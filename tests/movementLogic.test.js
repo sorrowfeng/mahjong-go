@@ -219,10 +219,10 @@ describe('applySlide()', () => {
 // ─── pixelsToCells ─────────────────────────────────────────────────────────────
 describe('pixelsToCells()', () => {
   test('水平：整格像素正确换算', () => {
-    // 一格 = TILE_WIDTH + TILE_GAP = 56 + 4 = 60px
-    expect(pixelsToCells(60, DIR.HORIZONTAL)).toBe(1);
-    expect(pixelsToCells(120, DIR.HORIZONTAL)).toBe(2);
-    expect(pixelsToCells(-60, DIR.HORIZONTAL)).toBe(-1);
+    // 一格 = TILE_WIDTH + TILE_GAP = 60 + 4 = 64px
+    expect(pixelsToCells(64, DIR.HORIZONTAL)).toBe(1);
+    expect(pixelsToCells(128, DIR.HORIZONTAL)).toBe(2);
+    expect(pixelsToCells(-64, DIR.HORIZONTAL)).toBe(-1);
   });
 
   test('水平：不足半格取近值', () => {

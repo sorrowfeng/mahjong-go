@@ -13,6 +13,7 @@ const TILE_TYPES = [
     label: CHINESE_NUMS[i] + '万',
     topChar: CHINESE_NUMS[i],
     bottomChar: '万',
+    image: `assets/images/tiles/wan_${i + 1}.png`,
   })),
   // 条子 1-9（id: 9-17）
   ...Array.from({ length: 9 }, (_, i) => ({
@@ -22,6 +23,7 @@ const TILE_TYPES = [
     label: CHINESE_NUMS[i] + '条',
     topChar: CHINESE_NUMS[i],
     bottomChar: '条',
+    image: `assets/images/tiles/tiao_${i + 1}.png`,
   })),
   // 筒子 1-9（id: 18-26）
   ...Array.from({ length: 9 }, (_, i) => ({
@@ -31,15 +33,16 @@ const TILE_TYPES = [
     label: CHINESE_NUMS[i] + '筒',
     topChar: CHINESE_NUMS[i],
     bottomChar: '筒',
+    image: `assets/images/tiles/tong_${i + 1}.png`,
   })),
   // 字牌 东南西北中发白（id: 27-33）
-  { id: 27, type: TILE_TYPE.ZI, value: 1, label: '东', topChar: '东', bottomChar: '' },
-  { id: 28, type: TILE_TYPE.ZI, value: 2, label: '南', topChar: '南', bottomChar: '' },
-  { id: 29, type: TILE_TYPE.ZI, value: 3, label: '西', topChar: '西', bottomChar: '' },
-  { id: 30, type: TILE_TYPE.ZI, value: 4, label: '北', topChar: '北', bottomChar: '' },
-  { id: 31, type: TILE_TYPE.ZI, value: 5, label: '中', topChar: '中', bottomChar: '' },
-  { id: 32, type: TILE_TYPE.ZI, value: 6, label: '发', topChar: '发', bottomChar: '' },
-  { id: 33, type: TILE_TYPE.ZI, value: 7, label: '白', topChar: '', bottomChar: '' },
+  { id: 27, type: TILE_TYPE.ZI, value: 1, label: '东', topChar: '东', bottomChar: '', image: 'assets/images/tiles/feng_1.png' },
+  { id: 28, type: TILE_TYPE.ZI, value: 2, label: '南', topChar: '南', bottomChar: '', image: 'assets/images/tiles/feng_2.png' },
+  { id: 29, type: TILE_TYPE.ZI, value: 3, label: '西', topChar: '西', bottomChar: '', image: 'assets/images/tiles/feng_3.png' },
+  { id: 30, type: TILE_TYPE.ZI, value: 4, label: '北', topChar: '北', bottomChar: '', image: 'assets/images/tiles/feng_4.png' },
+  { id: 31, type: TILE_TYPE.ZI, value: 5, label: '中', topChar: '中', bottomChar: '', image: 'assets/images/tiles/jian_1.png' },
+  { id: 32, type: TILE_TYPE.ZI, value: 6, label: '发', topChar: '发', bottomChar: '', image: 'assets/images/tiles/jian_2.png' },
+  { id: 33, type: TILE_TYPE.ZI, value: 7, label: '白', topChar: '', bottomChar: '', image: 'assets/images/tiles/jian_3.png' },
 ];
 
 // 每种牌的副数：万/条/筒各4副，字牌各4副
@@ -59,6 +62,7 @@ function generateDeck() {
         label: tileDef.label,
         topChar: tileDef.topChar,
         bottomChar: tileDef.bottomChar,
+        image: tileDef.image,
       });
     }
   }

@@ -20,22 +20,17 @@ function createTileElement(tileInstance, row, col) {
   el.style.left = left + 'px';
   el.style.top = top + 'px';
 
-  // 白板特殊处理
-  if (tileInstance.label === '白') {
+  if (tileInstance.image) {
+    // 图片牌
+    const img = document.createElement('img');
+    img.src = tileInstance.image;
+    img.alt = tileInstance.label;
+    img.className = 'tile__img';
+    el.appendChild(img);
+  } else {
+    // 白板：无图片，保留原有空白样式
     el.classList.add('tile--bai');
     el.innerHTML = '<span class="tile__blank"></span>';
-  } else if (tileInstance.type === TILE_TYPE.ZI) {
-    // 字牌居中大字，中=红，发=绿，其余=深紫
-    let colorClass = '';
-    if (tileInstance.label === '中') colorClass = 'tile__zi--zhong';
-    else if (tileInstance.label === '发') colorClass = 'tile__zi--fa';
-    el.innerHTML = `<span class="tile__zi ${colorClass}">${tileInstance.topChar}</span>`;
-  } else {
-    // 数牌：上方数字 + 下方花色
-    el.innerHTML = `
-      <span class="tile__top">${tileInstance.topChar}</span>
-      <span class="tile__bottom">${tileInstance.bottomChar}</span>
-    `;
   }
 
   return el;

@@ -221,6 +221,7 @@ function reshuffleRemainingTiles(state) {
           label: def.label,
           topChar: def.topChar,
           bottomChar: def.bottomChar,
+          image: def.image,
         },
       };
     });

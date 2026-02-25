@@ -2,7 +2,7 @@
 
 .tile {
   position: absolute;
-  width: 56px;
+  width: 60px;
   height: 80px;
   background: #f5f0e8;
   border: 2px solid #c8b99a;
@@ -43,7 +43,8 @@
 .tile__top,
 .tile__bottom,
 .tile__zi,
-.tile__blank {
+.tile__blank,
+.tile__img {
   backface-visibility: hidden;
 }
 
@@ -81,6 +82,18 @@
   font-size: 26px;
   font-weight: bold;
   line-height: 1;
+}
+
+/* 图片牌 */
+.tile__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 4px;
+  pointer-events: none;
+  display: block;
 }
 
 /* 白板 */

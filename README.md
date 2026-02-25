@@ -66,6 +66,14 @@
 └── tests/                      # Jest 单元测试
 ```
 
+## 图片素材
+
+`assets/images/tiles/` 目录下的全部麻将牌图片均由 **Seedream 4.5** AI 生成。
+
+## 许可证
+
+本项目基于 [Apache License 2.0](LICENSE) 开源。
+
 ## 本地开发
 
 游戏本体无需任何构建步骤，直接在浏览器中打开 `index.html` 即可。

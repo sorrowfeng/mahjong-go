@@ -12,17 +12,14 @@ function _mtPos(col) {
   return col * MTILE_STEP;
 }
 
-function _createMTile(topChar, bottomChar, colorClass) {
+function _createMTile(imageSrc, label) {
   const el = document.createElement('div');
-  el.className = `mtile ${colorClass}`;
-  const top = document.createElement('span');
-  top.className = 'mtile__top';
-  top.textContent = topChar;
-  const bot = document.createElement('span');
-  bot.className = 'mtile__bottom';
-  bot.textContent = bottomChar;
-  el.appendChild(top);
-  el.appendChild(bot);
+  el.className = 'mtile';
+  const img = document.createElement('img');
+  img.src = imageSrc;
+  img.alt = label;
+  img.className = 'mtile__img';
+  el.appendChild(img);
   return el;
 }
 
@@ -42,8 +39,8 @@ function _runDemo1(stageEl, gen) {
   stageEl.style.width  = (4 * MTILE_STEP - MTILE_GAP) + 'px';
   stageEl.style.height = MTILE_H + 'px';
 
-  const tA = _createMTile('一', '万', 'mtile--wan');
-  const tB = _createMTile('一', '万', 'mtile--wan');
+  const tA = _createMTile('assets/images/tiles/wan_1.png', '一万');
+  const tB = _createMTile('assets/images/tiles/wan_1.png', '一万');
   _placeAt(tA, 0);
   _placeAt(tB, 3);
   stageEl.appendChild(tA);
@@ -96,13 +93,13 @@ function _runDemo2(stageEl, gen) {
   }
 
   // Row 0, Col 3: [七万] — 静止目标
-  const tTop = _createMTile('七', '万', 'mtile--wan');
+  const tTop = _createMTile('assets/images/tiles/wan_7.png', '七万');
   placeRC(tTop, 0, 3);
 
   // Row 1, Col 0: [六万] — 拖动起点（带动右侧牌）
   // Row 1, Col 1: [七万] — 跟随移动
-  const tL1 = _createMTile('六', '万', 'mtile--wan');
-  const tL2 = _createMTile('七', '万', 'mtile--wan');
+  const tL1 = _createMTile('assets/images/tiles/wan_6.png', '六万');
+  const tL2 = _createMTile('assets/images/tiles/wan_7.png', '七万');
   placeRC(tL1, 1, 0);
   placeRC(tL2, 1, 1);
 

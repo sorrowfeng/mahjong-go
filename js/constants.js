@@ -4,7 +4,7 @@ const BOARD_COLS = 17;
 const BOARD_ROWS = 8;
 const TOTAL_TILES = 136;
 
-const TILE_WIDTH = 56;
+const TILE_WIDTH = 60;
 const TILE_HEIGHT = 80;
 const TILE_GAP = 4;
 const BOARD_PADDING = 12; // 棋盘内边距（像素）
