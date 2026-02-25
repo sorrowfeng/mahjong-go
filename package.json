@@ -1,0 +1,13 @@
+{
+  "name": "mahjong-xiaoxiaole",
+  "version": "1.0.0",
+  "description": "麻将消消乐游戏测试套件",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  }
+}

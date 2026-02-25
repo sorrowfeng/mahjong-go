@@ -1,0 +1,153 @@
+/* tutorial.css — 规则教学动画 */
+
+#tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+#tutorial-overlay.hidden {
+  display: none;
+}
+
+.tutorial-box {
+  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
+  border: 3px solid #f5d76e;
+  border-radius: 20px;
+  padding: 32px 40px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.tutorial-title {
+  font-size: 26px;
+  color: #f5d76e;
+  margin-bottom: 28px;
+  text-shadow: 0 0 12px rgba(245,215,110,0.4);
+  letter-spacing: 2px;
+}
+
+.tutorial-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.tutorial-rule {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.tutorial-rule__label {
+  font-size: 13px;
+  font-weight: bold;
+  color: #f5d76e;
+  letter-spacing: 1px;
+}
+
+.tutorial-rule__stage {
+  position: relative;
+  /* width / height set by JS */
+}
+
+.tutorial-rule__desc {
+  font-size: 13px;
+  color: #aed6a0;
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+.tutorial-rule__desc strong {
+  color: #f5d76e;
+}
+
+.tutorial-rule--text {
+  border-left: 3px solid rgba(245,215,110,0.35);
+  padding-left: 14px;
+  text-align: left;
+  align-self: stretch;
+}
+
+.tutorial-rule--text .tutorial-rule__desc {
+  font-size: 13px;
+}
+
+.tutorial-divider {
+  border: none;
+  border-top: 1px solid rgba(245,215,110,0.2);
+  margin: 4px 0;
+}
+
+/* ── Mini Tile ── */
+
+.mtile {
+  position: absolute;
+  width: 44px;
+  height: 62px;
+  background: #f5f0e8;
+  border: 2px solid #c8b99a;
+  border-radius: 5px;
+  box-shadow: 2px 2px 0 #a89070, 0 2px 5px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: box-shadow 0.15s, transform 0.3s ease-out, opacity 0.3s;
+}
+
+.mtile__top {
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.mtile__bottom {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.mtile--wan .mtile__top,
+.mtile--wan .mtile__bottom { color: #c0392b; }
+
+.mtile--tiao .mtile__top,
+.mtile--tiao .mtile__bottom { color: #27ae60; }
+
+.mtile--tong .mtile__top,
+.mtile--tong .mtile__bottom { color: #2980b9; }
+
+/* Selected / hint glow */
+.mtile--hint {
+  box-shadow:
+    2px 2px 0 #a89070,
+    0 0 0 3px #f5d76e,
+    0 0 14px rgba(245,215,110,0.8);
+}
+
+/* Eliminating: shrink to nothing */
+.mtile--elim {
+  transform: scale(0);
+  opacity: 0;
+}
+
+/* Drag indicator arrow */
+.mtile-arrow {
+  position: absolute;
+  font-size: 22px;
+  color: #f5d76e;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: left 0.5s ease-out;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(245,215,110,0.6);
+}

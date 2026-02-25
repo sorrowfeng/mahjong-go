@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>麻将消消乐</title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/board.css" />
+  <link rel="stylesheet" href="css/tile.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/tutorial.css" />
+</head>
+<body>
+
+  <header>
+    <h1>麻将消消乐</h1>
+  </header>
+
+  <div class="toolbar">
+    <button id="btn-hint" class="btn btn--secondary">提示</button>
+    <button id="btn-undo" class="btn btn--secondary" disabled>撤销</button>
+    <button id="btn-new" class="btn btn--danger">新游戏</button>
+    <button id="btn-rules" class="btn btn--secondary">规则</button>
+    <div class="tile-counter">剩余：<span id="tile-count">136</span> 张</div>
+    <div class="timer-display">用时：<span id="game-timer">00:00:00</span></div>
+  </div>
+
+  <div class="game-area">
+    <div id="board"></div>
+  </div>
+
+  <!-- 规则教学动画 -->
+  <div id="tutorial-overlay">
+    <div class="tutorial-box">
+      <h2 class="tutorial-title">游戏规则</h2>
+
+      <div class="tutorial-rules">
+
+        <!-- 规则1：直接消除 -->
+        <div class="tutorial-rule">
+          <div class="tutorial-rule__label">① 直接消除</div>
+          <div id="tutorial-stage-1" class="tutorial-rule__stage"></div>
+          <p class="tutorial-rule__desc">同行或同列中，两张<strong>相同的牌</strong>之间没有其他牌时，点击即可消除</p>
+        </div>
+
+        <hr class="tutorial-divider" />
+
+        <!-- 规则2：拖动消除 -->
+        <div class="tutorial-rule">
+          <div class="tutorial-rule__label">② 拖动消除</div>
+          <div id="tutorial-stage-2" class="tutorial-rule__stage"></div>
+          <p class="tutorial-rule__desc">拖动一张牌时，<strong>同方向相邻的牌会一起移动</strong>；移动后若与另一行/列的相同牌形成可消除关系，则触发消除，否则复原</p>
+        </div>
+
+        <hr class="tutorial-divider" />
+
+        <!-- 规则3：连锁文字说明 -->
+        <div class="tutorial-rule tutorial-rule--text">
+          <p class="tutorial-rule__desc">③ 消除后若出现新的可消除对，会自动<strong>连锁消除</strong>；当无任何步骤可用时，点击<strong>提示</strong>按钮可重新随机排列剩余牌</p>
+        </div>
+
+      </div>
+
+      <button id="btn-tutorial-start" class="btn btn--primary">开始新游戏</button>
+    </div>
+  </div>
+
+  <!-- 死局提示 -->
+  <div id="deadlock-msg" class="hidden">无可消除步骤，请使用提示或撤销！</div>
+
+  <!-- 重排提示 -->
+  <div id="reshuffle-msg" class="hidden">无可用步骤，已重新随机排列剩余牌！</div>
+
+  <!-- 胜利界面 -->
+  <div id="victory-screen" class="hidden">
+    <div class="victory-box">
+      <h2>恭喜通关！</h2>
+      <p>所有麻将已全部消除</p>
+      <p id="victory-time-display" class="victory-time"></p>
+      <button id="btn-new-victory" class="btn btn--primary">再来一局</button>
+    </div>
+  </div>
+
+  <!-- JS 加载顺序：constants → tileDefinitions → boardState → gameLogic → movementLogic → hintSystem → renderer → animationController → dragController → gameController → main -->
+  <script defer src="js/tutorial.js"></script>
+  <script defer src="js/constants.js"></script>
+  <script defer src="js/tileDefinitions.js"></script>
+  <script defer src="js/boardState.js"></script>
+  <script defer src="js/gameLogic.js"></script>
+  <script defer src="js/movementLogic.js"></script>
+  <script defer src="js/hintSystem.js"></script>
+  <script defer src="js/renderer.js"></script>
+  <script defer src="js/animationController.js"></script>
+  <script defer src="js/dragController.js"></script>
+  <script defer src="js/gameController.js"></script>
+  <script defer src="js/main.js"></script>
+
+</body>
+</html>

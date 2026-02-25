@@ -1,0 +1,147 @@
+/* tile.css — 牌的外观与状态 */
+
+.tile {
+  position: absolute;
+  width: 56px;
+  height: 80px;
+  background: #f5f0e8;
+  border: 2px solid #c8b99a;
+  border-radius: 6px;
+  box-shadow:
+    2px 3px 0 #a89070,
+    0 2px 6px rgba(0,0,0,0.3);
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: box-shadow 0.1s;
+  will-change: transform;
+  touch-action: none;
+  /* 3D 翻牌支持 */
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* ── 牌背面（发牌动画时显示） ── */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: -2px;                /* 覆盖 border 区域 */
+  border-radius: 6px;
+  border: 2px solid #1a4a1c;
+  background: linear-gradient(155deg, #3d8c40 0%, #2c5f2e 55%, #1e4820 100%);
+  backface-visibility: hidden;
+  transform: rotateX(-180deg); /* 背面：仅当牌翻转至180°时可见 */
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,0.35),
+    2px 3px 0 #163818;
+}
+
+/* 正面内容元素：翻转时随牌一起隐藏 */
+.tile__top,
+.tile__bottom,
+.tile__zi,
+.tile__blank {
+  backface-visibility: hidden;
+}
+
+/* ── 发牌动画状态 ── */
+/* 背面朝上（初始状态）*/
+.tile--deal-hidden {
+  transform: rotateX(-180deg);
+}
+
+/* 翻牌过渡 */
+.tile--deal-animating {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+/* 数牌上方字符 */
+.tile__top {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* 数牌下方花色 */
+.tile__bottom {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* 字牌居中大字 */
+.tile__zi {
+  font-size: 26px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* 白板 */
+.tile--bai {
+  border: 3px solid #b0a090;
+}
+
+.tile__blank {
+  display: block;
+  width: 36px;
+  height: 52px;
+  border: 2px solid #c8b99a;
+  border-radius: 3px;
+  background: #f0ece4;
+}
+
+/* 花色颜色 */
+.tile--wan .tile__top,
+.tile--wan .tile__bottom {
+  color: #c0392b;
+}
+
+.tile--tiao .tile__top,
+.tile--tiao .tile__bottom {
+  color: #27ae60;
+}
+
+.tile--tong .tile__top,
+.tile--tong .tile__bottom {
+  color: #2980b9;
+}
+
+.tile--zi .tile__zi {
+  color: #6c3483;
+}
+
+/* 中 红色，发 绿色 */
+.tile__zi--zhong {
+  color: #c0392b !important;
+}
+
+.tile__zi--fa {
+  color: #27ae60 !important;
+}
+
+/* 选中状态 */
+.tile--selected {
+  box-shadow:
+    2px 3px 0 #a89070,
+    0 0 0 3px #f5d76e,
+    0 0 16px rgba(245, 215, 110, 0.8);
+  z-index: 50;
+}
+
+/* 消除状态（由 animationController 添加） */
+.tile--eliminating {
+  animation: tile-eliminate 0.3s ease-out forwards;
+}
+
+/* 提示状态 */
+.tile--hint {
+  animation: tile-hint-pulse 0.7s ease-in-out 2 forwards;
+  z-index: 30;
+}

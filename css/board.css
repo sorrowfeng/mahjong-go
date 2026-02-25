@@ -1,0 +1,16 @@
+/* board.css — 棋盘容器 */
+
+#board {
+  position: relative;
+  background: #2c5f2e;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,0.4),
+    0 6px 24px rgba(0,0,0,0.5);
+  /* 宽度和高度由 renderer.js 动态设置（含 BOARD_PADDING 偏移） */
+  box-sizing: content-box;
+  /* 3D 透视，供发牌翻牌动画使用 */
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+  overflow: hidden; /* 将 3D 绘制范围限制在棋盘内，避免产生页面滚动条 */
+}

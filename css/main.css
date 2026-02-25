@@ -1,0 +1,196 @@
+/* main.css — 整体布局、UI按钮 */
+
+body {
+  background: #1a3a1c;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  user-select: none;
+  overflow: hidden; /* 防止发牌动画 3D 变换超出视口触发滚动条 */
+}
+
+header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #f5d76e;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 4px;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #f5d76e, #e8b820);
+  color: #2a1a00;
+}
+
+.btn--secondary {
+  background: linear-gradient(135deg, #7ec8e3, #3a8fb5);
+  color: #fff;
+}
+
+.btn--danger {
+  background: linear-gradient(135deg, #ff7675, #d63031);
+  color: #fff;
+}
+
+/* 剩余牌数显示 */
+.tile-counter {
+  font-size: 14px;
+  color: #aed6a0;
+  margin-left: 8px;
+}
+
+.tile-counter span {
+  color: #f5d76e;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* 计时器显示 */
+.timer-display {
+  font-size: 14px;
+  color: #aed6a0;
+  margin-left: 8px;
+}
+
+.timer-display span {
+  color: #f5d76e;
+  font-weight: bold;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 死局提示 */
+#deadlock-msg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(200, 50, 50, 0.95);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#deadlock-msg.hidden {
+  display: none;
+}
+
+/* 重排提示 */
+#reshuffle-msg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 100, 160, 0.95);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#reshuffle-msg.hidden {
+  display: none;
+}
+
+/* 胜利界面 */
+#victory-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#victory-screen.hidden {
+  display: none;
+}
+
+.victory-box {
+  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
+  border: 3px solid #f5d76e;
+  border-radius: 20px;
+  padding: 40px 60px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.victory-box h2 {
+  font-size: 36px;
+  color: #f5d76e;
+  margin-bottom: 12px;
+  text-shadow: 0 0 20px rgba(245, 215, 110, 0.6);
+}
+
+.victory-box p {
+  font-size: 18px;
+  color: #aed6a0;
+  margin-bottom: 12px;
+}
+
+.victory-time {
+  font-size: 22px;
+  color: #f5d76e !important;
+  font-weight: bold;
+  margin-bottom: 24px !important;
+}
+
+/* 游戏区域外层 */
+.game-area {
+  overflow: auto;
+  max-width: 100%;
+}
