@@ -2,6 +2,12 @@
 
 纯 HTML/CSS/JavaScript 开发的网页麻将消消乐游戏，无需任何框架或构建工具，直接双击 `index.html` 即可游玩。
 
+## 截图
+
+| 游戏主界面 | 规则说明 |
+|:---:|:---:|
+| ![游戏主界面](assets/screenshots/gameplay.png) | ![规则说明](assets/screenshots/tutorial.png) |
+
 ## 游戏规则
 
 ### 牌组
@@ -63,6 +69,12 @@
 │   ├── tutorial.js             # 规则教学动画逻辑
 │   ├── gameController.js       # 游戏状态机与计时器
 │   └── main.js                 # 入口与初始化
+├── assets/
+│   ├── images/tiles/           # 麻将牌图片（AI 生成）
+│   └── screenshots/            # 游戏截图
+│       ├── gameplay.png        # 游戏主界面截图
+│       └── tutorial.png        # 规则说明截图
+├── dist/                       # 打包产物（Windows 安装包）
 └── tests/                      # Jest 单元测试
 ```
 
