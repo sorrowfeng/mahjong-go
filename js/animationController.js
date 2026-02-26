@@ -86,7 +86,9 @@ function animateEliminate(pairs) {
  * onWaveComplete(stateAfter): 每波动画结束后的回调（更新游戏状态）
  */
 async function runEliminationSequence(waves, onWaveComplete) {
-  for (const wave of waves) {
+  for (let i = 0; i < waves.length; i++) {
+    const wave = waves[i];
+    SoundController.playChainWave(i);
     await animateEliminate(wave.eliminated);
     await wait(ANIM.CHAIN_DELAY);
     onWaveComplete(wave.stateAfter);
@@ -132,6 +134,7 @@ async function runDealAnimation(boardEl, height) {
     for (const el of rowEls) {
       el.classList.remove('tile--deal-hidden'); // 触发 rotateY(180→0) 过渡
     }
+    SoundController.playTileFlip(height - 1 - row); // 底行=0，顶行=height-1
     await wait(ROW_INTERVAL);
   }
 

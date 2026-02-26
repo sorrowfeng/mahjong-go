@@ -93,6 +93,8 @@
   position: absolute;
   width: 44px;
   height: 62px;
+  background: #f5f0e8;
+  border: 2px solid #c8b99a;
   border-radius: 5px;
   box-shadow: 2px 2px 0 #a89070, 0 2px 5px rgba(0,0,0,0.3);
   transition: box-shadow 0.15s, transform 0.3s ease-out, opacity 0.3s;

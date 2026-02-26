@@ -22,6 +22,7 @@
     <button id="btn-undo" class="btn btn--secondary" disabled>撤销</button>
     <button id="btn-new" class="btn btn--danger">新游戏</button>
     <button id="btn-rules" class="btn btn--secondary">规则</button>
+    <button id="btn-sound" class="btn btn--secondary btn--sound" title="音效开关">🔊</button>
     <div class="tile-counter">剩余：<span id="tile-count">136</span> 张</div>
     <div class="timer-display">用时：<span id="game-timer">00:00:00</span></div>
   </div>
@@ -83,6 +84,8 @@
   </div>
 
   <!-- JS 加载顺序：constants → tileDefinitions → boardState → gameLogic → movementLogic → hintSystem → renderer → animationController → dragController → gameController → main -->
+  <script defer src="js/soundController.js"></script>
+  <script defer src="js/bgmController.js"></script>
   <script defer src="js/tutorial.js"></script>
   <script defer src="js/constants.js"></script>
   <script defer src="js/tileDefinitions.js"></script>

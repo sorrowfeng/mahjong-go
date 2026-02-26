@@ -57,13 +57,15 @@ function syncPhase(state) {
 
 // 初始化新游戏
 async function initNewGame() {
-  gameGeneration++; // 使所有进行中的 async 任务失效
+  gameGeneration++;
   const myGeneration = gameGeneration;
 
   undoStack = [];
   resetTimer();
-  gameState = GAME_STATE.ANIMATING; // 发牌期间屏蔽操作
+  gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
+
+  SoundController.playNewGame();
 
   const deck = generateDeck();
   let state = null;
@@ -128,6 +130,7 @@ async function handleDragEnd({ group, direction, delta }) {
   try {
     if (hasMatch) {
       pushUndo(boardState);
+      SoundController.playSlideSuccess();
       await animateSlide(group, direction, delta);
 
       if (gameGeneration !== myGeneration) return; // 新游戏已启动，放弃
@@ -141,6 +144,7 @@ async function handleDragEnd({ group, direction, delta }) {
         }
       });
     } else {
+      SoundController.playInvalidMove();
       await animateRevert(group);
     }
   } finally {
@@ -181,6 +185,7 @@ async function handleTileClick({ row, col }) {
 
   if (!pair) return; // 点击的牌暂无可消除配对，忽略
 
+  SoundController.playTileClick();
   pushUndo(boardState);
 
   const { a, b } = pair;
@@ -247,6 +252,7 @@ function handleHint() {
     window._gameState = boardState;
     renderBoard(boardState, getBoardEl());
     updateUI();
+    SoundController.playReshuffle();
     showReshuffle();
   }
 }
@@ -298,6 +304,7 @@ function updateUI() {
 // 胜利界面
 function showVictory() {
   gameState = GAME_STATE.VICTORY;
+  SoundController.playVictory();
   const elapsed = stopTimer();
   const timeEl = document.getElementById('victory-time-display');
   if (timeEl) timeEl.textContent = `用时：${formatTime(elapsed)}`;

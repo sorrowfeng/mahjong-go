@@ -69,6 +69,17 @@ header h1 {
   color: #fff;
 }
 
+.btn--sound {
+  min-width: 40px;
+  font-size: 18px;
+  padding: 6px 10px;
+}
+
+.btn--muted {
+  background: linear-gradient(135deg, #888, #555);
+  opacity: 0.75;
+}
+
 .btn--danger {
   background: linear-gradient(135deg, #ff7675, #d63031);
   color: #fff;
