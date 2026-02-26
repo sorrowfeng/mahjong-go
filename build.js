@@ -190,29 +190,45 @@ log('发布到 GitHub Release');
 // 检查 gh CLI
 if (!fs.existsSync(GH_CLI)) fail(`未找到 GitHub CLI: ${GH_CLI}\n  请先安装: winget install GitHub.cli`);
 
-// 检查登录状态
-try {
-  execOut(`"${GH_CLI}" auth status`);
-} catch {
-  fail('GitHub CLI 未登录，请先运行: gh auth login');
+// 支持通过 GH_TOKEN 环境变量授权（推荐），或 gh auth login
+const ghToken = process.env.GH_TOKEN;
+if (!ghToken) {
+  try {
+    execOut(`"${GH_CLI}" auth status`);
+  } catch {
+    fail('请设置 GH_TOKEN 环境变量，或先运行: gh auth login\n  获取 token: gh auth token');
+  }
 }
+const ghEnv = { ...process.env, ...(ghToken ? { GH_TOKEN: ghToken } : {}) };
 
-// 获取当前版本 tag（取最新 commit 的短 hash 作为版本号）
-const shortHash = execOut('git rev-parse --short HEAD');
-const tag = `v1.0.0-${shortHash}`;
+// 从 package.json 读取版本号
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+const version = pkg.version || '1.0.0';
+const tag = `v${version}`;
 const title = `${APP_NAME} ${tag}`;
-const notes = `## 下载\n\n直接下载 \`${APP_NAME}.exe\` 运行即可，无需安装。\n\n**系统要求**：Windows 10/11（64位）`;
+const notes = [
+  '## 下载',
+  '',
+  `直接下载 \`${APP_NAME}.exe\` 运行即可，无需安装。`,
+  '',
+  '**系统要求**：Windows 10/11（64位），需要系统内置 WebView2（Win10/11 默认已有）',
+  '',
+  '## 玩法',
+  '- **点击**：消除同行/列中无遮挡的相同牌',
+  '- **拖动**：拖动牌使其与其他位置的相同牌对齐消除',
+  '- **提示**：无思路时点击提示按钮，若无可用步骤则自动重排',
+].join('\n');
 
 // 删除同名 tag（若重新发布）
 try {
-  execOut(`"${GH_CLI}" release delete ${tag} --yes`);
-  execOut(`git push origin :refs/tags/${tag}`);
+  execSync(`"${GH_CLI}" release delete ${tag} --yes`, { env: ghEnv, stdio: 'pipe' });
+  execSync(`git push origin :refs/tags/${tag}`, { env: ghEnv, stdio: 'pipe' });
 } catch { /* 首次发布，tag 不存在，忽略 */ }
 
 // 创建 release 并上传 exe
-exec(`"${GH_CLI}" release create ${tag} "${DEST_EXE}#${APP_NAME}.exe" --title "${title}" --notes "${notes}"`);
+exec(`"${GH_CLI}" release create ${tag} "${DEST_EXE}#${APP_NAME}.exe" --title "${title}" --notes "${notes}"`, { env: ghEnv });
 
 // 获取 release URL
-const url = execOut(`"${GH_CLI}" release view ${tag} --json url -q .url`);
+const url = execSync(`"${GH_CLI}" release view ${tag} --json url -q .url`, { env: ghEnv }).toString().trim();
 ok(`Release 已发布: ${url}`);
 console.log();
