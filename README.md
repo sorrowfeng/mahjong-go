@@ -86,6 +86,17 @@
 
 本项目基于 [Apache License 2.0](LICENSE) 开源。
 
+## 开源依赖
+
+| 项目 | 用途 | 许可证 |
+|------|------|--------|
+| [Tauri](https://tauri.app) | 将 Web 应用打包为桌面可执行文件 | MIT / Apache-2.0 |
+| [Pake](https://github.com/tw93/Pake) | 基于 Tauri 的网页打包工具 | MIT |
+| [Jest](https://jestjs.io) | JavaScript 单元测试框架 | MIT |
+| [NSIS](https://nsis.sourceforge.io) | Windows 安装包制作工具（构建时使用） | zlib/libpng |
+
+游戏本体（`index.html` / `css/` / `js/`）为纯原生实现，运行时无任何第三方依赖。
+
 ## 本地开发
 
 游戏本体无需任何构建步骤，直接在浏览器中打开 `index.html` 即可。
