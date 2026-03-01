@@ -23,8 +23,8 @@ let BOARD_PADDING = 12;
  *  4. 最终牌尺寸以"棋盘充满可用区域"为目标，无固定上限
  */
 function recalcLayout() {
-  const RATIO      = 4 / 3;   // 牌宽高比（tileH = tileW * RATIO）
-  const MIN_TILE_W = 26;       // 最小触控宽度（px）
+  const RATIO      = 4 / 3;
+  const MIN_TILE_W = 26;
   const BASE_GAP   = 4;
   const BASE_PAD   = 12;
 
@@ -33,41 +33,29 @@ function recalcLayout() {
   const toolbarEl = document.querySelector('.toolbar');
   const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
                   + (toolbarEl ? toolbarEl.offsetHeight : 0)
-                  + 20;  // padding + margin 缓冲
+                  + 20;
 
   const availW = window.innerWidth  - 24;
   const availH = window.innerHeight - chromeH;
 
-  // ── 2. 给定行列数，计算最大牌宽（同时满足宽/高约束） ──────────────────
-  // byW: 宽度方向最多能放多宽的牌
-  // byH: 高度方向最多能放多宽的牌（tileH = tileW * RATIO）
+  // ── 2. 计算给定行列数能放的最大牌宽 ──────────────────────────────────
   function calcTileW(cols, rows) {
     const byW = (availW - BASE_PAD * 2 + BASE_GAP) / cols - BASE_GAP;
     const byH = (availH - BASE_PAD * 2 + BASE_GAP) / rows / RATIO - BASE_GAP;
     return Math.min(byW, byH);
   }
 
-  // ── 3. 选默认布局：17×8 vs 8×17，哪个牌更大用哪个 ────────────────────
-  // 不依赖 availW/availH 大小比较判断横竖屏——直接让计算结果说话
-  // 这样 iPad 竖屏（宽744）能正确选 17×8 而不是 8×17
-  const w_17x8 = calcTileW(17, 8);
-  const w_8x17 = calcTileW(8, 17);
-  const defaultCols = w_17x8 >= w_8x17 ? 17 : 8;
-  const defaultRows = w_17x8 >= w_8x17 ? 8  : 17;
-  const defaultW    = w_17x8 >= w_8x17 ? w_17x8 : w_8x17;
-
-  // ── 4. 优先使用默认布局 ───────────────────────────────────────────────
-  if (defaultW >= MIN_TILE_W) {
-    BOARD_COLS = defaultCols;
-    BOARD_ROWS = defaultRows;
-    applyTileSize(Math.floor(defaultW / 2) * 2);
-    return;
+  // 给定牌宽，计算棋盘实际面积
+  function boardArea(cols, rows, tw) {
+    const th  = Math.round(tw * RATIO);
+    const gap = Math.max(2, Math.round(tw * BASE_GAP / 60));
+    const pad = Math.max(6, Math.round(tw * BASE_PAD  / 60));
+    return (cols * (tw + gap) - gap + pad * 2) *
+           (rows * (th  + gap) - gap + pad * 2);
   }
 
-  // ── 5. 默认布局放不下，枚举所有合法布局选牌最大的 ────────────────────
-  let bestCols = defaultCols;
-  let bestRows = defaultRows;
-  let bestW    = defaultW;
+  // ── 3. 枚举所有合法布局，选棋盘面积最大的 ────────────────────────────
+  let bestCols = 17, bestRows = 8, bestW = 0, bestArea = 0;
 
   for (let cols = 4; cols <= 34; cols++) {
     const rows = Math.ceil(TOTAL_TILES / cols);
@@ -75,14 +63,31 @@ function recalcLayout() {
     if (cols * rows - TOTAL_TILES >= cols) continue;
 
     const w = calcTileW(cols, rows);
-    if (w > bestW) { bestW = w; bestCols = cols; bestRows = rows; }
+    if (w < MIN_TILE_W) continue;
+
+    const tw   = Math.floor(w / 2) * 2;
+    const area = boardArea(cols, rows, tw);
+    if (area > bestArea) { bestArea = area; bestW = tw; bestCols = cols; bestRows = rows; }
   }
 
+  // ── 4. 横屏时：若 17×8 面积不比最优差超过 15%，强制使用 17×8 ────────
+  const isLandscape = availW >= availH;
+  if (isLandscape) {
+    const w17 = calcTileW(17, 8);
+    if (w17 >= MIN_TILE_W) {
+      const tw17 = Math.floor(w17 / 2) * 2;
+      const a17  = boardArea(17, 8, tw17);
+      if (a17 >= bestArea * 0.85) {
+        bestCols = 17; bestRows = 8; bestW = tw17;
+      }
+    }
+  }
+
+  // ── 5. 写回全局变量 ────────────────────────────────────────────────────
   BOARD_COLS = bestCols;
   BOARD_ROWS = bestRows;
-  applyTileSize(Math.max(MIN_TILE_W, Math.floor(bestW / 2) * 2));
+  applyTileSize(Math.max(MIN_TILE_W, bestW));
 
-  // ── 内部辅助：写回尺寸变量并同步 CSS ────────────────────────────────
   function applyTileSize(w) {
     TILE_WIDTH    = w;
     TILE_HEIGHT   = Math.round(w * RATIO);
