@@ -47,13 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // 首次进入页面：展示规则动画，BGM 在用户点击"开始"后启动
   showTutorial(true);
 
-  // 窗口尺寸变化时重新计算牌尺寸并重渲染（防抖 200ms）
+  // 窗口尺寸变化时重新计算牌尺寸/行列数并重渲染（防抖 200ms）
   let resizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (window._gameState && window._gamePhase === 'IDLE') {
-        recalcTileSize();
+      if (!window._gameState || window._gamePhase !== 'IDLE') return;
+      const prevCols = BOARD_COLS;
+      const prevRows = BOARD_ROWS;
+      recalcTileSize();
+      if (BOARD_COLS !== prevCols || BOARD_ROWS !== prevRows) {
+        // 行列数变了，必须重新开局（旧 state 尺寸已不匹配）
+        handleNewGame();
+      } else {
+        // 行列数没变，只需重渲染（牌尺寸变了）
         renderBoard(window._gameState, document.getElementById('board'));
       }
     }, 200);
