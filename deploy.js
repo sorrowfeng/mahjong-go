@@ -53,17 +53,19 @@ for (const item of INCLUDES) {
   }
 }
 
-// 3. 推送到 gh-pages 分支
+// 3. 用纯 git 命令推送到 gh-pages 分支（不带 tags）
 console.log('\n推送到 gh-pages 分支...');
 const ghToken = process.env.GH_TOKEN;
 const repoUrl = ghToken
   ? `https://${ghToken}@github.com/sorrowfeng/mahjong-go.git`
   : 'https://github.com/sorrowfeng/mahjong-go.git';
 
-run(
-  `npx gh-pages --dist "${TMP_DIR}" --branch gh-pages --message "deploy: update GitHub Pages" --repo "${repoUrl}"`,
-  { cwd: ROOT }
-);
+// 在临时目录初始化独立的 git 仓库
+run('git init -b gh-pages', { cwd: TMP_DIR });
+run('git add -A', { cwd: TMP_DIR });
+run('git commit -m "deploy: update GitHub Pages"', { cwd: TMP_DIR });
+// 强制推送到远端 gh-pages 分支（不携带任何 tag）
+run(`git push "${repoUrl}" gh-pages:gh-pages --force`, { cwd: TMP_DIR });
 
 // 4. 清理临时目录
 fs.rmSync(TMP_DIR, { recursive: true });
