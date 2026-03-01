@@ -123,6 +123,28 @@ header h1 {
   font-variant-numeric: tabular-nums;
 }
 
+/* 旋转屏幕提示 */
+#rotate-hint {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(100, 60, 0, 0.95);
+  color: #f5d76e;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#rotate-hint.hidden {
+  display: none;
+}
+
 /* 死局提示 */
 #deadlock-msg {
   position: fixed;

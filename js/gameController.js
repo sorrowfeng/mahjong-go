@@ -68,6 +68,9 @@ async function initNewGame() {
   moveCount = 0;
   hintCount = 0;
   resetTimer();
+  // 隐藏旋转提示（如有）
+  const rotateHint = document.getElementById('rotate-hint');
+  if (rotateHint) rotateHint.classList.add('hidden');
   gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
 
@@ -374,4 +377,12 @@ function doReshuffle() {
   updateUI();
   SoundController.playReshuffle();
   showReshuffle();
+}
+
+// 旋转屏幕提示（仅提示，不强制开新局）
+function showRotateHint() {
+  const el = document.getElementById('rotate-hint');
+  if (!el) return;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
 }

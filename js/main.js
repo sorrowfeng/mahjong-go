@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 首次进入页面：展示规则动画，BGM 在用户点击"开始"后启动
   showTutorial(true);
 
-  // 窗口尺寸变化时重新计算牌尺寸/行列数并重渲染（防抖 200ms）
+  // 窗口尺寸变化时：只重算牌尺寸；若行列数也变了，显示"请开始新游戏"提示
   let resizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
@@ -57,12 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const prevRows = BOARD_ROWS;
       recalcLayout();
       if (BOARD_COLS !== prevCols || BOARD_ROWS !== prevRows) {
-        // 行列数变了，必须重新开局（旧 state 尺寸已不匹配）
-        handleNewGame();
-      } else {
-        // 行列数没变，只需重渲染（牌尺寸变了）
-        renderBoard(window._gameState, document.getElementById('board'));
+        // 行列数变了（如旋转屏幕）：不强制开新局，提示用户手动开始
+        showRotateHint();
+        // 强制回退到原行列数，以当前可用空间重算牌尺寸，保持局面可继续
+        BOARD_COLS = prevCols;
+        BOARD_ROWS = prevRows;
+        recalcTileSizeOnly(prevCols, prevRows);
       }
+      // 无论行列数是否变化，都用当前（已回退的）行列数重渲染
+      renderBoard(window._gameState, document.getElementById('board'));
     }, 200);
   });
 

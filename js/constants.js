@@ -81,16 +81,15 @@ function recalcLayout() {
     if (area > bestArea) { bestArea = area; bestW = tw; bestCols = cols; bestRows = rows; }
   }
 
-  // ── 4. 横屏时：若 17×8 面积不比最优差超过 15%，强制使用 17×8 ────────
+  // ── 4. 横屏时：优先使用 17×8 默认布局 ────────────────────────────────
+  // 桌面/平板横屏：17×8 是唯一整除 136 的标准布局，强制使用以确保满格显示。
+  // 仅当 17×8 牌宽不足最小可操作尺寸时才回落到枚举结果。
   const isLandscape = availW >= availH;
   if (isLandscape) {
     const w17 = calcTileW(17, 8);
     if (w17 >= MIN_TILE_W) {
-      const tw17 = Math.floor(w17 / 2) * 2;
-      const a17  = boardArea(17, 8, tw17);
-      if (a17 >= bestArea * 0.85) {
-        bestCols = 17; bestRows = 8; bestW = tw17;
-      }
+      // 17×8 能放下，无论面积大小都强制使用
+      bestCols = 17; bestRows = 8; bestW = Math.floor(w17 / 2) * 2;
     }
   }
 
@@ -108,6 +107,46 @@ function recalcLayout() {
     root.style.setProperty('--tile-w', TILE_WIDTH  + 'px');
     root.style.setProperty('--tile-h', TILE_HEIGHT + 'px');
   }
+}
+
+/**
+ * 仅重算给定行列数下的牌尺寸并写入 CSS 变量，不改变 BOARD_COLS/ROWS。
+ * 用于旋转屏幕后保持行列数、仅调整牌大小以适应新的视口尺寸。
+ */
+function recalcTileSizeOnly(cols, rows) {
+  const RATIO      = 4 / 3;
+  const MIN_TILE_W = 26;
+  const BASE_GAP   = 4;
+  const BASE_PAD   = 12;
+
+  const isMobileLandscape = window.innerHeight <= 500 && window.innerWidth > window.innerHeight;
+  let availW, availH;
+  if (isMobileLandscape) {
+    const toolbarEl = document.querySelector('.toolbar');
+    const sidebarW  = toolbarEl ? toolbarEl.offsetWidth : 80;
+    availW = window.innerWidth  - sidebarW - 8;
+    availH = window.innerHeight - 8;
+  } else {
+    const headerEl  = document.querySelector('header');
+    const toolbarEl = document.querySelector('.toolbar');
+    const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
+                    + (toolbarEl ? toolbarEl.offsetHeight : 0)
+                    + 20;
+    availW = window.innerWidth  - 24;
+    availH = window.innerHeight - chromeH;
+  }
+
+  const byW = (availW - BASE_PAD * 2 + BASE_GAP) / cols - BASE_GAP;
+  const byH = (availH - BASE_PAD * 2 + BASE_GAP) / rows / RATIO - BASE_GAP;
+  const w   = Math.max(MIN_TILE_W, Math.floor(Math.min(byW, byH) / 2) * 2);
+
+  TILE_WIDTH    = w;
+  TILE_HEIGHT   = Math.round(w * RATIO);
+  TILE_GAP      = Math.max(2, Math.round(w * BASE_GAP / 60));
+  BOARD_PADDING = Math.max(6, Math.round(w * BASE_PAD  / 60));
+  const root = document.documentElement;
+  root.style.setProperty('--tile-w', TILE_WIDTH  + 'px');
+  root.style.setProperty('--tile-h', TILE_HEIGHT + 'px');
 }
 
 // 动画时长（毫秒）
