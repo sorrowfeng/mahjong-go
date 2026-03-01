@@ -71,6 +71,9 @@ async function initNewGame() {
   gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
 
+  // 根据当前视口重算牌尺寸
+  recalcTileSize();
+
   SoundController.playNewGame();
 
   const deck = generateDeck();

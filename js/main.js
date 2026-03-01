@@ -47,6 +47,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // 首次进入页面：展示规则动画，BGM 在用户点击"开始"后启动
   showTutorial(true);
 
+  // 窗口尺寸变化时重新计算牌尺寸并重渲染（防抖 200ms）
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (window._gameState && window._gamePhase === 'IDLE') {
+        recalcTileSize();
+        renderBoard(window._gameState, document.getElementById('board'));
+      }
+    }, 200);
+  });
+
   // 全局按钮点击音效（事件委托，排除音效开关按钮自身）
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');

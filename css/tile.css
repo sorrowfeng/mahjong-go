@@ -1,9 +1,14 @@
 /* tile.css — 牌的外观与状态 */
 
+:root {
+  --tile-w: 60px;
+  --tile-h: 80px;
+}
+
 .tile {
   position: absolute;
-  width: 60px;
-  height: 80px;
+  width: var(--tile-w);
+  height: var(--tile-h);
   background: #f5f0e8;
   border: 2px solid #c8b99a;
   border-radius: 6px;
@@ -65,21 +70,21 @@
 
 /* 数牌上方字符 */
 .tile__top {
-  font-size: 20px;
+  font-size: calc(var(--tile-w) * 0.33);
   font-weight: bold;
   line-height: 1;
 }
 
 /* 数牌下方花色 */
 .tile__bottom {
-  font-size: 14px;
+  font-size: calc(var(--tile-w) * 0.23);
   font-weight: 600;
   line-height: 1;
 }
 
 /* 字牌居中大字 */
 .tile__zi {
-  font-size: 26px;
+  font-size: calc(var(--tile-w) * 0.43);
   font-weight: bold;
   line-height: 1;
 }
@@ -103,8 +108,8 @@
 
 .tile__blank {
   display: block;
-  width: 36px;
-  height: 52px;
+  width: 60%;
+  height: 65%;
   border: 2px solid #c8b99a;
   border-radius: 3px;
   background: #f0ece4;

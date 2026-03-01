@@ -8,18 +8,19 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 12px 16px;
   user-select: none;
   overflow: hidden; /* 防止发牌动画 3D 变换超出视口触发滚动条 */
+  box-sizing: border-box;
 }
 
 header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   text-align: center;
 }
 
 header h1 {
-  font-size: 28px;
+  font-size: clamp(18px, 4vw, 28px);
   font-weight: bold;
   color: #f5d76e;
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -29,18 +30,23 @@ header h1 {
 /* 工具栏 */
 .toolbar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
 }
 
 .btn {
-  padding: 8px 20px;
+  padding: 6px 14px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: clamp(12px, 2.5vw, 15px);
   font-weight: 600;
   transition: transform 0.1s, box-shadow 0.1s;
   box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -87,28 +93,28 @@ header h1 {
 
 /* 剩余牌数显示 */
 .tile-counter {
-  font-size: 14px;
+  font-size: clamp(11px, 2vw, 14px);
   color: #aed6a0;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 .tile-counter span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: 18px;
+  font-size: clamp(14px, 2.5vw, 18px);
 }
 
 /* 计时器显示 */
 .timer-display {
-  font-size: 14px;
+  font-size: clamp(11px, 2vw, 14px);
   color: #aed6a0;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 .timer-display span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: 18px;
+  font-size: clamp(14px, 2.5vw, 18px);
   font-variant-numeric: tabular-nums;
 }
 
@@ -255,15 +261,15 @@ header h1 {
 
 /* 步数/提示次数显示 */
 .stat-display {
-  font-size: 14px;
+  font-size: clamp(11px, 2vw, 14px);
   color: #aed6a0;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 .stat-display span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: 18px;
+  font-size: clamp(14px, 2.5vw, 18px);
   font-variant-numeric: tabular-nums;
 }
 
@@ -271,4 +277,7 @@ header h1 {
 .game-area {
   overflow: auto;
   max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
