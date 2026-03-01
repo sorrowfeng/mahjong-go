@@ -1,6 +1,6 @@
 {
   "name": "mahjong-xiaoxiaole",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "麻将消消乐游戏测试套件",
   "scripts": {
     "test": "jest --coverage",
