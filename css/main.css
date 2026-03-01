@@ -1,0 +1,416 @@
+/* main.css — 整体布局、UI按钮 */
+
+body {
+  background: #1a3a1c;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
+  color: #fff;
+  height: 100vh;
+  height: 100dvh;          /* dvh 适配手机地址栏动态收缩，旧浏览器回退到 vh */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px 4px;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+header {
+  margin-bottom: 4px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+header h1 {
+  font-size: clamp(18px, 4vw, 28px);
+  font-weight: bold;
+  color: #f5d76e;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 4px;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #f5d76e, #e8b820);
+  color: #2a1a00;
+}
+
+.btn--secondary {
+  background: linear-gradient(135deg, #7ec8e3, #3a8fb5);
+  color: #fff;
+}
+
+.btn--sound {
+  min-width: 36px;
+  padding: 6px 8px;
+}
+
+.btn--muted {
+  background: linear-gradient(135deg, #888, #555);
+  opacity: 0.75;
+}
+
+.btn--danger {
+  background: linear-gradient(135deg, #ff7675, #d63031);
+  color: #fff;
+}
+
+/* 统计信息容器（普通模式：横排，与按钮同行） */
+.toolbar-stats {
+  display: contents; /* 子元素直接参与 toolbar 的 flex 布局，无视容器自身 */
+}
+
+/* 剩余牌数显示 */
+.tile-counter {
+  font-size: 12px;
+  color: #aed6a0;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.tile-counter span {
+  color: #f5d76e;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+/* 计时器显示 */
+.timer-display {
+  font-size: 12px;
+  color: #aed6a0;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.timer-display span {
+  color: #f5d76e;
+  font-weight: bold;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 旋转屏幕提示 */
+#rotate-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(100, 60, 0, 0.95);
+  color: #f5d76e;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#rotate-hint.hidden {
+  display: none;
+}
+
+/* 死局提示 */
+#deadlock-msg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(200, 50, 50, 0.95);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#deadlock-msg.hidden {
+  display: none;
+}
+
+/* 重排提示 */
+#reshuffle-msg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 100, 160, 0.95);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#reshuffle-msg.hidden {
+  display: none;
+}
+
+/* 胜利界面 */
+#victory-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#victory-screen.hidden {
+  display: none;
+}
+
+.victory-box {
+  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
+  border: 3px solid #f5d76e;
+  border-radius: 20px;
+  padding: 40px 60px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.victory-box h2 {
+  font-size: 36px;
+  color: #f5d76e;
+  margin-bottom: 12px;
+  text-shadow: 0 0 20px rgba(245, 215, 110, 0.6);
+}
+
+.victory-box p {
+  font-size: 18px;
+  color: #aed6a0;
+  margin-bottom: 12px;
+}
+
+.victory-time {
+  font-size: 22px;
+  color: #f5d76e !important;
+  font-weight: bold;
+  margin-bottom: 16px !important;
+}
+
+.victory-stat {
+  font-size: 16px;
+  color: #c8e6c0 !important;
+  margin-bottom: 8px !important;
+}
+
+#btn-new-victory {
+  margin-top: 20px;
+}
+
+/* 重排确认弹窗 */
+#reshuffle-confirm {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#reshuffle-confirm.hidden {
+  display: none;
+}
+
+.confirm-box {
+  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
+  border: 2px solid #7ec8e3;
+  border-radius: 16px;
+  padding: 32px 48px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.confirm-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #f5d76e;
+  margin-bottom: 10px;
+}
+
+.confirm-desc {
+  font-size: 15px;
+  color: #aed6a0;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* 步数/提示次数显示 */
+.stat-display {
+  font-size: 12px;
+  color: #aed6a0;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.stat-display span {
+  color: #f5d76e;
+  font-weight: bold;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 游戏区域外层 */
+.game-area {
+  flex: 1;               /* 占满 body 剩余高度 */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* 大屏（平板横屏 / 桌面）适当放大按钮和统计字体 */
+@media (min-width: 768px) {
+  .btn {
+    font-size: 15px;
+    padding: 7px 16px;
+  }
+  .btn--sound {
+    padding: 7px 10px;
+  }
+  .tile-counter,
+  .timer-display,
+  .stat-display {
+    font-size: 13px;
+  }
+  .tile-counter span,
+  .timer-display span,
+  .stat-display span {
+    font-size: 17px;
+  }
+}
+
+/* ── 手机横屏：侧边栏布局 ──────────────────────────────────────────────
+   条件：屏幕高度 ≤ 500px（手机横屏特征）
+   效果：标题隐藏，toolbar 变左侧竖列，棋盘占满剩余宽度
+   ─────────────────────────────────────────────────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  body {
+    flex-direction: row;
+    align-items: stretch;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  /* 标题隐藏，节省空间 */
+  header {
+    display: none;
+  }
+
+  /* toolbar 变成左侧竖列 */
+  .toolbar {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: stretch;
+    width: auto;
+    min-width: 68px;
+    max-width: 80px;
+    margin-bottom: 0;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 4px 2px;
+  }
+
+  /* 按钮紧凑化 */
+  .toolbar .btn {
+    font-size: 11px;
+    padding: 5px 6px;
+    text-align: center;
+  }
+
+  /* 统计信息：整体作为一个卡片放在按钮下方 */
+  .toolbar-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    padding: 4px 0;
+    margin-top: 2px;
+  }
+
+  .tile-counter,
+  .timer-display,
+  .stat-display {
+    font-size: 9px;
+    margin-left: 0;
+    text-align: center;
+    line-height: 1.2;
+    color: #aed6a0;
+    padding: 2px 4px;
+  }
+
+  .tile-counter span,
+  .timer-display span,
+  .stat-display span {
+    font-size: 11px;
+    display: inline;
+    color: #f5d76e;
+    font-weight: bold;
+  }
+
+  /* 棋盘区占满剩余空间 */
+  .game-area {
+    flex: 1;
+    width: auto;
+  }
+}
+
