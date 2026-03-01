@@ -39,21 +39,24 @@ function recalcLayout() {
   const availH = window.innerHeight - chromeH;
 
   // ── 2. 给定行列数，计算最大牌宽（同时满足宽/高约束） ──────────────────
+  // byW: 宽度方向最多能放多宽的牌
+  // byH: 高度方向最多能放多宽的牌（tileH = tileW * RATIO）
   function calcTileW(cols, rows) {
     const byW = (availW - BASE_PAD * 2 + BASE_GAP) / cols - BASE_GAP;
     const byH = (availH - BASE_PAD * 2 + BASE_GAP) / rows / RATIO - BASE_GAP;
     return Math.min(byW, byH);
   }
 
-  // ── 3. 确定默认布局 ───────────────────────────────────────────────────
-  // 横屏优先 17×8，竖屏优先 8×17
-  const isPortrait  = availW < availH;
-  const defaultCols = isPortrait ? 8  : 17;
-  const defaultRows = isPortrait ? 17 : 8;
+  // ── 3. 选默认布局：17×8 vs 8×17，哪个牌更大用哪个 ────────────────────
+  // 不依赖 availW/availH 大小比较判断横竖屏——直接让计算结果说话
+  // 这样 iPad 竖屏（宽744）能正确选 17×8 而不是 8×17
+  const w_17x8 = calcTileW(17, 8);
+  const w_8x17 = calcTileW(8, 17);
+  const defaultCols = w_17x8 >= w_8x17 ? 17 : 8;
+  const defaultRows = w_17x8 >= w_8x17 ? 8  : 17;
+  const defaultW    = w_17x8 >= w_8x17 ? w_17x8 : w_8x17;
 
   // ── 4. 优先使用默认布局 ───────────────────────────────────────────────
-  // 只要默认布局下牌宽 >= MIN_TILE_W，直接使用，不再枚举
-  const defaultW = calcTileW(defaultCols, defaultRows);
   if (defaultW >= MIN_TILE_W) {
     BOARD_COLS = defaultCols;
     BOARD_ROWS = defaultRows;
@@ -61,7 +64,7 @@ function recalcLayout() {
     return;
   }
 
-  // ── 5. 默认布局放不下，枚举所有合法布局选覆盖率最高的 ─────────────────
+  // ── 5. 默认布局放不下，枚举所有合法布局选牌最大的 ────────────────────
   let bestCols = defaultCols;
   let bestRows = defaultRows;
   let bestW    = defaultW;
@@ -72,12 +75,7 @@ function recalcLayout() {
     if (cols * rows - TOTAL_TILES >= cols) continue;
 
     const w = calcTileW(cols, rows);
-    if (w < MIN_TILE_W) continue;
-    if (w > bestW) {
-      bestW    = w;
-      bestCols = cols;
-      bestRows = rows;
-    }
+    if (w > bestW) { bestW = w; bestCols = cols; bestRows = rows; }
   }
 
   BOARD_COLS = bestCols;
