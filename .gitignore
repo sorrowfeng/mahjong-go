@@ -7,6 +7,9 @@ coverage/
 # 打包产物（二进制文件不入库）
 dist/
 
+# GitHub Pages 临时部署目录
+.gh-pages-tmp/
+
 # 系统文件
 .DS_Store
 Thumbs.db
