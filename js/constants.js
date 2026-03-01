@@ -29,14 +29,25 @@ function recalcLayout() {
   const BASE_PAD   = 12;
 
   // ── 1. 精确测量可用区域 ────────────────────────────────────────────────
-  const headerEl  = document.querySelector('header');
-  const toolbarEl = document.querySelector('.toolbar');
-  const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
-                  + (toolbarEl ? toolbarEl.offsetHeight : 0)
-                  + 20;
+  // 检测是否处于手机横屏侧边栏模式（对应 CSS @media (max-height:500px) and (orientation:landscape)）
+  const isMobileLandscape = window.innerHeight <= 500 && window.innerWidth > window.innerHeight;
 
-  const availW = window.innerWidth  - 24;
-  const availH = window.innerHeight - chromeH;
+  let availW, availH;
+  if (isMobileLandscape) {
+    // 标题已隐藏，toolbar 变为左侧竖列侧边栏，需减去其宽度
+    const toolbarEl = document.querySelector('.toolbar');
+    const sidebarW  = toolbarEl ? toolbarEl.offsetWidth : 80;
+    availW = window.innerWidth  - sidebarW - 8;  // 8 = gap + body padding
+    availH = window.innerHeight - 8;             // 8 = body 上下 padding
+  } else {
+    const headerEl  = document.querySelector('header');
+    const toolbarEl = document.querySelector('.toolbar');
+    const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
+                    + (toolbarEl ? toolbarEl.offsetHeight : 0)
+                    + 20;
+    availW = window.innerWidth  - 24;
+    availH = window.innerHeight - chromeH;
+  }
 
   // ── 2. 计算给定行列数能放的最大牌宽 ──────────────────────────────────
   function calcTileW(cols, rows) {
