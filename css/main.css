@@ -126,9 +126,9 @@ header h1 {
 /* 旋转屏幕提示 */
 #rotate-hint {
   position: fixed;
-  top: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   background: rgba(100, 60, 0, 0.95);
   color: #f5d76e;
   padding: 12px 28px;
