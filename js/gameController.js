@@ -247,6 +247,7 @@ function handleHint() {
   if (directPairs.length > 0) {
     const { a, b } = directPairs[0];
     animateHint([a, b]);
+    updateUI();
     return;
   }
 
@@ -254,6 +255,7 @@ function handleHint() {
   const hint = findHint(boardState);
   if (hint) {
     animateHint(hint.group);
+    updateUI();
   } else {
     // 死局：重新随机排列剩余牌
     const newState = reshuffleRemainingTiles(boardState);
@@ -308,6 +310,12 @@ function updateUI() {
   if (countEl) {
     countEl.textContent = remaining;
   }
+
+  const moveEl = document.getElementById('move-count');
+  if (moveEl) moveEl.textContent = moveCount;
+
+  const hintEl = document.getElementById('hint-count');
+  if (hintEl) hintEl.textContent = hintCount;
 }
 
 // 胜利界面
