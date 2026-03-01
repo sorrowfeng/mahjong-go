@@ -43,13 +43,14 @@ header h1 {
 }
 
 .btn {
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: clamp(12px, 2.5vw, 15px);
+  font-size: 13px;
   font-weight: 600;
   transition: transform 0.1s, box-shadow 0.1s;
   box-shadow: 0 3px 6px rgba(0,0,0,0.3);
   white-space: nowrap;
+  line-height: 1.4;
 }
 
 .btn:hover {
@@ -79,9 +80,8 @@ header h1 {
 }
 
 .btn--sound {
-  min-width: 40px;
-  font-size: 18px;
-  padding: 6px 10px;
+  min-width: 36px;
+  padding: 6px 8px;
 }
 
 .btn--muted {
@@ -96,28 +96,30 @@ header h1 {
 
 /* 剩余牌数显示 */
 .tile-counter {
-  font-size: clamp(11px, 2vw, 14px);
+  font-size: 12px;
   color: #aed6a0;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .tile-counter span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: clamp(14px, 2.5vw, 18px);
+  font-size: 15px;
 }
 
 /* 计时器显示 */
 .timer-display {
-  font-size: clamp(11px, 2vw, 14px);
+  font-size: 12px;
   color: #aed6a0;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .timer-display span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: clamp(14px, 2.5vw, 18px);
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -264,15 +266,16 @@ header h1 {
 
 /* 步数/提示次数显示 */
 .stat-display {
-  font-size: clamp(11px, 2vw, 14px);
+  font-size: 12px;
   color: #aed6a0;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .stat-display span {
   color: #f5d76e;
   font-weight: bold;
-  font-size: clamp(14px, 2.5vw, 18px);
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -284,4 +287,25 @@ header h1 {
   align-items: center;
   justify-content: center;
   width: 100%;
+}
+
+/* 大屏（平板横屏 / 桌面）适当放大按钮和统计字体 */
+@media (min-width: 768px) {
+  .btn {
+    font-size: 15px;
+    padding: 7px 16px;
+  }
+  .btn--sound {
+    padding: 7px 10px;
+  }
+  .tile-counter,
+  .timer-display,
+  .stat-display {
+    font-size: 13px;
+  }
+  .tile-counter span,
+  .timer-display span,
+  .stat-display span {
+    font-size: 17px;
+  }
 }

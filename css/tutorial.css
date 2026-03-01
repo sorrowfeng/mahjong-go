@@ -8,6 +8,9 @@
   align-items: center;
   justify-content: center;
   z-index: 3000;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-y: auto;        /* 极小屏可整体滚动 */
 }
 
 #tutorial-overlay.hidden {
@@ -18,17 +21,21 @@
   background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
   border: 3px solid #f5d76e;
   border-radius: 20px;
-  padding: 32px 40px;
-  max-width: 500px;
-  width: 90%;
+  padding: clamp(16px, 3vw, 32px) clamp(16px, 4vw, 40px);
+  max-width: 520px;
+  width: 100%;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;        /* 内容超出时弹窗内滚动 */
   text-align: center;
   box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  box-sizing: border-box;
 }
 
 .tutorial-title {
-  font-size: 26px;
+  font-size: clamp(18px, 4vw, 26px);
   color: #f5d76e;
-  margin-bottom: 28px;
+  margin-bottom: clamp(14px, 3vh, 28px);
   text-shadow: 0 0 12px rgba(245,215,110,0.4);
   letter-spacing: 2px;
 }
@@ -36,19 +43,19 @@
 .tutorial-rules {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 28px;
+  gap: clamp(12px, 2.5vh, 24px);
+  margin-bottom: clamp(14px, 3vh, 28px);
 }
 
 .tutorial-rule {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tutorial-rule__label {
-  font-size: 13px;
+  font-size: clamp(11px, 2vw, 13px);
   font-weight: bold;
   color: #f5d76e;
   letter-spacing: 1px;
@@ -60,7 +67,7 @@
 }
 
 .tutorial-rule__desc {
-  font-size: 13px;
+  font-size: clamp(11px, 2vw, 13px);
   color: #aed6a0;
   line-height: 1.6;
   max-width: 360px;
@@ -78,7 +85,7 @@
 }
 
 .tutorial-rule--text .tutorial-rule__desc {
-  font-size: 13px;
+  font-size: clamp(11px, 2vw, 13px);
 }
 
 .tutorial-divider {
