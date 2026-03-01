@@ -197,7 +197,17 @@ header h1 {
   font-size: 22px;
   color: #f5d76e !important;
   font-weight: bold;
-  margin-bottom: 24px !important;
+  margin-bottom: 16px !important;
+}
+
+.victory-stat {
+  font-size: 16px;
+  color: #c8e6c0 !important;
+  margin-bottom: 8px !important;
+}
+
+#btn-new-victory {
+  margin-top: 20px;
 }
 
 /* 游戏区域外层 */

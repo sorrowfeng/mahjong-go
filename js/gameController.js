@@ -5,6 +5,10 @@ let boardState = null;
 let undoStack = [];
 let gameGeneration = 0; // 每次新游戏自增，使旧 async 任务失效
 
+// 统计数据
+let moveCount = 0;  // 有效操作步数（拖动产生消除 + 点击消除）
+let hintCount = 0;  // 使用提示次数
+
 // 计时器状态
 let timerInterval = null;
 let timerStart = 0;
@@ -61,6 +65,8 @@ async function initNewGame() {
   const myGeneration = gameGeneration;
 
   undoStack = [];
+  moveCount = 0;
+  hintCount = 0;
   resetTimer();
   gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
@@ -130,6 +136,7 @@ async function handleDragEnd({ group, direction, delta }) {
   try {
     if (hasMatch) {
       pushUndo(boardState);
+      moveCount++;
       SoundController.playSlideSuccess();
       await animateSlide(group, direction, delta);
 
@@ -187,6 +194,7 @@ async function handleTileClick({ row, col }) {
 
   SoundController.playTileClick();
   pushUndo(boardState);
+  moveCount++;
 
   const { a, b } = pair;
   const stateAfterFirst = eliminateTiles(boardState, [
@@ -232,6 +240,7 @@ function handleHint() {
   if (gameState !== GAME_STATE.IDLE) return;
 
   clearHintAnimation(getBoardEl());
+  hintCount++;
 
   // 优先提示直接可消除的配对（点击即可消除）
   const directPairs = findAllPairs(boardState);
@@ -308,6 +317,10 @@ function showVictory() {
   const elapsed = stopTimer();
   const timeEl = document.getElementById('victory-time-display');
   if (timeEl) timeEl.textContent = `用时：${formatTime(elapsed)}`;
+  const moveEl = document.getElementById('victory-move-display');
+  if (moveEl) moveEl.textContent = `有效操作：${moveCount} 步`;
+  const hintEl = document.getElementById('victory-hint-display');
+  if (hintEl) hintEl.textContent = `使用提示：${hintCount} 次`;
   const screen = document.getElementById('victory-screen');
   if (screen) screen.classList.remove('hidden');
 }
