@@ -15,13 +15,13 @@
 // 扫描一行/列，返回可消除的牌对 [{row, col, instanceId}][]
 function scanLineForPairs(tiles) {
   // tiles: [{row, col, tile}]，已按位置排序
+  // 返回所有相邻同类对，去重由上层调用方负责（applyOneWave / handleTileClick）
   const pairs = [];
   for (let i = 0; i < tiles.length - 1; i++) {
     const a = tiles[i];
     const b = tiles[i + 1];
     if (a.tile.tileTypeId === b.tile.tileTypeId) {
       pairs.push([a, b]);
-      i++; // 跳过已配对的 b，避免一张牌配对两次
     }
   }
   return pairs;
