@@ -402,7 +402,7 @@ header h1 {
   .timer-display span,
   .stat-display span {
     font-size: 11px;
-    display: block;
+    display: inline;
     color: #f5d76e;
     font-weight: bold;
   }
