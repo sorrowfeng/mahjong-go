@@ -23,77 +23,63 @@ let BOARD_PADDING = 12;
  *  4. 最终牌尺寸以"棋盘充满可用区域"为目标，无固定上限
  */
 function recalcLayout() {
-  const RATIO       = 4 / 3;  // 牌宽高比 3:4
+  const RATIO       = 4 / 3;  // 牌宽高比 3:4（tileH = tileW * RATIO）
   const MIN_TILE_W  = 26;      // 最小触控宽度（px）
   const BASE_GAP    = 4;
   const BASE_PAD    = 12;
 
   // ── 1. 精确测量可用区域 ────────────────────────────────────────────────
-  // 实际测量 header + toolbar 占用的高度，比硬编码更准确
   const headerEl  = document.querySelector('header');
   const toolbarEl = document.querySelector('.toolbar');
   const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
                   + (toolbarEl ? toolbarEl.offsetHeight : 0)
-                  + 32;  // 上下 padding + 间距缓冲
+                  + 20;  // 上下 padding + margin 缓冲
 
   const availW = window.innerWidth  - 24;   // 左右 padding
   const availH = window.innerHeight - chromeH;
 
-  // ── 2. 给定行列数，计算"填满可用区域"的牌宽 ──────────────────────────
-  // 不设上限，让棋盘尽量充满屏幕
+  // ── 2. 给定行列数，计算能放下的最大牌宽 ──────────────────────────────
+  // 推导：
+  //   棋盘宽 = cols*(tileW+gap) - gap + pad*2  ≤ availW
+  //   棋盘高 = rows*(tileH+gap) - gap + pad*2  ≤ availH，tileH = tileW * RATIO
+  //   byW = (availW - pad*2 + gap) / cols - gap
+  //   byH = (availH - pad*2 + gap) / rows / RATIO - gap   ← 除以 RATIO
   function calcTileW(cols, rows) {
-    const gap = BASE_GAP;
-    const pad = BASE_PAD;
-    const byW = (availW - pad * 2 + gap) / cols - gap;
-    const byH = ((availH - pad * 2 + gap) / rows - gap) * RATIO;
+    const byW = (availW - BASE_PAD * 2 + BASE_GAP) / cols - BASE_GAP;
+    const byH = (availH - BASE_PAD * 2 + BASE_GAP) / rows / RATIO - BASE_GAP;
     return Math.min(byW, byH);
   }
 
-  // ── 3. 候选布局列表（按优先级排序） ─────────────────────────────────────
-  // 规则：
-  //   - 横屏（availW >= availH）优先 17×8
-  //   - 竖屏（availW < availH） 优先 8×17
-  //   - 降级候选：以 cols 步长 1 枚举，rows = ceil(136/cols)
-  //     保证 cols*rows - 136 < cols（最后一行空格不超过一整行）
-  const isPortrait = availW < availH;
-
-  // 默认布局：横屏 17×8，竖屏 8×17
+  // ── 3. 候选布局 ───────────────────────────────────────────────────────
+  const isPortrait  = availW < availH;
   const defaultCols = isPortrait ? 8  : 17;
   const defaultRows = isPortrait ? 17 : 8;
 
-  // 构建候选列表：默认布局放第一位，其余按"与默认接近"排序
   const candidates = [];
-
-  // 枚举合法布局
   for (let cols = 4; cols <= 34; cols++) {
     const rows = Math.ceil(TOTAL_TILES / cols);
     if (rows < 4) continue;
-    if (cols * rows - TOTAL_TILES >= cols) continue; // 空格超过一行
+    if (cols * rows - TOTAL_TILES >= cols) continue; // 末行空格不超过一整行
     candidates.push({ cols, rows });
   }
 
-  // 将默认布局提到最前面
+  // 默认布局排最前
   candidates.sort((a, b) => {
-    const aIsDefault = (a.cols === defaultCols && a.rows === defaultRows) ? -1 : 0;
-    const bIsDefault = (b.cols === defaultCols && b.rows === defaultRows) ? -1 : 0;
-    return aIsDefault - bIsDefault;
+    const aD = (a.cols === defaultCols && a.rows === defaultRows) ? -1 : 0;
+    const bD = (b.cols === defaultCols && b.rows === defaultRows) ? -1 : 0;
+    return aD - bD;
   });
 
-  // ── 4. 选出最优布局 ───────────────────────────────────────────────────
-  // 优先选默认布局（只要牌宽 >= MIN_TILE_W 就用默认）
-  // 否则在所有候选中选牌宽最大的
-  let chosen     = candidates[0]; // 先置为默认
-  let chosenW    = calcTileW(chosen.cols, chosen.rows);
+  // ── 4. 选最优布局 ─────────────────────────────────────────────────────
+  // 默认布局牌宽 >= MIN_TILE_W 就直接用；否则枚举选牌最大的
+  let chosen  = candidates[0];
+  let chosenW = calcTileW(chosen.cols, chosen.rows);
 
   if (chosenW < MIN_TILE_W) {
-    // 默认布局太小，枚举所有候选选最优
     let bestW = chosenW;
     for (const c of candidates) {
       const w = calcTileW(c.cols, c.rows);
-      if (w > bestW) {
-        bestW  = w;
-        chosen = c;
-      }
+      if (w > bestW) { bestW = w; chosen = c; }
     }
     chosenW = bestW;
   }
@@ -102,9 +88,8 @@ function recalcLayout() {
   BOARD_COLS = chosen.cols;
   BOARD_ROWS = chosen.rows;
 
-  // 牌宽对齐到偶数避免亚像素模糊，保证 >= MIN_TILE_W
   let w = Math.max(MIN_TILE_W, chosenW);
-  w = Math.floor(w / 2) * 2;
+  w = Math.floor(w / 2) * 2;   // 对齐到偶数，避免亚像素模糊
 
   TILE_WIDTH    = w;
   TILE_HEIGHT   = Math.round(w * RATIO);
