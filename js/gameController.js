@@ -72,7 +72,7 @@ async function initNewGame() {
   syncPhase('ANIMATING');
 
   // 根据当前视口重算牌尺寸
-  recalcTileSize();
+  recalcLayout();
 
   SoundController.playNewGame();
 

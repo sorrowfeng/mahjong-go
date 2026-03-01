@@ -2,82 +2,114 @@
 
 const TOTAL_TILES = 136;
 
-// 行列数：运行时由 recalcTileSize() 根据屏幕动态设置
+// 行列数：运行时由 recalcLayout() 根据屏幕动态设置
 let BOARD_COLS = 17;
 let BOARD_ROWS = 8;
 
-// 牌尺寸：运行时由 recalcTileSize() 覆盖
+// 牌尺寸：运行时由 recalcLayout() 覆盖
 let TILE_WIDTH   = 60;
 let TILE_HEIGHT  = 80;
 let TILE_GAP     = 4;
 let BOARD_PADDING = 12;
 
 /**
- * 根据当前可用视口同时计算最优行列数和牌尺寸，并同步到 CSS 变量。
+ * 根据当前可用视口计算最优行列数和牌尺寸，并同步到 CSS 变量。
  * 必须在 createEmptyBoard / renderBoard 之前调用。
  *
- * 算法：
- *  1. 枚举所有满足 cols*rows >= 136 的 (cols, rows) 组合（cols 2-34，rows 向上取整）
- *  2. 对每个组合按可用空间计算能放下的最大牌宽 w
- *  3. 选 w 最大的组合（牌最大 = 最好看最易操作）
- *  4. 横屏默认保持 17×8，不超过桌面上限 60px
+ * 策略：
+ *  1. 精确测量页面 chrome（标题+工具栏）实际占用高度
+ *  2. 优先使用"默认布局"（横屏 17×8，竖屏 8×17）
+ *  3. 若默认布局下牌宽 < 最小可操作尺寸，则枚举候选布局找最优
+ *  4. 最终牌尺寸以"棋盘充满可用区域"为目标，无固定上限
  */
-function recalcTileSize() {
-  const BASE_GAP      = 4;
-  const BASE_PADDING  = 12;
-  const RATIO         = 4 / 3;   // 宽高比 3:4
-  const MIN_TILE_W    = 28;       // 最小触控尺寸
-  const MAX_TILE_W    = 60;       // 桌面上限
+function recalcLayout() {
+  const RATIO       = 4 / 3;  // 牌宽高比 3:4
+  const MIN_TILE_W  = 26;      // 最小触控宽度（px）
+  const BASE_GAP    = 4;
+  const BASE_PAD    = 12;
 
-  // 可用区域（减去页面 chrome：标题+工具栏+间距+padding）
-  const CHROME_H = 165;
-  const CHROME_W = 32;
-  const availW = window.innerWidth  - CHROME_W;
-  const availH = window.innerHeight - CHROME_H;
+  // ── 1. 精确测量可用区域 ────────────────────────────────────────────────
+  // 实际测量 header + toolbar 占用的高度，比硬编码更准确
+  const headerEl  = document.querySelector('header');
+  const toolbarEl = document.querySelector('.toolbar');
+  const chromeH   = (headerEl  ? headerEl.offsetHeight  : 0)
+                  + (toolbarEl ? toolbarEl.offsetHeight : 0)
+                  + 32;  // 上下 padding + 间距缓冲
 
-  // 给定行列数，计算能放下的最大牌宽
-  function maxTileW(cols, rows) {
-    const byW = Math.floor((availW - BASE_PADDING * 2 + BASE_GAP) / cols) - BASE_GAP;
-    const byH = Math.floor(((availH - BASE_PADDING * 2 + BASE_GAP) / rows - BASE_GAP) * RATIO);
+  const availW = window.innerWidth  - 24;   // 左右 padding
+  const availH = window.innerHeight - chromeH;
+
+  // ── 2. 给定行列数，计算"填满可用区域"的牌宽 ──────────────────────────
+  // 不设上限，让棋盘尽量充满屏幕
+  function calcTileW(cols, rows) {
+    const gap = BASE_GAP;
+    const pad = BASE_PAD;
+    const byW = (availW - pad * 2 + gap) / cols - gap;
+    const byH = ((availH - pad * 2 + gap) / rows - gap) * RATIO;
     return Math.min(byW, byH);
   }
 
-  // 枚举候选布局：cols 从 2 到 34，rows 向上取整保证能放下所有牌
-  // 额外约束：
-  //   - cols*rows 恰好等于 TOTAL_TILES（不浪费格子），或允许最多多出半行
-  //   - 排除明显不合理的极端细长布局（cols < 4 或 rows < 4）
-  let bestW  = -1;
-  let bestCols = 17;
-  let bestRows = 8;
+  // ── 3. 候选布局列表（按优先级排序） ─────────────────────────────────────
+  // 规则：
+  //   - 横屏（availW >= availH）优先 17×8
+  //   - 竖屏（availW < availH） 优先 8×17
+  //   - 降级候选：以 cols 步长 1 枚举，rows = ceil(136/cols)
+  //     保证 cols*rows - 136 < cols（最后一行空格不超过一整行）
+  const isPortrait = availW < availH;
 
+  // 默认布局：横屏 17×8，竖屏 8×17
+  const defaultCols = isPortrait ? 8  : 17;
+  const defaultRows = isPortrait ? 17 : 8;
+
+  // 构建候选列表：默认布局放第一位，其余按"与默认接近"排序
+  const candidates = [];
+
+  // 枚举合法布局
   for (let cols = 4; cols <= 34; cols++) {
     const rows = Math.ceil(TOTAL_TILES / cols);
-    if (rows < 4) continue;               // 行数太少不合理
-    if (cols * rows > TOTAL_TILES + cols) continue; // 浪费超过一整行
-
-    const w = maxTileW(cols, rows);
-    if (w < MIN_TILE_W) continue;         // 牌太小，跳过
-
-    const clampedW = Math.min(w, MAX_TILE_W);
-    if (clampedW > bestW) {
-      bestW    = clampedW;
-      bestCols = cols;
-      bestRows = rows;
-    }
+    if (rows < 4) continue;
+    if (cols * rows - TOTAL_TILES >= cols) continue; // 空格超过一行
+    candidates.push({ cols, rows });
   }
 
-  // 更新全局行列数
-  BOARD_COLS = bestCols;
-  BOARD_ROWS = bestRows;
+  // 将默认布局提到最前面
+  candidates.sort((a, b) => {
+    const aIsDefault = (a.cols === defaultCols && a.rows === defaultRows) ? -1 : 0;
+    const bIsDefault = (b.cols === defaultCols && b.rows === defaultRows) ? -1 : 0;
+    return aIsDefault - bIsDefault;
+  });
 
-  // 计算最终牌尺寸（对齐到偶数避免亚像素模糊）
-  let w = Math.max(MIN_TILE_W, Math.min(MAX_TILE_W, bestW));
+  // ── 4. 选出最优布局 ───────────────────────────────────────────────────
+  // 优先选默认布局（只要牌宽 >= MIN_TILE_W 就用默认）
+  // 否则在所有候选中选牌宽最大的
+  let chosen     = candidates[0]; // 先置为默认
+  let chosenW    = calcTileW(chosen.cols, chosen.rows);
+
+  if (chosenW < MIN_TILE_W) {
+    // 默认布局太小，枚举所有候选选最优
+    let bestW = chosenW;
+    for (const c of candidates) {
+      const w = calcTileW(c.cols, c.rows);
+      if (w > bestW) {
+        bestW  = w;
+        chosen = c;
+      }
+    }
+    chosenW = bestW;
+  }
+
+  // ── 5. 写回全局变量 ────────────────────────────────────────────────────
+  BOARD_COLS = chosen.cols;
+  BOARD_ROWS = chosen.rows;
+
+  // 牌宽对齐到偶数避免亚像素模糊，保证 >= MIN_TILE_W
+  let w = Math.max(MIN_TILE_W, chosenW);
   w = Math.floor(w / 2) * 2;
 
   TILE_WIDTH    = w;
   TILE_HEIGHT   = Math.round(w * RATIO);
-  TILE_GAP      = Math.max(2, Math.round(w * BASE_GAP     / 60));
-  BOARD_PADDING = Math.max(6, Math.round(w * BASE_PADDING / 60));
+  TILE_GAP      = Math.max(2, Math.round(w * BASE_GAP / 60));
+  BOARD_PADDING = Math.max(6, Math.round(w * BASE_PAD  / 60));
 
   // 同步 CSS 变量
   const root = document.documentElement;

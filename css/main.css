@@ -4,19 +4,21 @@ body {
   background: #1a3a1c;
   font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
   color: #fff;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;          /* dvh 适配手机地址栏动态收缩，旧浏览器回退到 vh */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px 4px;
   user-select: none;
-  overflow: hidden; /* 防止发牌动画 3D 变换超出视口触发滚动条 */
+  overflow: hidden;
   box-sizing: border-box;
 }
 
 header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 header h1 {
@@ -31,12 +33,13 @@ header h1 {
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 6px;
   align-items: center;
   justify-content: center;
   width: 100%;
   max-width: 1100px;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -275,9 +278,10 @@ header h1 {
 
 /* 游戏区域外层 */
 .game-area {
-  overflow: auto;
-  max-width: 100%;
+  flex: 1;               /* 占满 body 剩余高度 */
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }

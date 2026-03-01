@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!window._gameState || window._gamePhase !== 'IDLE') return;
       const prevCols = BOARD_COLS;
       const prevRows = BOARD_ROWS;
-      recalcTileSize();
+      recalcLayout();
       if (BOARD_COLS !== prevCols || BOARD_ROWS !== prevRows) {
         // 行列数变了，必须重新开局（旧 state 尺寸已不匹配）
         handleNewGame();
