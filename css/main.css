@@ -210,6 +210,49 @@ header h1 {
   margin-top: 20px;
 }
 
+/* 重排确认弹窗 */
+#reshuffle-confirm {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#reshuffle-confirm.hidden {
+  display: none;
+}
+
+.confirm-box {
+  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
+  border: 2px solid #7ec8e3;
+  border-radius: 16px;
+  padding: 32px 48px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.confirm-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #f5d76e;
+  margin-bottom: 10px;
+}
+
+.confirm-desc {
+  font-size: 15px;
+  color: #aed6a0;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
 /* 步数/提示次数显示 */
 .stat-display {
   font-size: 14px;

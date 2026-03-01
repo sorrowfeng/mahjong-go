@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-undo').addEventListener('click', handleUndo);
   document.getElementById('btn-new').addEventListener('click', handleNewGame);
   document.getElementById('btn-new-victory').addEventListener('click', handleNewGame);
+  document.getElementById('btn-reshuffle-ok').addEventListener('click', doReshuffle);
+  document.getElementById('btn-reshuffle-cancel').addEventListener('click', hideReshuffleConfirm);
 
   // 规则按钮
   document.getElementById('btn-rules').addEventListener('click', () => {

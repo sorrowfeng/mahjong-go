@@ -257,14 +257,8 @@ function handleHint() {
     animateHint(hint.group);
     updateUI();
   } else {
-    // 死局：重新随机排列剩余牌
-    const newState = reshuffleRemainingTiles(boardState);
-    boardState = newState;
-    window._gameState = boardState;
-    renderBoard(boardState, getBoardEl());
-    updateUI();
-    SoundController.playReshuffle();
-    showReshuffle();
+    // 死局：弹窗询问用户是否重排
+    showReshuffleConfirm();
   }
 }
 
@@ -354,4 +348,27 @@ function showReshuffle() {
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 3000);
   }
+}
+
+// 重排确认弹窗
+function showReshuffleConfirm() {
+  const dialog = document.getElementById('reshuffle-confirm');
+  if (!dialog) return;
+  dialog.classList.remove('hidden');
+}
+
+function hideReshuffleConfirm() {
+  const dialog = document.getElementById('reshuffle-confirm');
+  if (dialog) dialog.classList.add('hidden');
+}
+
+function doReshuffle() {
+  hideReshuffleConfirm();
+  const newState = reshuffleRemainingTiles(boardState);
+  boardState = newState;
+  window._gameState = boardState;
+  renderBoard(boardState, getBoardEl());
+  updateUI();
+  SoundController.playReshuffle();
+  showReshuffle();
 }
