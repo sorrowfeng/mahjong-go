@@ -568,3 +568,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .victory-box h2 { text-shadow: 0 0 15px rgba(245,215,110,0.5); }
 /* 迭代58: 确认弹窗标题 */
 .confirm-title { color: #f5d76e; font-size: 18px; }
+/* 迭代59: 确认描述文字 */
+.confirm-desc { color: #aed6a0; font-size: 14px; }
