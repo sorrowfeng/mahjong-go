@@ -500,3 +500,5 @@ body { padding: 8px 12px; }
 /* 迭代21: 按钮渐变 */
 .btn--primary { background: linear-gradient(135deg, #f5d76e, #e8b820); }
 .btn--secondary { background: linear-gradient(135deg, #7ec8e3, #3a8fb5); }
+/* 迭代22: 按钮悬停上浮 */
+.btn:hover { transform: translateY(-2px); }
