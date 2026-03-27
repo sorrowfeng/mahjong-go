@@ -256,3 +256,12 @@ document.querySelectorAll('.btn').forEach(btn => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('麻将消消乐已加载');
 });
+
+// 功能增强30: 本地存储容量检查
+function checkStorage() {
+  try {
+    localStorage.setItem('test', 'test');
+    localStorage.removeItem('test');
+    return true;
+  } catch(e) { return false; }
+}
