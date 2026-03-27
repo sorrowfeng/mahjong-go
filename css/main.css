@@ -510,3 +510,5 @@ header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-backgr
 .victory-box { box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
 /* 迭代28: 确认弹窗阴影 */
 .confirm-box { box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+/* 迭代29: 提示框背景 */
+#deadlock-msg { background: rgba(180,50,50,0.9); }
