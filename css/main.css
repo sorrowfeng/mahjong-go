@@ -429,3 +429,8 @@ header h1 {
 .toolbar {
   gap: 6px;
 }
+
+/* 迭代5: 统计信息样式 */
+.tile-counter span {
+  color: #f7dc6f;
+}
