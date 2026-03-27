@@ -439,3 +439,8 @@ header h1 {
 .victory-box {
   border-radius: 16px;
 }
+
+/* 迭代8: 提示框样式 */
+#deadlock-msg, #reshuffle-msg {
+  border-radius: 8px;
+}
