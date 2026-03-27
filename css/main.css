@@ -624,3 +624,5 @@ body { color: #ffffff; }
 .tile--selected { transition-delay: 0.05s; }
 /* 迭代86: 选中边框宽度 */
 .tile--selected { border-width: 3px; }
+/* 迭代87: 提示边框宽度 */
+.tile--hint { border-width: 3px; }
