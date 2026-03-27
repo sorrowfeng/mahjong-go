@@ -544,3 +544,5 @@ body { font-family: 'Microsoft YaHei', sans-serif; }
 header h1 { font-size: 24px; }
 /* 迭代46: 按钮字体 */
 .btn { font-size: 14px; }
+/* 迭代47: 响应式小屏 */
+@media (max-width: 400px) { .btn { font-size: 11px; } }
