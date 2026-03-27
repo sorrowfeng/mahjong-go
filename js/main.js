@@ -292,3 +292,8 @@ window.addEventListener('orientationchange', () => {
     if (typeof recalcLayout === 'function') recalcLayout();
   }, 100);
 });
+
+// 功能增强35: 游戏状态保存
+function saveGameState() {
+  return { boardState, moveCount, hintCount, gameState };
+}
