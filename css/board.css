@@ -21,3 +21,5 @@
 }
 /* 迭代24: 棋盘内边距 */
 #board { padding: 8px; }
+/* 迭代31: 棋盘边框 */
+#board { border: 2px solid #3d7a48; }
