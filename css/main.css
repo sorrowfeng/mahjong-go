@@ -588,3 +588,5 @@ header { border-radius: 8px; }
 .tile--selected { transform: translateY(-3px); }
 /* 迭代68: 提示状态上浮 */
 .tile--hint { transform: translateY(-2px); }
+/* 迭代69: 禁用按钮禁止光标 */
+.btn:disabled { cursor: not-allowed; }
