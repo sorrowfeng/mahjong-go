@@ -251,3 +251,8 @@ if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 document.querySelectorAll('.btn').forEach(btn => {
   btn.setAttribute('role', 'button');
 });
+
+// 功能增强29: 游戏加载提示
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('麻将消消乐已加载');
+});
