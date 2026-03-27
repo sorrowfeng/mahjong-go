@@ -107,3 +107,13 @@ function saveBestScore(time, moves) {
     localStorage.setItem('mahjong-best', JSON.stringify(best));
   }
 }
+
+// 功能增强7: 自动保存游戏进度
+function autoSaveGame() {
+  if (boardState && gameState === 'IDLE') {
+    localStorage.setItem('mahjong-autosave', JSON.stringify({
+      boardState, moveCount, hintCount, timerElapsed: timerElapsed || 0
+    }));
+  }
+}
+setInterval(autoSaveGame, 30000);
