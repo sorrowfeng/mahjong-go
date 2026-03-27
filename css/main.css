@@ -546,3 +546,5 @@ header h1 { font-size: 24px; }
 .btn { font-size: 14px; }
 /* 迭代47: 响应式小屏 */
 @media (max-width: 400px) { .btn { font-size: 11px; } }
+/* 迭代48: 胜利界面宽度 */
+.victory-box { max-width: 400px; }
