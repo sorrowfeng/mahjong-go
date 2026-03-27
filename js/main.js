@@ -97,3 +97,13 @@ document.addEventListener('keydown', (e) => {
 const soundEnabled = localStorage.getItem('mahjong-sound') !== 'false';
 SoundController.setEnabled(soundEnabled);
 document.getElementById('btn-sound').textContent = soundEnabled ? '🔊' : '🔇';
+
+// 功能增强6: 最佳成绩记录
+function saveBestScore(time, moves) {
+  const best = JSON.parse(localStorage.getItem('mahjong-best') || '{}');
+  if (!best.time || time < best.time) {
+    best.time = time;
+    best.moves = moves;
+    localStorage.setItem('mahjong-best', JSON.stringify(best));
+  }
+}
