@@ -526,3 +526,5 @@ header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 .tile--hint { box-shadow: 0 0 15px rgba(245,215,110,0.6); }
 /* 迭代37: 胜利标题颜色 */
 .victory-box h2 { color: #f5d76e; }
+/* 迭代38: 胜利文字颜色 */
+.victory-box p { color: #aed6a0; }
