@@ -189,3 +189,8 @@ function showAchievement(name) {
 function setDifficulty(level) {
   localStorage.setItem('mahjong-difficulty', level);
 }
+
+// 功能增强18: 连击统计
+let comboCount = 0;
+function addCombo() { comboCount++; }
+function getCombo() { return comboCount; }
