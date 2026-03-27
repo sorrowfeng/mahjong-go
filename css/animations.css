@@ -53,3 +53,9 @@
 #victory-screen:not(.hidden) .victory-box {
   animation: victory-in 0.4s ease-out;
 }
+
+/* 迭代6: 消除动画微调 */
+@keyframes tile-eliminate {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
