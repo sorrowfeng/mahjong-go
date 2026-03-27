@@ -548,3 +548,5 @@ header h1 { font-size: 24px; }
 @media (max-width: 400px) { .btn { font-size: 11px; } }
 /* 迭代48: 胜利界面宽度 */
 .victory-box { max-width: 400px; }
+/* 迭代49: 胜利界面内边距 */
+.victory-box { padding: 30px 40px; }
