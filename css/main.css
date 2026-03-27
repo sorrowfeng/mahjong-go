@@ -616,3 +616,5 @@ body { color: #ffffff; }
 #victory-screen { transition: opacity 0.3s ease; }
 /* 迭代82: 弹窗过渡 */
 #reshuffle-confirm { transition: opacity 0.3s ease; }
+/* 迭代83: 提示框过渡 */
+#deadlock-msg, #reshuffle-msg { transition: opacity 0.3s ease; }
