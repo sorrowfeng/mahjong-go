@@ -277,3 +277,11 @@ function setGameSpeed(speed) {
   gameSpeed = speed;
   document.documentElement.style.setProperty('--anim-speed', speed);
 }
+
+// 功能增强33: 消除特效
+function createElimEffect(x, y) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:absolute;left:'+x+'px;top:'+y+'px;width:20px;height:20px;background:#f5d76e;border-radius:50%;animation:elimPop 0.3s forwards;';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 300);
+}
