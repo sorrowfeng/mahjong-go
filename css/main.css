@@ -592,3 +592,5 @@ header { border-radius: 8px; }
 .btn:disabled { cursor: not-allowed; }
 /* 迭代70: 按钮点击效果 */
 .btn:active { transform: translateY(1px); }
+/* 迭代71: body文字颜色 */
+body { color: #ffffff; }
