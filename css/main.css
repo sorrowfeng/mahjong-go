@@ -564,3 +564,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .tile--hint { border-color: #ffe066; }
 /* 迭代56: 胜利背景渐变 */
 #victory-screen { background: rgba(0,0,0,0.85); }
+/* 迭代57: 胜利标题阴影 */
+.victory-box h2 { text-shadow: 0 0 15px rgba(245,215,110,0.5); }
