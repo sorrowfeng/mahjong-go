@@ -600,3 +600,5 @@ body { color: #ffffff; }
 .confirm-box { text-align: center; }
 /* 迭代74: 胜利界面flex布局 */
 .victory-box { display: flex; flex-direction: column; align-items: center; }
+/* 迭代75: 确认弹窗flex */
+.confirm-box { display: flex; flex-direction: column; gap: 16px; }
