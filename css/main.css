@@ -578,3 +578,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 #deadlock-msg, #reshuffle-msg { top: 20px; }
 /* 迭代63: 棋盘圆角优化 */
 #board { border-radius: 14px; }
+/* 迭代64: 游戏区域圆角 */
+.game-area { border-radius: 10px; }
