@@ -344,3 +344,9 @@ function setVolume(v) { soundVolume = Math.max(0, Math.min(1, v)); }
 // 功能增强42: 提示次数限制
 let maxHints = 10;
 function getHintLimit() { return maxHints; }
+
+// 功能增强43: 游戏难度加成
+function getDifficultyBonus() {
+  const diff = localStorage.getItem('mahjong-difficulty') || 'normal';
+  return { easy: 1.2, normal: 1, hard: 0.8 }[diff] || 1;
+}
