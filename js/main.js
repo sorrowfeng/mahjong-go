@@ -234,3 +234,10 @@ document.addEventListener('touchstart', e => {
 window.addEventListener('resize', () => {
   if (typeof recalcLayout === 'function') recalcLayout();
 });
+
+// 功能增强26: 分享功能
+function shareGame() {
+  const text = '我在麻将消消乐游戏中取得了好成绩！';
+  if (navigator.share) navigator.share({ text });
+  else alert(text);
+}
