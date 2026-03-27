@@ -77,3 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// 功能增强3: 游戏统计功能
+let gameStats = { moves: 0, hints: 0, time: 0, eliminations: 0 };
+
+function updateGameStats() {
+  document.getElementById('move-count').textContent = gameStats.moves;
+  document.getElementById('hint-count').textContent = gameStats.hints;
+}
