@@ -484,3 +484,6 @@ body { padding: 8px 12px; }
 
 /* 迭代18: 统计字体 */
 .tile-counter, .timer-display, .stat-display { font-size: 12px; }
+
+/* 迭代20: 胜利界面背景 */
+#victory-screen { background: rgba(0,0,0,0.75); }
