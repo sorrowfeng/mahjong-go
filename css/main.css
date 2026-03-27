@@ -620,3 +620,5 @@ body { color: #ffffff; }
 #deadlock-msg, #reshuffle-msg { transition: opacity 0.3s ease; }
 /* 迭代84: 旋转提示过渡 */
 #rotate-hint { transition: opacity 0.3s ease; }
+/* 迭代85: 选中过渡延迟 */
+.tile--selected { transition-delay: 0.05s; }
