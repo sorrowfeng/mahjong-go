@@ -606,3 +606,5 @@ body { color: #ffffff; }
 .tile { transition: all 0.15s ease; }
 /* 迭代77: 选中过渡 */
 .tile--selected { transition: all 0.2s ease; }
+/* 迭代78: 提示过渡 */
+.tile--hint { transition: all 0.2s ease; }
