@@ -518,3 +518,5 @@ header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-backgr
 body { background: #1a3a1c; }
 /* 迭代33: 工具栏背景 */
 .toolbar { background: rgba(0,0,0,0.2); border-radius: 8px; }
+/* 迭代34: header背景 */
+header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
