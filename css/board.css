@@ -19,3 +19,5 @@
 #board {
   background: #2c6030;
 }
+/* 迭代24: 棋盘内边距 */
+#board { padding: 8px; }
