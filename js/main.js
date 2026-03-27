@@ -384,3 +384,13 @@ function getGameScore() {
   const score = Math.max(0, 10000 - parseInt(moves) * 100 - parseInt(time.replace(/:/g,'')) * 10);
   return score;
 }
+
+// 功能增强50: 游戏评价
+function getGameRating() {
+  const score = getGameScore();
+  if (score > 8000) return 'SSS';
+  if (score > 6000) return 'SS';
+  if (score > 4000) return 'S';
+  if (score > 2000) return 'A';
+  return 'B';
+}
