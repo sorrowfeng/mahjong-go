@@ -124,3 +124,13 @@ const achievements = {
   speedWin: { name: '快速通关', done: false },
   noHintWin: { name: '无提示通关', done: false }
 };
+
+// 功能增强9: 每日挑战提示
+function showDailyChallenge() {
+  const lastPlay = localStorage.getItem('mahjong-last-play');
+  const today = new Date().toDateString();
+  if (lastPlay !== today) {
+    setTimeout(() => alert('欢迎回来！今日挑战：尝试不提示通关！'), 1000);
+    localStorage.setItem('mahjong-last-play', today);
+  }
+}
