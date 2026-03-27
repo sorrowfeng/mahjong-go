@@ -558,3 +558,5 @@ header h1 { font-size: 24px; }
 header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 /* 迭代53: 按钮阴影增强 */
 .btn { box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+/* 迭代54: 选中状态边框 */
+.tile--selected { border-color: #f5d76e; }
