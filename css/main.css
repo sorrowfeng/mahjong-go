@@ -478,3 +478,6 @@ header h1 {
 
 /* 迭代16: header间距 */
 header { margin-bottom: 6px; }
+
+/* 迭代17: body边距 */
+body { padding: 8px 12px; }
