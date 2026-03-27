@@ -376,3 +376,11 @@ function getTimeBonus() {
   const time = parseInt(document.getElementById('game-timer').textContent.replace(/:/g,''));
   return time < 100 ? 100 : 0;
 }
+
+// 功能增强49: 游戏评分
+function getGameScore() {
+  const time = document.getElementById('game-timer').textContent;
+  const moves = document.getElementById('move-count').textContent;
+  const score = Math.max(0, 10000 - parseInt(moves) * 100 - parseInt(time.replace(/:/g,'')) * 10);
+  return score;
+}
