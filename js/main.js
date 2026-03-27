@@ -314,3 +314,9 @@ function enableHint() {
   hintCooldown = true;
   setTimeout(() => hintCooldown = false, 1000);
 }
+
+// 功能增强38: 撤销次数限制
+const MAX_UNDO = 20;
+function canUndo() {
+  return undoStack && undoStack.length < MAX_UNDO;
+}
