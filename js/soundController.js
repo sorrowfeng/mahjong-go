@@ -242,3 +242,11 @@ function playEnhancedEliminate() {
   _playTone(660, 0.15, 0.4, now, 'sine');
   _playTone(880, 0.18, 0.4, now + 0.08, 'sine');
 }
+
+// 功能增强2: 增强点击音效
+function playEnhancedClick() {
+  const ctx = _getCtx();
+  const now = ctx.currentTime;
+  _playTone(1200, 0.08, 0.35, now, 'sine');
+  _playTone(900, 0.06, 0.15, now + 0.01, 'sine');
+}
