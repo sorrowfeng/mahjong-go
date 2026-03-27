@@ -576,3 +576,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 #rotate-hint { top: 50%; left: 50%; transform: translate(-50%, -50%); }
 /* 迭代62: 提示框位置 */
 #deadlock-msg, #reshuffle-msg { top: 20px; }
+/* 迭代63: 棋盘圆角优化 */
+#board { border-radius: 14px; }
