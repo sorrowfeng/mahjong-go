@@ -207,3 +207,8 @@ function formatTimer(seconds) {
   const s = (seconds % 60).toString().padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
+
+// 功能增强21: 胜利庆祝动画
+function playVictoryAnimation() {
+  document.body.style.animation = 'victoryCelebrate 0.5s ease';
+}
