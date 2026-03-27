@@ -614,3 +614,5 @@ body { color: #ffffff; }
 .btn { transition: all 0.15s ease; }
 /* 迭代81: 胜利过渡 */
 #victory-screen { transition: opacity 0.3s ease; }
+/* 迭代82: 弹窗过渡 */
+#reshuffle-confirm { transition: opacity 0.3s ease; }
