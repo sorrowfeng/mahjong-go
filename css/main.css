@@ -572,3 +572,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .confirm-desc { color: #aed6a0; font-size: 14px; }
 /* 迭代60: 按钮间隔 */
 .confirm-actions { gap: 12px; }
+/* 迭代61: 旋转提示位置 */
+#rotate-hint { top: 50%; left: 50%; transform: translate(-50%, -50%); }
