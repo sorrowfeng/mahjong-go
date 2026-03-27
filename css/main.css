@@ -459,3 +459,8 @@ header h1 {
 @media (max-width: 500px) {
   .btn { padding: 5px 10px; font-size: 12px; }
 }
+
+/* 迭代12: 悬停效果 */
+.btn:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
