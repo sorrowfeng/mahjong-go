@@ -92,3 +92,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'n' || e.key === 'N') document.getElementById('btn-new').click();
   if (e.key === 'u' || e.key === 'U') document.getElementById('btn-undo').click();
 });
+
+// 功能增强5: 音效开关记忆
+const soundEnabled = localStorage.getItem('mahjong-sound') !== 'false';
+SoundController.setEnabled(soundEnabled);
+document.getElementById('btn-sound').textContent = soundEnabled ? '🔊' : '🔇';
