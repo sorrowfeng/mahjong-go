@@ -184,3 +184,8 @@ function showAchievement(name) {
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 2000);
 }
+
+// 功能增强17: 游戏难度选择
+function setDifficulty(level) {
+  localStorage.setItem('mahjong-difficulty', level);
+}
