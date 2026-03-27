@@ -504,3 +504,5 @@ body { padding: 8px 12px; }
 .btn:hover { transform: translateY(-2px); }
 /* 迭代23: 标题渐变 */
 header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-background-clip: text; }
+/* 迭代25: 统计数字加粗 */
+.tile-counter span, .timer-display span, .stat-display span { font-weight: bold; }
