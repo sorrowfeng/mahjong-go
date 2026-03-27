@@ -534,3 +534,5 @@ header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 #btn-reshuffle-cancel { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
 /* 迭代41: 旋转提示优化 */
 #rotate-hint { background: rgba(100,60,0,0.9); color: #f5d76e; }
+/* 迭代42: 游戏区域背景 */
+.game-area { background: rgba(0,0,0,0.1); border-radius: 8px; }
