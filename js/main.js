@@ -265,3 +265,8 @@ function checkStorage() {
     return true;
   } catch(e) { return false; }
 }
+
+// 功能增强31: 牌移动动画优化
+function animateTileMove(el, fromX, fromY, toX, toY) {
+  el.style.transition = 'all 0.2s ease';
+}
