@@ -590,3 +590,5 @@ header { border-radius: 8px; }
 .tile--hint { transform: translateY(-2px); }
 /* 迭代69: 禁用按钮禁止光标 */
 .btn:disabled { cursor: not-allowed; }
+/* 迭代70: 按钮点击效果 */
+.btn:active { transform: translateY(1px); }
