@@ -241,3 +241,8 @@ function shareGame() {
   if (navigator.share) navigator.share({ text });
   else alert(text);
 }
+
+// 功能增强27: 夜间模式支持
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.body.classList.add('dark-mode');
+}
