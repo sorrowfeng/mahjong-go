@@ -594,3 +594,5 @@ header { border-radius: 8px; }
 .btn:active { transform: translateY(1px); }
 /* 迭代71: body文字颜色 */
 body { color: #ffffff; }
+/* 迭代72: 胜利界面文字居中 */
+.victory-box { text-align: center; }
