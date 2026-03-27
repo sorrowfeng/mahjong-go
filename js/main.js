@@ -194,3 +194,8 @@ function setDifficulty(level) {
 let comboCount = 0;
 function addCombo() { comboCount++; }
 function getCombo() { return comboCount; }
+
+// 功能增强19: 牌数进度显示
+function getTileProgress() {
+  return document.getElementById('tile-count').textContent;
+}
