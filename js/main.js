@@ -356,3 +356,8 @@ function getAchievementProgress() {
   const unlocked = JSON.parse(localStorage.getItem('mahjong-achievements') || '[]');
   return unlocked.length;
 }
+
+// 功能增强45: 每日任务
+function getDailyTask() {
+  return { type: 'win', desc: '今日完成一局游戏', progress: 0, target: 1 };
+}
