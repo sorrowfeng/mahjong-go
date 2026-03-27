@@ -574,3 +574,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .confirm-actions { gap: 12px; }
 /* 迭代61: 旋转提示位置 */
 #rotate-hint { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+/* 迭代62: 提示框位置 */
+#deadlock-msg, #reshuffle-msg { top: 20px; }
