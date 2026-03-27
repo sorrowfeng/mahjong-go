@@ -340,3 +340,7 @@ function enhancedVictory() {
 // 功能增强41: 音效音量调节
 let soundVolume = 0.8;
 function setVolume(v) { soundVolume = Math.max(0, Math.min(1, v)); }
+
+// 功能增强42: 提示次数限制
+let maxHints = 10;
+function getHintLimit() { return maxHints; }
