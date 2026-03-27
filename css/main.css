@@ -502,3 +502,5 @@ body { padding: 8px 12px; }
 .btn--secondary { background: linear-gradient(135deg, #7ec8e3, #3a8fb5); }
 /* 迭代22: 按钮悬停上浮 */
 .btn:hover { transform: translateY(-2px); }
+/* 迭代23: 标题渐变 */
+header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-background-clip: text; }
