@@ -270,3 +270,10 @@ function checkStorage() {
 function animateTileMove(el, fromX, fromY, toX, toY) {
   el.style.transition = 'all 0.2s ease';
 }
+
+// 功能增强32: 游戏速度控制
+let gameSpeed = 1;
+function setGameSpeed(speed) {
+  gameSpeed = speed;
+  document.documentElement.style.setProperty('--anim-speed', speed);
+}
