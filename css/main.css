@@ -610,3 +610,5 @@ body { color: #ffffff; }
 .tile--hint { transition: all 0.2s ease; }
 /* 迭代79: 消除过渡 */
 .tile--eliminating { transition: all 0.3s ease; }
+/* 迭代80: 按钮过渡 */
+.btn { transition: all 0.15s ease; }
