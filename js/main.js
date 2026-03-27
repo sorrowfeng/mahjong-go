@@ -306,3 +306,11 @@ function loadGameState(saved) {
     hintCount = saved.hintCount;
   }
 }
+
+// 功能增强37: 提示冷却时间
+let hintCooldown = false;
+function enableHint() {
+  if (hintCooldown) return;
+  hintCooldown = true;
+  setTimeout(() => hintCooldown = false, 1000);
+}
