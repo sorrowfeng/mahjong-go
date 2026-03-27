@@ -117,3 +117,10 @@ function autoSaveGame() {
   }
 }
 setInterval(autoSaveGame, 30000);
+
+// 功能增强8: 游戏成就系统
+const achievements = {
+  firstWin: { name: '初次通关', done: false },
+  speedWin: { name: '快速通关', done: false },
+  noHintWin: { name: '无提示通关', done: false }
+};
