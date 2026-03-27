@@ -212,3 +212,6 @@ function formatTimer(seconds) {
 function playVictoryAnimation() {
   document.body.style.animation = 'victoryCelebrate 0.5s ease';
 }
+
+// 功能增强22: 背景音乐控制
+let bgmEnabled = localStorage.getItem('mahjong-bgm') !== 'false';
