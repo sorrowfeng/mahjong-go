@@ -618,3 +618,5 @@ body { color: #ffffff; }
 #reshuffle-confirm { transition: opacity 0.3s ease; }
 /* 迭代83: 提示框过渡 */
 #deadlock-msg, #reshuffle-msg { transition: opacity 0.3s ease; }
+/* 迭代84: 旋转提示过渡 */
+#rotate-hint { transition: opacity 0.3s ease; }
