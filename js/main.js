@@ -336,3 +336,7 @@ function enhancedVictory() {
   const box = document.querySelector('.victory-box');
   if (box) box.style.animation = 'victoryPulse 0.5s ease 3';
 }
+
+// 功能增强41: 音效音量调节
+let soundVolume = 0.8;
+function setVolume(v) { soundVolume = Math.max(0, Math.min(1, v)); }
