@@ -424,3 +424,8 @@ header h1 {
 header h1 {
   color: #f7dc6f;
 }
+
+/* 迭代4: 工具栏间距 */
+.toolbar {
+  gap: 6px;
+}
