@@ -608,3 +608,5 @@ body { color: #ffffff; }
 .tile--selected { transition: all 0.2s ease; }
 /* 迭代78: 提示过渡 */
 .tile--hint { transition: all 0.2s ease; }
+/* 迭代79: 消除过渡 */
+.tile--eliminating { transition: all 0.3s ease; }
