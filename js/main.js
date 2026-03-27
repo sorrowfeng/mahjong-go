@@ -285,3 +285,10 @@ function createElimEffect(x, y) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 300);
 }
+
+// 功能增强34: 屏幕旋转处理
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (typeof recalcLayout === 'function') recalcLayout();
+  }, 100);
+});
