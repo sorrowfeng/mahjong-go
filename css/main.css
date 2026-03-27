@@ -626,3 +626,5 @@ body { color: #ffffff; }
 .tile--selected { border-width: 3px; }
 /* 迭代87: 提示边框宽度 */
 .tile--hint { border-width: 3px; }
+/* 迭代88: 胜利界面渐变背景 */
+.victory-box { background: linear-gradient(145deg, #2c5f2e, #1a3a1c); }
