@@ -514,3 +514,5 @@ header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-backgr
 #deadlock-msg { background: rgba(180,50,50,0.9); }
 /* 迭代30: 重排提示颜色 */
 #reshuffle-msg { background: rgba(30,80,160,0.9); }
+/* 迭代32: body背景色 */
+body { background: #1a3a1c; }
