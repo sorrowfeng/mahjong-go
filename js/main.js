@@ -361,3 +361,8 @@ function getAchievementProgress() {
 function getDailyTask() {
   return { type: 'win', desc: '今日完成一局游戏', progress: 0, target: 1 };
 }
+
+// 功能增强46: 残局模式
+let puzzleMode = false;
+function startPuzzle() { puzzleMode = true; }
+function endPuzzle() { puzzleMode = false; }
