@@ -449,3 +449,8 @@ header h1 {
 .confirm-box {
   border-radius: 12px;
 }
+
+/* 迭代10: 按钮圆角 */
+.btn {
+  border-radius: 8px;
+}
