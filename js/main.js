@@ -161,3 +161,12 @@ const helpTips = [
   '使用提示可以看到可消除的牌',
   '使用撤销可以回退上一步'
 ];
+
+// 功能增强14: 游戏统计面板
+function showStats() {
+  const stats = `
+    游戏次数: ${localStorage.getItem('mahjong-play-count') || 0}
+    最佳时间: ${JSON.parse(localStorage.getItem('mahjong-best') || '{}').time || '暂无'}
+  `;
+  console.log(stats);
+}
