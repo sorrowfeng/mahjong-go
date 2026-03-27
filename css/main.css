@@ -434,3 +434,8 @@ header h1 {
 .tile-counter span {
   color: #f7dc6f;
 }
+
+/* 迭代7: 胜利界面 */
+.victory-box {
+  border-radius: 16px;
+}
