@@ -538,3 +538,5 @@ header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 .game-area { background: rgba(0,0,0,0.1); border-radius: 8px; }
 /* 迭代43: 按钮内边距 */
 .btn { padding: 7px 14px; }
+/* 迭代44: 字体调整 */
+body { font-family: 'Microsoft YaHei', sans-serif; }
