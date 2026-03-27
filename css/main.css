@@ -570,3 +570,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .confirm-title { color: #f5d76e; font-size: 18px; }
 /* 迭代59: 确认描述文字 */
 .confirm-desc { color: #aed6a0; font-size: 14px; }
+/* 迭代60: 按钮间隔 */
+.confirm-actions { gap: 12px; }
