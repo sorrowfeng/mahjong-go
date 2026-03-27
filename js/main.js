@@ -175,3 +175,12 @@ function showStats() {
 if (navigator.vibrate) {
   document.addEventListener('click', () => navigator.vibrate(10));
 }
+
+// 功能增强16: 成就弹窗显示
+function showAchievement(name) {
+  const badge = document.createElement('div');
+  badge.style.cssText = 'position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#f5d76e;color:#2a1a00;padding:12px 24px;border-radius:8px;font-weight:bold;z-index:9999;animation:fadeInOut 2s forwards;';
+  badge.textContent = '🏆 成就解锁: ' + name;
+  document.body.appendChild(badge);
+  setTimeout(() => badge.remove(), 2000);
+}
