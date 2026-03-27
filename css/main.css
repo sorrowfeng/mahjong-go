@@ -454,3 +454,8 @@ header h1 {
 .btn {
   border-radius: 8px;
 }
+
+/* 迭代11: 响应式调整 */
+@media (max-width: 500px) {
+  .btn { padding: 5px 10px; font-size: 12px; }
+}
