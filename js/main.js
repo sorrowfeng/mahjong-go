@@ -170,3 +170,8 @@ function showStats() {
   `;
   console.log(stats);
 }
+
+// 功能增强15: 震动反馈(移动端)
+if (navigator.vibrate) {
+  document.addEventListener('click', () => navigator.vibrate(10));
+}
