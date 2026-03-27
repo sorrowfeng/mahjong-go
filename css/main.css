@@ -469,3 +469,6 @@ header h1 {
 .btn:disabled {
   opacity: 0.4;
 }
+
+/* 迭代14: 旋转提示 */
+#rotate-hint { border-radius: 8px; }
