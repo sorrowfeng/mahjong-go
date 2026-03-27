@@ -85,3 +85,10 @@ function updateGameStats() {
   document.getElementById('move-count').textContent = gameStats.moves;
   document.getElementById('hint-count').textContent = gameStats.hints;
 }
+
+// 功能增强4: 键盘快捷键支持
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H') document.getElementById('btn-hint').click();
+  if (e.key === 'n' || e.key === 'N') document.getElementById('btn-new').click();
+  if (e.key === 'u' || e.key === 'U') document.getElementById('btn-undo').click();
+});
