@@ -612,3 +612,5 @@ body { color: #ffffff; }
 .tile--eliminating { transition: all 0.3s ease; }
 /* 迭代80: 按钮过渡 */
 .btn { transition: all 0.15s ease; }
+/* 迭代81: 胜利过渡 */
+#victory-screen { transition: opacity 0.3s ease; }
