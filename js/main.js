@@ -215,3 +215,10 @@ function playVictoryAnimation() {
 
 // 功能增强22: 背景音乐控制
 let bgmEnabled = localStorage.getItem('mahjong-bgm') !== 'false';
+
+// 功能增强23: 游戏数据重置
+function resetGameData() {
+  localStorage.removeItem('mahjong-best');
+  localStorage.removeItem('mahjong-play-count');
+  localStorage.removeItem('mahjong-autosave');
+}
