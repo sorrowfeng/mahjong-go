@@ -233,3 +233,12 @@ const SoundController = (() => {
     isEnabled,
   };
 })();
+
+// 功能增强1: 增强消除音效
+function playEnhancedEliminate() {
+  const ctx = _getCtx();
+  const now = ctx.currentTime;
+  // 双音上扬
+  _playTone(660, 0.15, 0.4, now, 'sine');
+  _playTone(880, 0.18, 0.4, now + 0.08, 'sine');
+}
