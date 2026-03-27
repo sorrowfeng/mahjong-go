@@ -444,3 +444,8 @@ header h1 {
 #deadlock-msg, #reshuffle-msg {
   border-radius: 8px;
 }
+
+/* 迭代9: 确认弹窗 */
+.confirm-box {
+  border-radius: 12px;
+}
