@@ -145,3 +145,10 @@ function getGameDuration() {
 let gamePlayCount = parseInt(localStorage.getItem('mahjong-play-count') || '0');
 gamePlayCount++;
 localStorage.setItem('mahjong-play-count', gamePlayCount);
+
+// 功能增强12: 主题切换功能
+function toggleTheme() {
+  const body = document.body;
+  body.classList.toggle('dark-theme');
+  localStorage.setItem('mahjong-theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+}
