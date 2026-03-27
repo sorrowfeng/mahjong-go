@@ -350,3 +350,9 @@ function getDifficultyBonus() {
   const diff = localStorage.getItem('mahjong-difficulty') || 'normal';
   return { easy: 1.2, normal: 1, hard: 0.8 }[diff] || 1;
 }
+
+// 功能增强44: 成就进度
+function getAchievementProgress() {
+  const unlocked = JSON.parse(localStorage.getItem('mahjong-achievements') || '[]');
+  return unlocked.length;
+}
