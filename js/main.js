@@ -330,3 +330,9 @@ function getGameSummary() {
     remaining: document.getElementById('tile-count').textContent
   };
 }
+
+// 功能增强40: 胜利动画增强
+function enhancedVictory() {
+  const box = document.querySelector('.victory-box');
+  if (box) box.style.animation = 'victoryPulse 0.5s ease 3';
+}
