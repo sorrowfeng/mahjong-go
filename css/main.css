@@ -532,3 +532,5 @@ header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 #btn-reshuffle-ok { background: linear-gradient(135deg, #27ae60, #1e8449); }
 /* 迭代40: 取消按钮样式 */
 #btn-reshuffle-cancel { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+/* 迭代41: 旋转提示优化 */
+#rotate-hint { background: rgba(100,60,0,0.9); color: #f5d76e; }
