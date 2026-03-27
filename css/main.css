@@ -550,3 +550,5 @@ header h1 { font-size: 24px; }
 .victory-box { max-width: 400px; }
 /* 迭代49: 胜利界面内边距 */
 .victory-box { padding: 30px 40px; }
+/* 迭代50: 确认弹窗宽度 */
+.confirm-box { max-width: 350px; }
