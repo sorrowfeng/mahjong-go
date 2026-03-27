@@ -472,3 +472,6 @@ header h1 {
 
 /* 迭代14: 旋转提示 */
 #rotate-hint { border-radius: 8px; }
+
+/* 迭代15: 游戏区域 */
+.game-area { padding: 6px; }
