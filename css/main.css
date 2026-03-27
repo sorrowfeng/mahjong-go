@@ -481,3 +481,6 @@ header { margin-bottom: 6px; }
 
 /* 迭代17: body边距 */
 body { padding: 8px 12px; }
+
+/* 迭代18: 统计字体 */
+.tile-counter, .timer-display, .stat-display { font-size: 12px; }
