@@ -222,3 +222,10 @@ function resetGameData() {
   localStorage.removeItem('mahjong-play-count');
   localStorage.removeItem('mahjong-autosave');
 }
+
+// 功能增强24: 触摸滑动优化
+let touchStartX, touchStartY;
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+});
