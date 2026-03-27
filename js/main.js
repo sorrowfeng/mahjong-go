@@ -320,3 +320,13 @@ const MAX_UNDO = 20;
 function canUndo() {
   return undoStack && undoStack.length < MAX_UNDO;
 }
+
+// 功能增强39: 游戏结束统计
+function getGameSummary() {
+  return {
+    moves: moveCount,
+    hints: hintCount,
+    time: document.getElementById('game-timer').textContent,
+    remaining: document.getElementById('tile-count').textContent
+  };
+}
