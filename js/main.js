@@ -140,3 +140,8 @@ function getGameDuration() {
   const duration = document.getElementById('game-timer').textContent;
   return duration;
 }
+
+// 功能增强11: 连续游戏次数统计
+let gamePlayCount = parseInt(localStorage.getItem('mahjong-play-count') || '0');
+gamePlayCount++;
+localStorage.setItem('mahjong-play-count', gamePlayCount);
