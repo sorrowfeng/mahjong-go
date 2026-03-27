@@ -516,3 +516,5 @@ header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-backgr
 #reshuffle-msg { background: rgba(30,80,160,0.9); }
 /* 迭代32: body背景色 */
 body { background: #1a3a1c; }
+/* 迭代33: 工具栏背景 */
+.toolbar { background: rgba(0,0,0,0.2); border-radius: 8px; }
