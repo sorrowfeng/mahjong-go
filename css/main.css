@@ -596,3 +596,5 @@ header { border-radius: 8px; }
 body { color: #ffffff; }
 /* 迭代72: 胜利界面文字居中 */
 .victory-box { text-align: center; }
+/* 迭代73: 确认弹窗居中 */
+.confirm-box { text-align: center; }
