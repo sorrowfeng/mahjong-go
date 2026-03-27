@@ -14,3 +14,8 @@
   perspective-origin: 50% 50%;
   overflow: hidden; /* 将 3D 绘制范围限制在棋盘内，避免产生页面滚动条 */
 }
+
+/* 迭代3: 棋盘背景微调 */
+#board {
+  background: #2c6030;
+}
