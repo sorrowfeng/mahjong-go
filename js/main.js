@@ -134,3 +134,9 @@ function showDailyChallenge() {
     localStorage.setItem('mahjong-last-play', today);
   }
 }
+
+// 功能增强10: 游戏时长统计
+function getGameDuration() {
+  const duration = document.getElementById('game-timer').textContent;
+  return duration;
+}
