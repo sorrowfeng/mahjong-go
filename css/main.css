@@ -554,3 +554,5 @@ header h1 { font-size: 24px; }
 .confirm-box { max-width: 350px; }
 /* 迭代51: 确认弹窗内边距 */
 .confirm-box { padding: 24px 32px; }
+/* 迭代52: 标题阴影 */
+header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
