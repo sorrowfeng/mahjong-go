@@ -199,3 +199,11 @@ function getCombo() { return comboCount; }
 function getTileProgress() {
   return document.getElementById('tile-count').textContent;
 }
+
+// 功能增强20: 计时器格式优化
+function formatTimer(seconds) {
+  const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
