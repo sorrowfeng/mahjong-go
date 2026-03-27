@@ -366,3 +366,7 @@ function getDailyTask() {
 let puzzleMode = false;
 function startPuzzle() { puzzleMode = true; }
 function endPuzzle() { puzzleMode = false; }
+
+// 功能增强47: 限时模式
+let timeAttack = false;
+function startTimeAttack() { timeAttack = true; }
