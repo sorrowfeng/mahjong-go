@@ -522,3 +522,5 @@ body { background: #1a3a1c; }
 header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 /* 迭代35: 选中状态发光 */
 .tile--selected { box-shadow: 0 0 15px rgba(245,215,110,0.8); }
+/* 迭代36: 提示状态发光 */
+.tile--hint { box-shadow: 0 0 15px rgba(245,215,110,0.6); }
