@@ -370,3 +370,9 @@ function endPuzzle() { puzzleMode = false; }
 // 功能增强47: 限时模式
 let timeAttack = false;
 function startTimeAttack() { timeAttack = true; }
+
+// 功能增强48: 计时奖励
+function getTimeBonus() {
+  const time = parseInt(document.getElementById('game-timer').textContent.replace(/:/g,''));
+  return time < 100 ? 100 : 0;
+}
