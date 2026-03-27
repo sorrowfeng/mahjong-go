@@ -542,3 +542,5 @@ header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
 body { font-family: 'Microsoft YaHei', sans-serif; }
 /* 迭代45: 标题字体 */
 header h1 { font-size: 24px; }
+/* 迭代46: 按钮字体 */
+.btn { font-size: 14px; }
