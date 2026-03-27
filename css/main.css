@@ -580,3 +580,5 @@ header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 #board { border-radius: 14px; }
 /* 迭代64: 游戏区域圆角 */
 .game-area { border-radius: 10px; }
+/* 迭代65: 工具栏圆角 */
+.toolbar { border-radius: 10px; }
