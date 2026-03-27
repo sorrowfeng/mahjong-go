@@ -246,3 +246,8 @@ function shareGame() {
 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
   document.body.classList.add('dark-mode');
 }
+
+// 功能增强28: 无障碍支持
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.setAttribute('role', 'button');
+});
