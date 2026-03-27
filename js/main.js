@@ -152,3 +152,12 @@ function toggleTheme() {
   body.classList.toggle('dark-theme');
   localStorage.setItem('mahjong-theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
 }
+
+// 功能增强13: 游戏帮助提示
+const helpTips = [
+  '相同牌之间没有其他牌时可以直接点击消除',
+  '拖动牌时相邻的同方向牌会一起移动',
+  '消除后会自动触发连锁消除',
+  '使用提示可以看到可消除的牌',
+  '使用撤销可以回退上一步'
+];
