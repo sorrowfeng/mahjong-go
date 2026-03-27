@@ -552,3 +552,5 @@ header h1 { font-size: 24px; }
 .victory-box { padding: 30px 40px; }
 /* 迭代50: 确认弹窗宽度 */
 .confirm-box { max-width: 350px; }
+/* 迭代51: 确认弹窗内边距 */
+.confirm-box { padding: 24px 32px; }
