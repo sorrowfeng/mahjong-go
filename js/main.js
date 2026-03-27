@@ -297,3 +297,12 @@ window.addEventListener('orientationchange', () => {
 function saveGameState() {
   return { boardState, moveCount, hintCount, gameState };
 }
+
+// 功能增强36: 加载游戏状态
+function loadGameState(saved) {
+  if (saved) {
+    boardState = saved.boardState;
+    moveCount = saved.moveCount;
+    hintCount = saved.hintCount;
+  }
+}
