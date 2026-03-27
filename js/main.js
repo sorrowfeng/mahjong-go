@@ -229,3 +229,8 @@ document.addEventListener('touchstart', e => {
   touchStartX = e.touches[0].clientX;
   touchStartY = e.touches[0].clientY;
 });
+
+// 功能增强25: 窗口大小调整处理
+window.addEventListener('resize', () => {
+  if (typeof recalcLayout === 'function') recalcLayout();
+});
