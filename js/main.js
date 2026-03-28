@@ -431,3 +431,10 @@ function addWinStreak() {
   winStreak++;
   localStorage.setItem('mahjong-win-streak', winStreak);
 }
+
+// 功能增强56: 游戏标签系统
+function addGameTag(tag) {
+  const tags = JSON.parse(localStorage.getItem('mahjong-tags') || '[]');
+  if (!tags.includes(tag)) tags.push(tag);
+  localStorage.setItem('mahjong-tags', JSON.stringify(tags));
+}
