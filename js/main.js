@@ -442,3 +442,9 @@ function addGameTag(tag) {
 // 功能增强57: 移动端优化
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 if (isMobile) document.body.classList.add('mobile-mode');
+
+// 功能增强58: 触摸手势优化
+if (isMobile) {
+  document.body.style.touchAction = 'none';
+  document.body.style.webkitTouchCallout = 'none';
+}
