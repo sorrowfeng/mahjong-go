@@ -736,3 +736,17 @@ function showGameInfo() {
 // 功能增强99: 调试模式开关
 let debugMode = false;
 function toggleDebug() { debugMode = !debugMode; if (debugMode) showGameInfo(); }
+
+// 功能增强100: 完整游戏报告
+function generateFullReport() {
+  const report = {
+    version: getGameVersion(),
+    stats: getGameSummary(),
+    progress: getProgressPercent(),
+    efficiency: getEfficiencyScore(),
+    records: getBestRecords(),
+    timestamp: getGameTimestamp()
+  };
+  console.log('=== 游戏报告 ===');
+  console.log(JSON.stringify(report, null, 2));
+}
