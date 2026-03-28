@@ -601,3 +601,11 @@ function getTotalPlayTime() {
   const history = getGameHistory();
   return history.reduce((a,b)=>a+(b.time||0),0);
 }
+
+// 功能增强79: 游戏效率评分
+function getEfficiencyScore() {
+  const remaining = parseInt(document.getElementById('tile-count')?.textContent || '136');
+  const moves = parseInt(document.getElementById('move-count')?.textContent || '0');
+  if (moves === 0) return 0;
+  return Math.round(((136 - remaining) / moves) * 100);
+}
