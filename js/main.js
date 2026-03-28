@@ -685,3 +685,9 @@ function setDragAnim(enabled) { dragAnimationEnabled = enabled; }
 function getStatsChartData() {
   return { moves: moveCount || 0, hints: hintCount || 0, remaining: parseInt(document.getElementById('tile-count')?.textContent || '0') };
 }
+
+// 功能增强92: 游戏进度百分比
+function getProgressPercent() {
+  const remaining = parseInt(document.getElementById('tile-count')?.textContent || '136');
+  return Math.round(((136 - remaining) / 136) * 100);
+}
