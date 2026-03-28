@@ -505,3 +505,8 @@ function startPerfMonitor() {
     gamePerformance.logicTime = performance.now() - start;
   };
 }
+
+// 功能增强65: 游戏状态快照
+function snapshotGame() {
+  return JSON.stringify({ boardState, moveCount, hintCount, timer: document.getElementById('game-timer')?.textContent });
+}
