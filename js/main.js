@@ -579,3 +579,11 @@ function checkAchievements() {
     localStorage.setItem('achievement-first', 'true');
   }
 }
+
+// 功能增强76: 牌数预警
+function getTileWarning() {
+  const remaining = parseInt(document.getElementById('tile-count')?.textContent || '0');
+  if (remaining <= 20) return '即将通关！';
+  if (remaining <= 50) return '进度不错！';
+  return null;
+}
