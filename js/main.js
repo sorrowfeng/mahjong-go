@@ -562,3 +562,12 @@ function addToHistory(gameData) {
   if (history.length > 100) history.shift();
   localStorage.setItem('mahjong-history', JSON.stringify(history));
 }
+
+// 功能增强74: 游戏统计摘要
+function getStatsSummary() {
+  const history = getGameHistory();
+  const totalGames = history.length;
+  const avgMoves = totalGames ? Math.round(history.reduce((a,b)=>a+(b.moves||0),0)/totalGames) : 0;
+  const avgTime = totalGames ? Math.round(history.reduce((a,b)=>a+(b.time||0),0)/totalGames) : 0;
+  return { totalGames, avgMoves, avgTime };
+}
