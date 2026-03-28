@@ -620,3 +620,9 @@ function getBestRecords() {
   });
   return best.minMoves === Infinity ? null : best;
 }
+
+// 功能增强81: 游戏状态重置
+function fullReset() {
+  localStorage.clear();
+  location.reload();
+}
