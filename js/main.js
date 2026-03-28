@@ -571,3 +571,11 @@ function getStatsSummary() {
   const avgTime = totalGames ? Math.round(history.reduce((a,b)=>a+(b.time||0),0)/totalGames) : 0;
   return { totalGames, avgMoves, avgTime };
 }
+
+// 功能增强75: 成就解锁检测
+function checkAchievements() {
+  const history = getGameHistory();
+  if (history.length >= 1 && !localStorage.getItem('achievement-first')) {
+    localStorage.setItem('achievement-first', 'true');
+  }
+}
