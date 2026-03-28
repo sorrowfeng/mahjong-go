@@ -712,3 +712,8 @@ function loadGameFromFile(file) {
   };
   reader.readAsText(file);
 }
+
+// 功能增强95: 成就徽章显示
+function showAchievementBadge(achievement) {
+  console.log('🏆 解锁成就: ' + achievement);
+}
