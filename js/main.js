@@ -409,3 +409,9 @@ function exportStats() {
 function setTileBack(pattern) {
   document.documentElement.style.setProperty('--tile-back-pattern', pattern);
 }
+
+// 功能增强53: 游戏难度提示
+function showDifficultyHint() {
+  const diff = localStorage.getItem('mahjong-difficulty') || 'normal';
+  console.log('当前难度: ' + diff);
+}
