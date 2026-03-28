@@ -654,3 +654,9 @@ const tileAnimationEnabled = true;
 function setTileAnimation(enabled) {
   document.body.classList.toggle('no-tile-anim', !enabled);
 }
+
+// 功能增强85: 消除动画增强
+const eliminateAnimEnabled = true;
+function setEliminateAnim(enabled) {
+  document.body.classList.toggle('no-elim-anim', !enabled);
+}
