@@ -680,3 +680,8 @@ function setVictoryAnim(enabled) { victoryAnimationEnabled = enabled; }
 // 功能增强90: 拖拽动画增强
 let dragAnimationEnabled = true;
 function setDragAnim(enabled) { dragAnimationEnabled = enabled; }
+
+// 功能增强91: 游戏统计饼图数据
+function getStatsChartData() {
+  return { moves: moveCount || 0, hints: hintCount || 0, remaining: parseInt(document.getElementById('tile-count')?.textContent || '0') };
+}
