@@ -554,3 +554,11 @@ function setCustomKey(action, key) {
 function getGameHistory() {
   return JSON.parse(localStorage.getItem('mahjong-history') || '[]');
 }
+
+// 功能增强73: 添加到游戏历史
+function addToHistory(gameData) {
+  const history = getGameHistory();
+  history.push({ ...gameData, timestamp: Date.now() });
+  if (history.length > 100) history.shift();
+  localStorage.setItem('mahjong-history', JSON.stringify(history));
+}
