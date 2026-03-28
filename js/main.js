@@ -722,3 +722,7 @@ function showAchievementBadge(achievement) {
 function getGameTimestamp() {
   return new Date().toISOString();
 }
+
+// 功能增强97: 游戏版本显示
+const gameVersion = '1.5.0';
+function getGameVersion() { return gameVersion; }
