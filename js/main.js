@@ -672,3 +672,7 @@ function setSfxVolume(v) { sfxVolume = Math.max(0, Math.min(1, v)); }
 // 功能增强88: 提示动画增强
 let hintAnimationEnabled = true;
 function setHintAnim(enabled) { hintAnimationEnabled = enabled; }
+
+// 功能增强89: 胜利动画增强
+let victoryAnimationEnabled = true;
+function setVictoryAnim(enabled) { victoryAnimationEnabled = enabled; }
