@@ -609,3 +609,14 @@ function getEfficiencyScore() {
   if (moves === 0) return 0;
   return Math.round(((136 - remaining) / moves) * 100);
 }
+
+// 功能增强80: 最佳记录查询
+function getBestRecords() {
+  const history = getGameHistory();
+  const best = { minMoves: Infinity, minTime: Infinity };
+  history.forEach(h => {
+    if (h.moves < best.minMoves) best.minMoves = h.moves;
+    if (h.time < best.minTime) best.minTime = h.time;
+  });
+  return best.minMoves === Infinity ? null : best;
+}
