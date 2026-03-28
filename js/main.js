@@ -404,3 +404,8 @@ function exportStats() {
   };
   console.log(JSON.stringify(stats));
 }
+
+// 功能增强52: 牌背图案切换
+function setTileBack(pattern) {
+  document.documentElement.style.setProperty('--tile-back-pattern', pattern);
+}
