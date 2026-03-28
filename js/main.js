@@ -438,3 +438,7 @@ function addGameTag(tag) {
   if (!tags.includes(tag)) tags.push(tag);
   localStorage.setItem('mahjong-tags', JSON.stringify(tags));
 }
+
+// 功能增强57: 移动端优化
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+if (isMobile) document.body.classList.add('mobile-mode');
