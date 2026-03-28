@@ -637,3 +637,14 @@ function exportConfig() {
   };
   return JSON.stringify(config);
 }
+
+// 功能增强83: 导入游戏配置
+function importConfig(json) {
+  try {
+    const config = JSON.parse(json);
+    Object.keys(config).forEach(k => {
+      if (config[k]) localStorage.setItem('mahjong-' + k, config[k]);
+    });
+    return true;
+  } catch(e) { return false; }
+}
