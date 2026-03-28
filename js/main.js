@@ -543,3 +543,9 @@ function toggleAnimationFeedback() {
   animationFeedback = !animationFeedback;
   localStorage.setItem('mahjong-anim-feedback', animationFeedback);
 }
+
+// 功能增强71: 快捷键自定义
+const customKeys = { hint: 'h', newGame: 'n', undo: 'u', sound: 'm' };
+function setCustomKey(action, key) {
+  customKeys[action] = key;
+}
