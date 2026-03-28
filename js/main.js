@@ -691,3 +691,14 @@ function getProgressPercent() {
   const remaining = parseInt(document.getElementById('tile-count')?.textContent || '136');
   return Math.round(((136 - remaining) / 136) * 100);
 }
+
+// 功能增强93: 游戏状态保存到文件
+function saveGameToFile() {
+  const data = snapshotGame();
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mahjong-save-' + Date.now() + '.json';
+  a.click();
+}
