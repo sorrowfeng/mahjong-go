@@ -648,3 +648,9 @@ function importConfig(json) {
     return true;
   } catch(e) { return false; }
 }
+
+// 功能增强84: 牌堆动画效果
+const tileAnimationEnabled = true;
+function setTileAnimation(enabled) {
+  document.body.classList.toggle('no-tile-anim', !enabled);
+}
