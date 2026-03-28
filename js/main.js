@@ -676,3 +676,7 @@ function setHintAnim(enabled) { hintAnimationEnabled = enabled; }
 // 功能增强89: 胜利动画增强
 let victoryAnimationEnabled = true;
 function setVictoryAnim(enabled) { victoryAnimationEnabled = enabled; }
+
+// 功能增强90: 拖拽动画增强
+let dragAnimationEnabled = true;
+function setDragAnim(enabled) { dragAnimationEnabled = enabled; }
