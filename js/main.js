@@ -424,3 +424,10 @@ function calculateScore() {
   const timeBonus = Math.max(0, 300 - parseInt((document.getElementById('game-timer')?.textContent || '0').replace(/:/g,'')));
   return Math.max(0, base - movePenalty - hintPenalty + timeBonus);
 }
+
+// 功能增强55: 连续胜利记录
+let winStreak = parseInt(localStorage.getItem('mahjong-win-streak') || '0');
+function addWinStreak() {
+  winStreak++;
+  localStorage.setItem('mahjong-win-streak', winStreak);
+}
