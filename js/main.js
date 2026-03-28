@@ -717,3 +717,8 @@ function loadGameFromFile(file) {
 function showAchievementBadge(achievement) {
   console.log('🏆 解锁成就: ' + achievement);
 }
+
+// 功能增强96: 游戏时间戳记录
+function getGameTimestamp() {
+  return new Date().toISOString();
+}
