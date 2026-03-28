@@ -518,3 +518,8 @@ function restoreGame(snapshot) {
     return data;
   } catch(e) { return null; }
 }
+
+// 功能增强67: 撤销恢复优化
+function canRedo() {
+  return false; // 暂不支持重做
+}
