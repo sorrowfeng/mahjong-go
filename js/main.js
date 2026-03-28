@@ -529,3 +529,10 @@ function setColorScheme(scheme) {
   localStorage.setItem('mahjong-color-scheme', scheme);
   document.body.setAttribute('data-scheme', scheme);
 }
+
+// 功能增强69: 声音反馈开关
+let soundFeedback = true;
+function toggleSoundFeedback() {
+  soundFeedback = !soundFeedback;
+  localStorage.setItem('mahjong-sound-feedback', soundFeedback);
+}
