@@ -732,3 +732,7 @@ function showGameInfo() {
   console.log('麻将消消乐 v' + gameVersion);
   console.log('游戏次数: ' + (localStorage.getItem('mahjong-play-count') || 0));
 }
+
+// 功能增强99: 调试模式开关
+let debugMode = false;
+function toggleDebug() { debugMode = !debugMode; if (debugMode) showGameInfo(); }
