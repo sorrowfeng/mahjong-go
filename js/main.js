@@ -726,3 +726,9 @@ function getGameTimestamp() {
 // 功能增强97: 游戏版本显示
 const gameVersion = '1.5.0';
 function getGameVersion() { return gameVersion; }
+
+// 功能增强98: 游戏信息显示
+function showGameInfo() {
+  console.log('麻将消消乐 v' + gameVersion);
+  console.log('游戏次数: ' + (localStorage.getItem('mahjong-play-count') || 0));
+}
