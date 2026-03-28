@@ -660,3 +660,7 @@ const eliminateAnimEnabled = true;
 function setEliminateAnim(enabled) {
   document.body.classList.toggle('no-elim-anim', !enabled);
 }
+
+// 功能增强86: 背景音乐音量
+let bgmVolume = 0.5;
+function setBgmVolume(v) { bgmVolume = Math.max(0, Math.min(1, v)); }
