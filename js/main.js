@@ -476,3 +476,16 @@ function exportGameData() {
   a.download = 'mahjong-data.json';
   a.click();
 }
+
+// 功能增强62: 游戏数据导入
+function importGameData(json) {
+  try {
+    const data = JSON.parse(json);
+    if (data.stats) localStorage.setItem('mahjong-play-count', data.stats.plays || 0);
+    if (data.stats?.best) localStorage.setItem('mahjong-best', data.stats.best);
+    if (data.achievements) localStorage.setItem('mahjong-achievements', data.achievements);
+    if (data.settings?.sound) localStorage.setItem('mahjong-sound', data.settings.sound);
+    if (data.settings?.theme) localStorage.setItem('mahjong-theme', data.settings.theme);
+    return true;
+  } catch(e) { return false; }
+}
