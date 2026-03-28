@@ -587,3 +587,11 @@ function getTileWarning() {
   if (remaining <= 50) return '进度不错！';
   return null;
 }
+
+// 功能增强77: 自动调整难度
+function autoAdjustDifficulty() {
+  const stats = getStatsSummary();
+  if (stats.avgMoves > 50) setDifficulty('easy');
+  else if (stats.avgMoves > 30) setDifficulty('normal');
+  else setDifficulty('hard');
+}
