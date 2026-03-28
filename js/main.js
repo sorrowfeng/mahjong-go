@@ -523,3 +523,9 @@ function restoreGame(snapshot) {
 function canRedo() {
   return false; // 暂不支持重做
 }
+
+// 功能增强68: 游戏颜色方案
+function setColorScheme(scheme) {
+  localStorage.setItem('mahjong-color-scheme', scheme);
+  document.body.setAttribute('data-scheme', scheme);
+}
