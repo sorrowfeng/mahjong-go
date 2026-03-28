@@ -489,3 +489,10 @@ function importGameData(json) {
     return true;
   } catch(e) { return false; }
 }
+
+// 功能增强63: 屏幕锁定检测
+function checkScreenLock() {
+  if (document.fullscreenElement) return true;
+  if (document.webkitFullscreenElement) return true;
+  return false;
+}
