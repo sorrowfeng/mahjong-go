@@ -595,3 +595,9 @@ function autoAdjustDifficulty() {
   else if (stats.avgMoves > 30) setDifficulty('normal');
   else setDifficulty('hard');
 }
+
+// 功能增强78: 游戏时长统计
+function getTotalPlayTime() {
+  const history = getGameHistory();
+  return history.reduce((a,b)=>a+(b.time||0),0);
+}
