@@ -454,3 +454,10 @@ function setSpeedPreference(speed) {
   localStorage.setItem('mahjong-speed', speed);
   document.documentElement.style.setProperty('--game-speed', speed);
 }
+
+// 功能增强60: 音效类型切换
+let soundType = 'classic';
+function setSoundType(type) {
+  soundType = type;
+  localStorage.setItem('mahjong-sound-type', type);
+}
