@@ -668,3 +668,7 @@ function setBgmVolume(v) { bgmVolume = Math.max(0, Math.min(1, v)); }
 // 功能增强87: 特效音量
 let sfxVolume = 0.8;
 function setSfxVolume(v) { sfxVolume = Math.max(0, Math.min(1, v)); }
+
+// 功能增强88: 提示动画增强
+let hintAnimationEnabled = true;
+function setHintAnim(enabled) { hintAnimationEnabled = enabled; }
