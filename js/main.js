@@ -448,3 +448,9 @@ if (isMobile) {
   document.body.style.touchAction = 'none';
   document.body.style.webkitTouchCallout = 'none';
 }
+
+// 功能增强59: 游戏速度偏好
+function setSpeedPreference(speed) {
+  localStorage.setItem('mahjong-speed', speed);
+  document.documentElement.style.setProperty('--game-speed', speed);
+}
