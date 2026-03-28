@@ -549,3 +549,8 @@ const customKeys = { hint: 'h', newGame: 'n', undo: 'u', sound: 'm' };
 function setCustomKey(action, key) {
   customKeys[action] = key;
 }
+
+// 功能增强72: 游戏历史记录
+function getGameHistory() {
+  return JSON.parse(localStorage.getItem('mahjong-history') || '[]');
+}
