@@ -461,3 +461,18 @@ function setSoundType(type) {
   soundType = type;
   localStorage.setItem('mahjong-sound-type', type);
 }
+
+// 功能增强61: 游戏统计导出为JSON
+function exportGameData() {
+  const data = {
+    stats: { plays: localStorage.getItem('mahjong-play-count'), best: localStorage.getItem('mahjong-best') },
+    achievements: localStorage.getItem('mahjong-achievements'),
+    settings: { sound: localStorage.getItem('mahjong-sound'), theme: localStorage.getItem('mahjong-theme') }
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mahjong-data.json';
+  a.click();
+}
