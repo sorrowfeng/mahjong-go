@@ -664,3 +664,7 @@ function setEliminateAnim(enabled) {
 // 功能增强86: 背景音乐音量
 let bgmVolume = 0.5;
 function setBgmVolume(v) { bgmVolume = Math.max(0, Math.min(1, v)); }
+
+// 功能增强87: 特效音量
+let sfxVolume = 0.8;
+function setSfxVolume(v) { sfxVolume = Math.max(0, Math.min(1, v)); }
