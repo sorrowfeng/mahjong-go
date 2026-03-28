@@ -496,3 +496,12 @@ function checkScreenLock() {
   if (document.webkitFullscreenElement) return true;
   return false;
 }
+
+// 功能增强64: 游戏性能监控
+let gamePerformance = { renderTime: 0, logicTime: 0 };
+function startPerfMonitor() {
+  const start = performance.now();
+  return () => {
+    gamePerformance.logicTime = performance.now() - start;
+  };
+}
