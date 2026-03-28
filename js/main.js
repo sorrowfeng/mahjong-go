@@ -702,3 +702,13 @@ function saveGameToFile() {
   a.download = 'mahjong-save-' + Date.now() + '.json';
   a.click();
 }
+
+// 功能增强94: 从文件加载游戏
+function loadGameFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = restoreGame(e.target.result);
+    if (data) console.log('游戏已加载');
+  };
+  reader.readAsText(file);
+}
