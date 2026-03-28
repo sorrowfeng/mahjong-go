@@ -536,3 +536,10 @@ function toggleSoundFeedback() {
   soundFeedback = !soundFeedback;
   localStorage.setItem('mahjong-sound-feedback', soundFeedback);
 }
+
+// 功能增强70: 动画反馈开关
+let animationFeedback = true;
+function toggleAnimationFeedback() {
+  animationFeedback = !animationFeedback;
+  localStorage.setItem('mahjong-anim-feedback', animationFeedback);
+}
