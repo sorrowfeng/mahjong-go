@@ -394,3 +394,13 @@ function getGameRating() {
   if (score > 2000) return 'A';
   return 'B';
 }
+
+// 功能增强51: 游戏统计导出
+function exportStats() {
+  const stats = {
+    plays: localStorage.getItem('mahjong-play-count') || 0,
+    best: localStorage.getItem('mahjong-best') || '{}',
+    achievements: localStorage.getItem('mahjong-achievements') || '[]'
+  };
+  console.log(JSON.stringify(stats));
+}
