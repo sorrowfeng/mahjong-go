@@ -626,3 +626,14 @@ function fullReset() {
   localStorage.clear();
   location.reload();
 }
+
+// 功能增强82: 导出游戏配置
+function exportConfig() {
+  const config = {
+    sound: localStorage.getItem('mahjong-sound'),
+    theme: localStorage.getItem('mahjong-theme'),
+    difficulty: localStorage.getItem('mahjong-difficulty'),
+    speed: localStorage.getItem('mahjong-speed')
+  };
+  return JSON.stringify(config);
+}
