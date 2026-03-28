@@ -415,3 +415,12 @@ function showDifficultyHint() {
   const diff = localStorage.getItem('mahjong-difficulty') || 'normal';
   console.log('当前难度: ' + diff);
 }
+
+// 功能增强54: 胜利积分计算
+function calculateScore() {
+  const base = 10000;
+  const movePenalty = (moveCount || 0) * 50;
+  const hintPenalty = (hintCount || 0) * 100;
+  const timeBonus = Math.max(0, 300 - parseInt((document.getElementById('game-timer')?.textContent || '0').replace(/:/g,'')));
+  return Math.max(0, base - movePenalty - hintPenalty + timeBonus);
+}
