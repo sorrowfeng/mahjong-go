@@ -510,3 +510,11 @@ function startPerfMonitor() {
 function snapshotGame() {
   return JSON.stringify({ boardState, moveCount, hintCount, timer: document.getElementById('game-timer')?.textContent });
 }
+
+// 功能增强66: 恢复游戏快照
+function restoreGame(snapshot) {
+  try {
+    const data = JSON.parse(snapshot);
+    return data;
+  } catch(e) { return null; }
+}
