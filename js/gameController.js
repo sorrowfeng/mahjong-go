@@ -113,7 +113,7 @@ async function initNewGame() {
     const candidate = createBoardFromDeck(shuffled);
 
     // 满棋盘无法滑动，只需确认有直接配对即可开始游戏
-    if (findAllPairs(candidate).length > 0) {
+    if (hasAnyPair(candidate)) {
       state = candidate;
       break;
     }

@@ -27,7 +27,7 @@ function findHint(state) {
         // 尝试正方向
         for (let delta = 1; delta <= maxPositive; delta++) {
           const proposed = applySlide(state, group, direction, delta);
-          if (findAllPairs(proposed).length > 0) {
+          if (hasAnyPair(proposed)) {
             return { group, direction, delta };
           }
         }
@@ -35,7 +35,7 @@ function findHint(state) {
         // 尝试负方向
         for (let delta = 1; delta <= maxNegative; delta++) {
           const proposed = applySlide(state, group, direction, -delta);
-          if (findAllPairs(proposed).length > 0) {
+          if (hasAnyPair(proposed)) {
             return { group, direction, delta: -delta };
           }
         }

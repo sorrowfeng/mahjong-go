@@ -63,6 +63,31 @@ function findAllPairs(state) {
   return pairs;
 }
 
+// 轻量级检查：是否存在至少一对可消除的牌（找到即返回 true，不扫描全部）
+function hasAnyPair(state) {
+  // 扫描每行
+  for (let r = 0; r < state.height; r++) {
+    let prev = null;
+    for (let c = 0; c < state.width; c++) {
+      const cur = state.grid[r][c];
+      if (cur === null) continue;
+      if (prev && prev.tileTypeId === cur.tileTypeId) return true;
+      prev = cur;
+    }
+  }
+  // 扫描每列
+  for (let c = 0; c < state.width; c++) {
+    let prev = null;
+    for (let r = 0; r < state.height; r++) {
+      const cur = state.grid[r][c];
+      if (cur === null) continue;
+      if (prev && prev.tileTypeId === cur.tileTypeId) return true;
+      prev = cur;
+    }
+  }
+  return false;
+}
+
 // 消除一批牌（给定位置列表），返回新 BoardState
 function eliminateTiles(state, positions) {
   const ops = positions.map(({ row, col }) => ({ row, col, tile: null }));
@@ -230,7 +255,7 @@ function reshuffleRemainingTiles(state) {
 
   for (let attempt = 0; attempt < 200; attempt++) {
     const newState = buildState(fisherYates(typeIds));
-    if (findAllPairs(newState).length > 0) return newState;
+    if (hasAnyPair(newState)) return newState;
   }
   return buildState(fisherYates(typeIds));
 }
