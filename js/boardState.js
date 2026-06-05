@@ -1,3 +1,5 @@
+import { BOARD_COLS, BOARD_ROWS } from './constants.js';
+
 // boardState.js — 不可变棋盘数据结构与纯函数操作
 
 /**
@@ -75,3 +77,5 @@ function cloneState(state) {
     height: state.height,
   };
 }
+
+export { createEmptyBoard, createBoardFromDeck, getTile, setTile, setTiles, countRemainingTiles, cloneState };

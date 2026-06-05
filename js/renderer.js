@@ -1,3 +1,5 @@
+import { BOARD_COLS, BOARD_ROWS, TILE_WIDTH, TILE_HEIGHT, TILE_GAP, BOARD_PADDING } from './constants.js';
+
 // renderer.js — DOM 渲染（绝对定位 + 局部更新）
 
 // instanceId → DOM 元素缓存，避免反复 querySelector
@@ -24,11 +26,20 @@ function createTileElement(tileInstance, row, col) {
   el.style.top = top + 'px';
 
   if (tileInstance.image) {
-    // 图片牌
+    // 图片牌：加载完成前显示占位符
     const img = document.createElement('img');
     img.src = tileInstance.image;
     img.alt = tileInstance.label;
     img.className = 'tile__img';
+    img.loading = 'lazy';
+    // 加载失败时显示文字占位
+    img.onerror = () => {
+      img.style.display = 'none';
+      const fallback = document.createElement('span');
+      fallback.className = 'tile__top';
+      fallback.textContent = tileInstance.topChar;
+      el.appendChild(fallback);
+    };
     el.appendChild(img);
   } else {
     // 白板：无图片，保留原有空白样式
@@ -150,3 +161,5 @@ function commitGroupPosition(group, direction, delta) {
     updateTilePosition(el, newRow, newCol);
   }
 }
+
+export { tilePixelPos, createTileElement, renderBoard, getTileElement, updateTilePosition, removeTileElement, setTileSelected, setTileHinted, clearAllHints, clearAllSelected, setGroupTransform, resetGroupTransform, commitGroupPosition };

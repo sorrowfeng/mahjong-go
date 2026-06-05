@@ -1,3 +1,7 @@
+import { ANIM } from './constants.js';
+import { getTileElement, commitGroupPosition, clearAllHints } from './renderer.js';
+import { SoundController } from './soundController.js';
+
 // animationController.js — 动画序列（滑动/消除/提示）
 
 // 工具：等待指定毫秒
@@ -146,3 +150,5 @@ async function runDealAnimation(boardEl, height) {
     el.classList.remove('tile--deal-animating');
   }
 }
+
+export { wait, animateSlide, animateRevert, runEliminationSequence, animateHint, clearHintAnimation, runDealAnimation };

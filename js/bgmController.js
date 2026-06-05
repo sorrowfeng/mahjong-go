@@ -6,7 +6,7 @@ const BgmController = (() => {
   let _ctx        = null;
   let _masterGain = null;
   let _volume     = 0.22;
-  let _gen        = 0;   // 每次 play/stop 自增，旧循环回调通过比对自动失效
+  let _gen        = 0;
 
   const N = {
     C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.00, A4: 440.00,
@@ -23,7 +23,6 @@ const BgmController = (() => {
     return _ctx;
   }
 
-  // 每次 play 创建新的 masterGain，stop 时直接 disconnect 旧的
   function _createMasterGain() {
     const ctx = _getCtx();
     if (_masterGain) {
@@ -35,29 +34,22 @@ const BgmController = (() => {
     return _masterGain;
   }
 
-  // ── 乐器合成 ────────────────────────────────────────────────────
-
   function _pluck(mg, freq, startTime, duration, gainPeak) {
     const ctx  = _getCtx();
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     const lpf  = ctx.createBiquadFilter();
-
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(freq, startTime);
-
     lpf.type = 'lowpass';
     lpf.frequency.setValueAtTime(3000, startTime);
     lpf.frequency.exponentialRampToValueAtTime(600, startTime + duration * 0.8);
     lpf.Q.value = 1.5;
-
     gain.gain.setValueAtTime(gainPeak, startTime);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
     osc.connect(lpf);
     lpf.connect(gain);
     gain.connect(mg);
-
     osc.start(startTime);
     osc.stop(startTime + duration + 0.01);
   }
@@ -66,18 +58,14 @@ const BgmController = (() => {
     const ctx  = _getCtx();
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
-
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, startTime);
-
     gain.gain.setValueAtTime(0.001, startTime);
     gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.04);
     gain.gain.setValueAtTime(gainPeak, startTime + duration * 0.7);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
     osc.connect(gain);
     gain.connect(mg);
-
     osc.start(startTime);
     osc.stop(startTime + duration + 0.01);
   }
@@ -87,25 +75,18 @@ const BgmController = (() => {
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     const lpf  = ctx.createBiquadFilter();
-
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, startTime);
-
     lpf.type            = 'lowpass';
     lpf.frequency.value = 400;
-
     gain.gain.setValueAtTime(gainPeak, startTime);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
     osc.connect(lpf);
     lpf.connect(gain);
     gain.connect(mg);
-
     osc.start(startTime);
     osc.stop(startTime + duration + 0.01);
   }
-
-  // ── 乐谱 ────────────────────────────────────────────────────────
 
   const BPM  = 112;
   const BEAT = 60 / BPM;
@@ -144,56 +125,42 @@ const BgmController = (() => {
     N.C3, N.G3, N.C3, N.G3,
   ];
 
-  // ── 排程一次循环（绑定到特定 gen 和 masterGain）────────────────
-
   function _scheduleLoop(mg, loopStart, gen) {
-    if (_gen !== gen) return; // 旧循环，直接丢弃
-
+    if (_gen !== gen) return;
     const ctx = _getCtx();
-
-    // 主旋律
     let t = loopStart;
     for (const [freq, beats] of MELODY) {
       const dur = beats * BEAT;
       _pluck(mg, freq, t, dur * 0.85, 0.55);
       t += dur;
     }
-
-    // 和弦伴奏
     for (let i = 0; i < CHORDS.length; i++) {
       const ct = loopStart + i * BEAT * 0.5;
       for (const freq of CHORDS[i]) {
         _pad(mg, freq, ct, BEAT * 0.45, 0.07);
       }
     }
-
-    // 低音线
     for (let i = 0; i < BASSLINE.length; i++) {
       _bass(mg, BASSLINE[i], loopStart + i * BEAT, BEAT * 0.7, 0.35);
     }
-
     const loopDuration = BAR * 8;
     const nextStart    = loopStart + loopDuration;
     const delay        = (nextStart - ctx.currentTime - 0.1) * 1000;
-
     setTimeout(() => _scheduleLoop(mg, nextStart, gen), Math.max(delay, 0));
   }
 
-  // ── 公开 API ─────────────────────────────────────────────────────
-
   function play() {
-    _gen++;                        // 使所有旧循环回调失效
+    _gen++;
     const mg  = _createMasterGain();
     const ctx = _getCtx();
     _scheduleLoop(mg, ctx.currentTime + 0.05, _gen);
   }
 
   function stop() {
-    _gen++;                        // 使所有正在调度的循环回调失效
+    _gen++;
     if (_masterGain) {
       const ctx = _getCtx();
       const mg  = _masterGain;
-      // 淡出后断开，彻底阻止后续音符到达扬声器
       mg.gain.cancelScheduledValues(ctx.currentTime);
       mg.gain.setValueAtTime(mg.gain.value, ctx.currentTime);
       mg.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
@@ -210,9 +177,10 @@ const BgmController = (() => {
   }
 
   function isPlaying() {
-    // 有活跃的 masterGain 且未被 stop 断开
     return _masterGain !== null;
   }
 
   return { play, stop, setVolume, isPlaying };
 })();
+
+export { BgmController };

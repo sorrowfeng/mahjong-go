@@ -1,3 +1,15 @@
+import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES } from './constants.js';
+import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
+import { findAllPairs, hasAnyPair, checkVictory, reshuffleRemainingTiles } from './gameLogic.js';
+import { findHint } from './hintSystem.js';
+import { renderBoard } from './renderer.js';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, clearHintAnimation } from './animationController.js';
+import { SoundController } from './soundController.js';
+import { generateDeck, shuffleDeck } from './tileDefinitions.js';
+import { applySlide } from './movementLogic.js';
+import { recalcLayout, recalcTileSizeOnly } from './constants.js';
+import { hideTutorial } from './tutorial.js';
+
 // gameController.js — 游戏状态机（主协调器）
 
 let gameState = GAME_STATE.IDLE;
@@ -414,3 +426,14 @@ function showRotateHint() {
   el.classList.remove('hidden');
   setTimeout(() => el.classList.add('hidden'), 5000);
 }
+
+export {
+  gameState, boardState, moveCount, hintCount,
+  pauseTimer, resumeTimer,
+  initNewGame, handleDragEnd, handleTileClick,
+  handleHint, handleUndo, handleNewGame,
+  doReshuffle, hideReshuffleConfirm, showRotateHint,
+  pushUndo, updateUI, showVictory, hideVictoryScreen,
+  showDeadlock, showReshuffle, showReshuffleConfirm,
+  syncPhase, getBoardEl, startTimer, stopTimer, resetTimer,
+};

@@ -1,3 +1,6 @@
+import { getTile, setTiles } from './boardState.js';
+import { DIR, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
+
 // movementLogic.js — 牌组选中、移动验证、碰撞检测
 
 /**
@@ -144,3 +147,5 @@ function clampDelta(delta, maxPositive, maxNegative) {
   // || 0 消除 JavaScript 的 -0（当 maxNegative=0 时 -maxNegative=-0）
   return Math.max(-maxNegative, Math.min(maxPositive, delta)) || 0;
 }
+
+export { selectGroup, calcMaxSlide, applySlide, pixelsToCells, clampDelta };

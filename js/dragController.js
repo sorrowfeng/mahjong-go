@@ -1,3 +1,8 @@
+import { DIR, DRAG_THRESHOLD, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
+import { getTile } from './boardState.js';
+import { selectGroup, calcMaxSlide, pixelsToCells, clampDelta } from './movementLogic.js';
+import { getTileElement, setTileSelected, setGroupTransform } from './renderer.js';
+
 // dragController.js — 拖拽输入处理（鼠标 + 触摸，轴锁定，像素钳制）
 
 function initDragController(boardEl, onDragEnd, onTileClick) {
@@ -192,3 +197,5 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
   document.addEventListener('touchmove', onPointerMove, { passive: false });
   document.addEventListener('touchend', onPointerUp, { passive: false });
 }
+
+export { initDragController };

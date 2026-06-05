@@ -1,3 +1,11 @@
+import { SoundController } from './soundController.js';
+import { BgmController } from './bgmController.js';
+import { showTutorial, hideTutorial } from './tutorial.js';
+import { initDragController } from './dragController.js';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame } from './gameController.js';
+import { recalcLayout, recalcTileSizeOnly } from './constants.js';
+import { renderBoard } from './renderer.js';
+
 // main.js — 入口、初始化、按钮绑定
 
 document.addEventListener('DOMContentLoaded', () => {

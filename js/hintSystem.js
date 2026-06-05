@@ -1,3 +1,7 @@
+import { DIR } from './constants.js';
+import { selectGroup, calcMaxSlide, applySlide } from './movementLogic.js';
+import { hasAnyPair } from './gameLogic.js';
+
 // hintSystem.js — 提示算法
 
 /**
@@ -45,3 +49,5 @@ function findHint(state) {
 
   return null; // 死局
 }
+
+export { findHint };

@@ -1,3 +1,5 @@
+import { TILE_TYPE } from './constants.js';
+
 // tileDefinitions.js — 34种牌定义 + 牌组生成
 
 // 中文数字
@@ -79,3 +81,5 @@ function shuffleDeck(deck) {
   }
   return arr;
 }
+
+export { TILE_TYPES, generateDeck, shuffleDeck };

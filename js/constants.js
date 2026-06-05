@@ -1,16 +1,16 @@
 // constants.js — 全局常量定义
 
-const TOTAL_TILES = 136;
+export const TOTAL_TILES = 136;
 
 // 行列数：运行时由 recalcLayout() 根据屏幕动态设置
-let BOARD_COLS = 17;
-let BOARD_ROWS = 8;
+export let BOARD_COLS = 17;
+export let BOARD_ROWS = 8;
 
 // 牌尺寸：运行时由 recalcLayout() 覆盖
-let TILE_WIDTH   = 60;
-let TILE_HEIGHT  = 80;
-let TILE_GAP     = 4;
-let BOARD_PADDING = 12;
+export let TILE_WIDTH   = 60;
+export let TILE_HEIGHT  = 80;
+export let TILE_GAP     = 4;
+export let BOARD_PADDING = 12;
 
 /**
  * 测量当前可用的游戏区域尺寸（排除 header / toolbar）。
@@ -179,3 +179,5 @@ const MAX_UNDO_STEPS = 20;
 
 // 开局可解最大重试次数
 const MAX_SHUFFLE_RETRIES = 100;
+
+export { recalcLayout, recalcTileSizeOnly, _measureAvailableArea, _applyTileSize };

@@ -1,3 +1,5 @@
+import { pauseTimer, resumeTimer } from './gameController.js';
+
 // tutorial.js — 规则教学动画
 
 const MTILE_W    = 44;
@@ -176,3 +178,5 @@ function hideTutorial() {
   if (overlay) overlay.classList.add('hidden');
   resumeTimer(); // 关闭覆盖层时恢复计时
 }
+
+export { showTutorial, hideTutorial };

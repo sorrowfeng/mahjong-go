@@ -1,3 +1,7 @@
+import { setTiles } from './boardState.js';
+import { countRemainingTiles } from './boardState.js';
+import { findHint } from './hintSystem.js';
+
 // gameLogic.js — 消除规则1/2统一实现 + 连锁消除
 
 /**
@@ -255,7 +259,10 @@ function reshuffleRemainingTiles(state) {
 
   for (let attempt = 0; attempt < 200; attempt++) {
     const newState = buildState(fisherYates(typeIds));
-    if (hasAnyPair(newState)) return newState;
+    // 可解性检查：至少存在一个直接配对或可移动产生配对的步骤
+    if (hasAnyPair(newState) || findHint(newState) !== null) return newState;
   }
   return buildState(fisherYates(typeIds));
 }
+
+export { findAllPairs, hasAnyPair, eliminateTiles, resolveChainElimination, checkVictory, resolveNewPairChain, reshuffleRemainingTiles };
