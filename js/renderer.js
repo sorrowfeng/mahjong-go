@@ -1,5 +1,8 @@
 // renderer.js — DOM 渲染（绝对定位 + 局部更新）
 
+// instanceId → DOM 元素缓存，避免反复 querySelector
+const _tileElementCache = new Map();
+
 // 计算牌的像素位置（含棋盘内边距偏移）
 function tilePixelPos(row, col) {
   return {
@@ -33,12 +36,16 @@ function createTileElement(tileInstance, row, col) {
     el.innerHTML = '<span class="tile__blank"></span>';
   }
 
+  // 写入缓存
+  _tileElementCache.set(tileInstance.instanceId, el);
+
   return el;
 }
 
 // 初始渲染：清空容器，全量渲染所有牌
 function renderBoard(state, boardEl) {
   boardEl.innerHTML = '';
+  _tileElementCache.clear();
 
   // 设置棋盘尺寸（内容区 + 两侧内边距）
   const contentW = BOARD_COLS * (TILE_WIDTH + TILE_GAP) - TILE_GAP;
@@ -57,9 +64,15 @@ function renderBoard(state, boardEl) {
   }
 }
 
-// 通过 instanceId 获取 DOM 元素
+// 通过 instanceId 获取 DOM 元素（带缓存）
 function getTileElement(instanceId) {
-  return document.querySelector(`[data-instance-id="${instanceId}"]`);
+  let el = _tileElementCache.get(instanceId);
+  if (el && el.isConnected) return el;
+  // 缓存未命中或元素已脱离 DOM，重新查找
+  el = document.querySelector(`[data-instance-id="${instanceId}"]`);
+  if (el) _tileElementCache.set(instanceId, el);
+  else _tileElementCache.delete(instanceId);
+  return el;
 }
 
 // 更新牌的 dataset 位置信息
@@ -75,7 +88,10 @@ function updateTilePosition(el, row, col) {
 // 移除 DOM 中的牌元素
 function removeTileElement(instanceId) {
   const el = getTileElement(instanceId);
-  if (el) el.remove();
+  if (el) {
+    el.remove();
+    _tileElementCache.delete(instanceId);
+  }
 }
 
 // 应用选中状态

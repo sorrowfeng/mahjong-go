@@ -154,6 +154,8 @@ function showTutorial(isFirstTime) {
   _tutorialGen++; // 使所有旧 setTimeout 回调自然失效
   const gen = _tutorialGen;
 
+  pauseTimer(); // 覆盖层显示时暂停计时
+
   const overlay = document.getElementById('tutorial-overlay');
   const btn     = document.getElementById('btn-tutorial-start');
   if (overlay) overlay.classList.remove('hidden');
@@ -172,4 +174,5 @@ function hideTutorial() {
   _tutorialGen++; // 停止所有动画定时器
   const overlay = document.getElementById('tutorial-overlay');
   if (overlay) overlay.classList.add('hidden');
+  resumeTimer(); // 关闭覆盖层时恢复计时
 }

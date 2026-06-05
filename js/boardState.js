@@ -46,13 +46,13 @@ function setTile(state, row, col, tile) {
 
 // 批量设置多个格子（positions: [{row, col, tile}]）
 function setTiles(state, positions) {
-  let newGrid = state.grid.slice();
+  // 先按行分组，只复制涉及的行，避免 O(n) 全量复制
+  const rowChanges = new Map();
   for (const { row, col, tile } of positions) {
-    const newRow = newGrid[row].slice();
-    newRow[col] = tile;
-    newGrid = newGrid.slice();
-    newGrid[row] = newRow;
+    if (!rowChanges.has(row)) rowChanges.set(row, state.grid[row].slice());
+    rowChanges.get(row)[col] = tile;
   }
+  const newGrid = state.grid.map((r, i) => rowChanges.get(i) || r);
   return { ...state, grid: newGrid };
 }
 

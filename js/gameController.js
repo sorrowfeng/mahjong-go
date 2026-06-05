@@ -47,6 +47,31 @@ function resetTimer() {
   if (el) el.textContent = '00:00:00';
 }
 
+// 暂停/恢复计时器（覆盖层显示时调用）
+let timerPaused = false;
+let timerPausedAt = 0;
+
+function pauseTimer() {
+  if (timerInterval === null || timerPaused) return;
+  timerPaused = true;
+  timerPausedAt = Date.now();
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function resumeTimer() {
+  if (!timerPaused) return;
+  timerPaused = false;
+  // 补偿暂停的时间差
+  const pausedDuration = Date.now() - timerPausedAt;
+  timerStart += pausedDuration;
+  timerInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - timerStart) / 1000);
+    const el = document.getElementById('game-timer');
+    if (el) el.textContent = formatTime(secs);
+  }, 1000);
+}
+
 // 暴露给 dragController 使用
 window._gameState = null;
 
@@ -176,7 +201,7 @@ async function handleDragEnd({ group, direction, delta }) {
       showVictory();
       return;
     }
-    if (findAllPairs(boardState).length === 0 && findHint(boardState) === null) {
+    if (findHint(boardState) === null) {
       showDeadlock();
     }
   }
@@ -236,7 +261,7 @@ async function handleTileClick({ row, col }) {
     return;
   }
 
-  if (findAllPairs(boardState).length === 0 && findHint(boardState) === null) {
+  if (findHint(boardState) === null) {
     showDeadlock();
   }
 }
@@ -360,16 +385,19 @@ function showReshuffle() {
 function showReshuffleConfirm() {
   const dialog = document.getElementById('reshuffle-confirm');
   if (!dialog) return;
+  pauseTimer(); // 弹窗时暂停计时
   dialog.classList.remove('hidden');
 }
 
 function hideReshuffleConfirm() {
   const dialog = document.getElementById('reshuffle-confirm');
   if (dialog) dialog.classList.add('hidden');
+  resumeTimer(); // 关闭弹窗时恢复计时
 }
 
 function doReshuffle() {
   hideReshuffleConfirm();
+  pushUndo(boardState); // 支持撤销重排
   const newState = reshuffleRemainingTiles(boardState);
   boardState = newState;
   window._gameState = boardState;
