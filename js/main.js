@@ -1,8 +1,8 @@
 import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
-import { showTutorial, hideTutorial } from './tutorial.js?v=20260607-2';
-import { initDragController } from './dragController.js?v=20260607-2';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights } from './gameController.js?v=20260607-2';
+import { showTutorial, hideTutorial } from './tutorial.js?v=20260607-3';
+import { initDragController } from './dragController.js?v=20260607-3';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights } from './gameController.js?v=20260607-3';
 import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
 
@@ -28,10 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-show-hint').addEventListener('click', () => {
     setHintMenuOpen(false);
     handleHint();
-  });
-  document.getElementById('btn-teaching').addEventListener('click', () => {
-    setHintMenuOpen(false);
-    startTeachingLevel();
   });
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.hint-menu-wrap')) setHintMenuOpen(false);
@@ -79,6 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
         BgmController.play();
       }
     }
+  });
+  document.getElementById('btn-tutorial-teaching').addEventListener('click', () => {
+    hideTutorial();
+    startTeachingLevel();
   });
 
   // 首次进入页面：展示规则动画，BGM 在用户点击"开始"后启动

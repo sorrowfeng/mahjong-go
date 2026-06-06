@@ -119,6 +119,17 @@
   margin: 4px 0;
 }
 
+.tutorial-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tutorial-actions .btn {
+  min-width: 112px;
+}
+
 /* ── Mini Tile ── */
 
 .mtile {

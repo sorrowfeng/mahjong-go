@@ -8,12 +8,12 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
   <title>麻将消消乐</title>
   <link rel="icon" href="assets/icon.ico" />
-  <link rel="stylesheet" href="css/reset.css?v=20260607-2" />
-  <link rel="stylesheet" href="css/main.css?v=20260607-2" />
-  <link rel="stylesheet" href="css/board.css?v=20260607-2" />
-  <link rel="stylesheet" href="css/tile.css?v=20260607-2" />
-  <link rel="stylesheet" href="css/animations.css?v=20260607-2" />
-  <link rel="stylesheet" href="css/tutorial.css?v=20260607-2" />
+  <link rel="stylesheet" href="css/reset.css?v=20260607-3" />
+  <link rel="stylesheet" href="css/main.css?v=20260607-3" />
+  <link rel="stylesheet" href="css/board.css?v=20260607-3" />
+  <link rel="stylesheet" href="css/tile.css?v=20260607-3" />
+  <link rel="stylesheet" href="css/animations.css?v=20260607-3" />
+  <link rel="stylesheet" href="css/tutorial.css?v=20260607-3" />
 </head>
 <body>
 
@@ -26,7 +26,6 @@
       <button id="btn-hint" class="btn btn--secondary" aria-haspopup="true" aria-expanded="false">提示</button>
       <div id="hint-menu" class="hint-menu hidden" role="menu" aria-label="提示菜单">
         <button id="btn-show-hint" class="hint-menu__item" type="button" role="menuitem">显示提示</button>
-        <button id="btn-teaching" class="hint-menu__item" type="button" role="menuitem">教学关卡</button>
       </div>
     </div>
     <button id="btn-undo" class="btn btn--secondary" disabled>撤销</button>
@@ -84,7 +83,10 @@
 
       </div>
 
-      <button id="btn-tutorial-start" class="btn btn--primary">开始新游戏</button>
+      <div class="tutorial-actions">
+        <button id="btn-tutorial-teaching" class="btn btn--secondary" type="button">教学关卡</button>
+        <button id="btn-tutorial-start" class="btn btn--primary" type="button">开始新游戏</button>
+      </div>
     </div>
   </div>
 
@@ -121,7 +123,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=20260607-2"></script>
+  <script type="module" src="js/main.js?v=20260607-3"></script>
 
 </body>
 </html>
