@@ -1,346 +1,496 @@
-/* main.css — 整体布局、UI按钮 */
+/* main.css — 整体布局、按钮、状态面板 */
+
+:root {
+  --ui-ink: #16382c;
+  --ui-muted: #61766d;
+  --ui-panel: rgba(255, 255, 255, 0.78);
+  --ui-panel-strong: rgba(255, 255, 255, 0.92);
+  --ui-line: rgba(53, 134, 97, 0.2);
+  --ui-accent: #2f9d72;
+  --ui-accent-strong: #1e7658;
+  --ui-gold: #d2a33a;
+  --ui-danger: #dc625d;
+  --ui-shadow: 0 18px 45px rgba(39, 92, 70, 0.16);
+}
 
 body {
-  background: #1a3a1c;
-  font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
-  color: #fff;
   height: 100vh;
-  height: 100dvh;          /* dvh 适配手机地址栏动态收缩，旧浏览器回退到 vh */
+  height: 100dvh;
+  margin: 0;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 12px 4px;
-  user-select: none;
   overflow: hidden;
-  box-sizing: border-box;
+  user-select: none;
+  color: var(--ui-ink);
+  font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", Arial, sans-serif;
+  isolation: isolate;
+  background-color: #eaf8f1;
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(100, 190, 147, 0.22), transparent 28%),
+    radial-gradient(circle at 80% 24%, rgba(133, 207, 204, 0.2), transparent 30%),
+    radial-gradient(circle at 72% 86%, rgba(235, 197, 108, 0.16), transparent 28%),
+    linear-gradient(180deg, #f6fbf8 0%, #e6f6ee 50%, #d7efe3 100%);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+body::before {
+  background:
+    linear-gradient(rgba(55, 139, 102, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(55, 139, 102, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.8;
+}
+
+body::after {
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.64), transparent 28%, rgba(37, 118, 84, 0.08)),
+    linear-gradient(90deg, rgba(255,255,255,0.54), transparent 18%, transparent 82%, rgba(255,255,255,0.54));
 }
 
 header {
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   text-align: center;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  padding: 4px 10px 0;
 }
 
 header h1 {
-  font-size: clamp(18px, 4vw, 28px);
-  font-weight: bold;
-  color: #f5d76e;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  letter-spacing: 4px;
+  position: relative;
+  margin: 0;
+  font-size: 1.62rem;
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  color: #1f7658;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.82);
 }
 
-/* 工具栏 */
+header h1::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 76px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(47,157,114,0.7), transparent);
+  transform: translateX(-50%);
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 6px;
+  width: min(100%, 1120px);
+  margin-bottom: 8px;
+  padding: 7px 8px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  max-width: 1100px;
   flex-shrink: 0;
+  border: 1px solid rgba(196, 223, 204, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.76)),
+    rgba(232, 248, 240, 0.72);
+  box-shadow: var(--ui-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.toolbar::before {
+  content: "";
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 45%;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.54), transparent);
+  pointer-events: none;
 }
 
 .btn {
-  padding: 6px 12px;
+  min-height: 32px;
+  padding: 6px 13px;
+  border: 0;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: transform 0.1s, box-shadow 0.1s;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 700;
   white-space: nowrap;
-  line-height: 1.4;
+  cursor: pointer;
+  border: 1px solid rgba(38, 118, 84, 0.16);
+  box-shadow: 0 8px 18px rgba(31, 104, 76, 0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease, background-color 120ms ease;
 }
+
+.btn::before {
+  min-width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 900;
+  color: currentColor;
+  background: rgba(255,255,255,0.28);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.32);
+}
+
+#btn-hint::before { content: "?"; }
+#btn-undo::before { content: "\21B6"; }
+#btn-new::before { content: "+"; }
+#btn-rules::before { content: "i"; font-family: Georgia, serif; font-style: italic; }
+#btn-sound::before { content: "\266A"; }
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+  filter: brightness(1.02);
+  box-shadow: 0 11px 24px rgba(31, 104, 76, 0.16);
 }
 
 .btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(31, 104, 76, 0.14);
+}
+
+.btn:focus-visible {
+  outline: 3px solid rgba(88, 187, 141, 0.54);
+  outline-offset: 2px;
 }
 
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none;
+  filter: grayscale(0.25);
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, #f5d76e, #e8b820);
-  color: #2a1a00;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 45%),
+    linear-gradient(180deg, #44ba86, #268863);
 }
 
 .btn--secondary {
-  background: linear-gradient(135deg, #7ec8e3, #3a8fb5);
-  color: #fff;
-}
-
-.btn--sound {
-  min-width: 36px;
-  padding: 6px 8px;
-}
-
-.btn--muted {
-  background: linear-gradient(135deg, #888, #555);
-  opacity: 0.75;
+  color: var(--ui-accent-strong);
+  background:
+    linear-gradient(180deg, #ffffff, #eef9f3);
 }
 
 .btn--danger {
-  background: linear-gradient(135deg, #ff7675, #d63031);
-  color: #fff;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 45%),
+    linear-gradient(180deg, #ef8179, #d95458);
 }
 
-/* 统计信息容器（普通模式：横排，与按钮同行） */
+.btn--sound {
+  min-width: 38px;
+  padding-inline: 8px;
+}
+
+.btn--muted {
+  color: #6b7d74;
+  background: linear-gradient(180deg, #f5f8f6, #dce7e2);
+}
+
 .toolbar-stats {
-  display: contents; /* 子元素直接参与 toolbar 的 flex 布局，无视容器自身 */
+  display: contents;
 }
 
-/* 剩余牌数显示 */
-.tile-counter {
-  font-size: 12px;
-  color: #aed6a0;
-  margin-left: 4px;
+.tile-counter,
+.timer-display,
+.stat-display {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 7px;
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(202, 229, 211, 0.16);
+  border-radius: 8px;
+  color: var(--ui-muted);
+  font-size: 0.78rem;
   white-space: nowrap;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.9), rgba(244, 251, 247, 0.72)),
+    rgba(255,255,255,0.72);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.46);
 }
 
-.tile-counter span {
-  color: #f5d76e;
-  font-weight: bold;
-  font-size: 15px;
-}
-
-/* 计时器显示 */
-.timer-display {
-  font-size: 12px;
-  color: #aed6a0;
-  margin-left: 4px;
-  white-space: nowrap;
-}
-
-.timer-display span {
-  color: #f5d76e;
-  font-weight: bold;
-  font-size: 15px;
+.tile-counter span,
+.timer-display span,
+.stat-display span {
+  display: inline-block;
+  color: var(--ui-accent-strong);
+  font-size: 0.95rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-/* 旋转屏幕提示 */
-#rotate-hint {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(100, 60, 0, 0.95);
-  color: #f5d76e;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  z-index: 1000;
+.stat-pop {
+  animation: stat-pop 260ms ease-out;
+}
+
+.game-area {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.game-area::before {
+  content: "";
+  position: absolute;
+  inset: clamp(10px, 2.4vw, 28px) clamp(12px, 5vw, 76px);
+  z-index: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(93, 157, 125, 0.16);
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255,255,255,0.7), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,0.42), rgba(225, 245, 235, 0.38)),
+    linear-gradient(90deg, rgba(190, 231, 210, 0.5), rgba(229, 248, 239, 0.72), rgba(190, 231, 210, 0.5));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    0 24px 56px rgba(46, 116, 84, 0.16);
+}
+
+.game-area::after {
+  content: "";
+  position: absolute;
+  inset: clamp(16px, 3vw, 34px) clamp(28px, 6vw, 96px);
+  z-index: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(64, 143, 102, 0.1);
+  background:
+    linear-gradient(rgba(63, 144, 104, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 144, 104, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
   pointer-events: none;
-  white-space: nowrap;
 }
 
-#rotate-hint.hidden {
-  display: none;
-}
-
-/* 死局提示 */
-#deadlock-msg {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(200, 50, 50, 0.95);
-  color: #fff;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  z-index: 1000;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-
-#deadlock-msg.hidden {
-  display: none;
-}
-
-/* 重排提示 */
+#rotate-hint,
+#deadlock-msg,
 #reshuffle-msg {
   position: fixed;
-  top: 20px;
   left: 50%;
+  z-index: 1600;
+  max-width: min(92vw, 520px);
   transform: translateX(-50%);
-  background: rgba(30, 100, 160, 0.95);
-  color: #fff;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  z-index: 1000;
+  padding: 11px 20px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 14px 36px rgba(38, 88, 67, 0.24);
   pointer-events: none;
-  transition: opacity 0.3s;
 }
 
+#rotate-hint {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #735018;
+  background: rgba(255, 246, 214, 0.96);
+  border: 1px solid rgba(215, 172, 70, 0.34);
+}
+
+#deadlock-msg {
+  top: 18px;
+  background: rgba(218, 89, 86, 0.94);
+}
+
+#reshuffle-msg {
+  top: 18px;
+  background: rgba(37, 143, 111, 0.94);
+}
+
+#rotate-hint.hidden,
+#deadlock-msg.hidden,
 #reshuffle-msg.hidden {
   display: none;
 }
 
-/* 胜利界面 */
-#victory-screen {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-#victory-screen.hidden {
-  display: none;
-}
-
-.victory-box {
-  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
-  border: 3px solid #f5d76e;
-  border-radius: 20px;
-  padding: 40px 60px;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-}
-
-.victory-box h2 {
-  font-size: 36px;
-  color: #f5d76e;
-  margin-bottom: 12px;
-  text-shadow: 0 0 20px rgba(245, 215, 110, 0.6);
-}
-
-.victory-box p {
-  font-size: 18px;
-  color: #aed6a0;
-  margin-bottom: 12px;
-}
-
-.victory-time {
-  font-size: 22px;
-  color: #f5d76e !important;
-  font-weight: bold;
-  margin-bottom: 16px !important;
-}
-
-.victory-stat {
-  font-size: 16px;
-  color: #c8e6c0 !important;
-  margin-bottom: 8px !important;
-}
-
-#btn-new-victory {
-  margin-top: 20px;
-}
-
-/* 重排确认弹窗 */
+#victory-screen,
 #reshuffle-confirm {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  padding: 18px;
+  background: rgba(21, 57, 43, 0.26);
+  backdrop-filter: blur(14px);
 }
 
+#victory-screen.hidden,
 #reshuffle-confirm.hidden {
   display: none;
 }
 
+.victory-box,
 .confirm-box {
-  background: linear-gradient(135deg, #2c5f2e, #1a3a1c);
-  border: 2px solid #7ec8e3;
-  border-radius: 16px;
-  padding: 32px 48px;
+  width: min(100%, 400px);
+  box-sizing: border-box;
+  border-radius: 8px;
   text-align: center;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246, 252, 249, 0.92)),
+    #ffffff;
+  border: 1px solid rgba(57, 139, 101, 0.2);
+  box-shadow: 0 22px 58px rgba(31, 88, 65, 0.22);
+}
+
+.victory-box {
+  padding: 30px 34px;
+}
+
+.victory-box h2 {
+  margin: 0 0 10px;
+  color: var(--ui-accent-strong);
+  font-size: 2rem;
+  line-height: 1.15;
+  text-shadow: none;
+}
+
+.victory-box p {
+  margin: 0 0 10px;
+  color: var(--ui-muted);
+  font-size: 1rem;
+}
+
+.victory-time {
+  color: var(--ui-accent-strong) !important;
+  font-size: 1.2rem !important;
+  font-weight: 800;
+}
+
+.victory-stat {
+  color: var(--ui-muted) !important;
+  font-size: 0.94rem !important;
+}
+
+#btn-new-victory {
+  margin-top: 14px;
+}
+
+.confirm-box {
+  padding: 24px 28px;
+  border-color: rgba(57, 139, 101, 0.22);
 }
 
 .confirm-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #f5d76e;
-  margin-bottom: 10px;
+  margin: 0 0 8px;
+  color: var(--ui-accent-strong);
+  font-size: 1.125rem;
+  font-weight: 800;
 }
 
 .confirm-desc {
-  font-size: 15px;
-  color: #aed6a0;
-  margin-bottom: 24px;
+  margin: 0 0 20px;
+  color: var(--ui-muted);
+  font-size: 0.95rem;
 }
 
 .confirm-actions {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   justify-content: center;
 }
 
-/* 步数/提示次数显示 */
-.stat-display {
-  font-size: 12px;
-  color: #aed6a0;
-  margin-left: 4px;
-  white-space: nowrap;
+#btn-reshuffle-ok {
+  background: linear-gradient(180deg, #44ba86, #268863);
 }
 
-.stat-display span {
-  color: #f5d76e;
-  font-weight: bold;
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
+#btn-reshuffle-cancel {
+  color: #586b62;
+  background: linear-gradient(180deg, #ffffff, #edf4f1);
 }
 
-/* 游戏区域外层 */
-.game-area {
-  flex: 1;               /* 占满 body 剩余高度 */
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-/* 大屏（平板横屏 / 桌面）适当放大按钮和统计字体 */
 @media (min-width: 768px) {
+  header h1 {
+    font-size: 1.75rem;
+  }
+
   .btn {
-    font-size: 15px;
+    min-height: 34px;
     padding: 7px 16px;
+    font-size: 0.94rem;
   }
-  .btn--sound {
-    padding: 7px 10px;
-  }
+
   .tile-counter,
   .timer-display,
   .stat-display {
-    font-size: 13px;
-  }
-  .tile-counter span,
-  .timer-display span,
-  .stat-display span {
-    font-size: 17px;
+    font-size: 0.84rem;
   }
 }
 
-/* ── 手机横屏：侧边栏布局 ──────────────────────────────────────────────
-   条件：屏幕高度 ≤ 500px（手机横屏特征）
-   效果：标题隐藏，toolbar 变左侧竖列，棋盘占满剩余宽度
-   ─────────────────────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  body {
+    padding: 7px;
+  }
+
+  .toolbar {
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .btn {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .tile-counter,
+  .timer-display,
+  .stat-display {
+    min-height: 24px;
+    padding-inline: 5px;
+    font-size: 0.7rem;
+  }
+
+  .tile-counter span,
+  .timer-display span,
+  .stat-display span {
+    font-size: 0.82rem;
+  }
+}
+
 @media (max-height: 500px) and (orientation: landscape) {
   body {
     flex-direction: row;
@@ -349,282 +499,54 @@ header h1 {
     gap: 4px;
   }
 
-  /* 标题隐藏，节省空间 */
   header {
     display: none;
   }
 
-  /* toolbar 变成左侧竖列 */
   .toolbar {
+    width: auto;
+    min-width: 72px;
+    max-width: 84px;
+    align-self: center;
+    margin-bottom: 0;
+    padding: 4px;
     flex-direction: column;
     flex-wrap: nowrap;
-    justify-content: center;
     align-items: stretch;
-    width: auto;
-    min-width: 68px;
-    max-width: 80px;
-    margin-bottom: 0;
+    justify-content: flex-start;
     gap: 4px;
-    flex-shrink: 0;
-    padding: 4px 2px;
   }
 
-  /* 按钮紧凑化 */
   .toolbar .btn {
-    font-size: 11px;
-    padding: 5px 6px;
-    text-align: center;
+    min-height: 28px;
+    padding: 4px 6px;
+    font-size: 0.68rem;
   }
 
-  /* 统计信息：整体作为一个卡片放在按钮下方 */
   .toolbar-stats {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 6px;
-    padding: 4px 0;
+    gap: 3px;
     margin-top: 2px;
   }
 
   .tile-counter,
   .timer-display,
   .stat-display {
-    font-size: 9px;
-    margin-left: 0;
-    text-align: center;
-    line-height: 1.2;
-    color: #aed6a0;
-    padding: 2px 4px;
+    justify-content: center;
+    min-height: 22px;
+    padding: 2px 3px;
+    font-size: 0.56rem;
   }
 
   .tile-counter span,
   .timer-display span,
   .stat-display span {
-    font-size: 11px;
-    display: inline;
-    color: #f5d76e;
-    font-weight: bold;
+    font-size: 0.68rem;
   }
 
-  /* 棋盘区占满剩余空间 */
   .game-area {
-    flex: 1;
     width: auto;
+    padding: 0;
   }
 }
-
-
-/* 迭代1: 按钮样式微调 */
-.btn {
-  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
-}
-
-/* 迭代2: 标题颜色微调 */
-header h1 {
-  color: #f7dc6f;
-}
-
-/* 迭代4: 工具栏间距 */
-.toolbar {
-  gap: 6px;
-}
-
-/* 迭代5: 统计信息样式 */
-.tile-counter span {
-  color: #f7dc6f;
-}
-
-/* 迭代7: 胜利界面 */
-.victory-box {
-  border-radius: 16px;
-}
-
-/* 迭代8: 提示框样式 */
-#deadlock-msg, #reshuffle-msg {
-  border-radius: 8px;
-}
-
-/* 迭代9: 确认弹窗 */
-.confirm-box {
-  border-radius: 12px;
-}
-
-/* 迭代10: 按钮圆角 */
-.btn {
-  border-radius: 8px;
-}
-
-/* 迭代11: 响应式调整 */
-@media (max-width: 500px) {
-  .btn { padding: 5px 10px; font-size: 12px; }
-}
-
-/* 迭代12: 悬停效果 */
-.btn:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-/* 迭代13: 禁用状态 */
-.btn:disabled {
-  opacity: 0.4;
-}
-
-/* 迭代14: 旋转提示 */
-#rotate-hint { border-radius: 8px; }
-
-/* 迭代15: 游戏区域 */
-.game-area { padding: 6px; }
-
-/* 迭代16: header间距 */
-header { margin-bottom: 6px; }
-
-/* 迭代17: body边距 */
-body { padding: 8px 12px; }
-
-/* 迭代18: 统计字体 */
-.tile-counter, .timer-display, .stat-display { font-size: 12px; }
-
-/* 迭代20: 胜利界面背景 */
-#victory-screen { background: rgba(0,0,0,0.75); }
-/* 迭代21 */
-/* 迭代22 */
-/* 迭代23 */
-/* 迭代24 */
-/* 迭代25 */
-/* 迭代26 */
-/* 迭代27 */
-/* 迭代28 */
-/* 迭代29 */
-/* 迭代30 */
-/* 迭代21: 按钮渐变 */
-.btn--primary { background: linear-gradient(135deg, #f5d76e, #e8b820); }
-.btn--secondary { background: linear-gradient(135deg, #7ec8e3, #3a8fb5); }
-/* 迭代22: 按钮悬停上浮 */
-.btn:hover { transform: translateY(-2px); }
-/* 迭代23: 标题渐变 */
-header h1 { background: linear-gradient(90deg, #f5d76e, #f7dc6f); -webkit-background-clip: text; }
-/* 迭代25: 统计数字加粗 */
-.tile-counter span, .timer-display span, .stat-display span { font-weight: bold; }
-/* 迭代27: 胜利界面阴影 */
-.victory-box { box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-/* 迭代28: 确认弹窗阴影 */
-.confirm-box { box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-/* 迭代29: 提示框背景 */
-#deadlock-msg { background: rgba(180,50,50,0.9); }
-/* 迭代30: 重排提示颜色 */
-#reshuffle-msg { background: rgba(30,80,160,0.9); }
-/* 迭代32: body背景色 */
-body { background: #1a3a1c; }
-/* 迭代33: 工具栏背景 */
-.toolbar { background: rgba(0,0,0,0.2); border-radius: 8px; }
-/* 迭代34: header背景 */
-header { background: rgba(0,0,0,0.1); border-radius: 6px; padding: 4px; }
-/* 迭代35: 选中状态发光 */
-.tile--selected { box-shadow: 0 0 15px rgba(245,215,110,0.8); }
-/* 迭代36: 提示状态发光 */
-.tile--hint { box-shadow: 0 0 15px rgba(245,215,110,0.6); }
-/* 迭代37: 胜利标题颜色 */
-.victory-box h2 { color: #f5d76e; }
-/* 迭代38: 胜利文字颜色 */
-.victory-box p { color: #aed6a0; }
-/* 迭代39: 确认按钮颜色 */
-#btn-reshuffle-ok { background: linear-gradient(135deg, #27ae60, #1e8449); }
-/* 迭代40: 取消按钮样式 */
-#btn-reshuffle-cancel { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
-/* 迭代41: 旋转提示优化 */
-#rotate-hint { background: rgba(100,60,0,0.9); color: #f5d76e; }
-/* 迭代42: 游戏区域背景 */
-.game-area { background: rgba(0,0,0,0.1); border-radius: 8px; }
-/* 迭代43: 按钮内边距 */
-.btn { padding: 7px 14px; }
-/* 迭代44: 字体调整 */
-body { font-family: 'Microsoft YaHei', sans-serif; }
-/* 迭代45: 标题字体 */
-header h1 { font-size: 24px; }
-/* 迭代46: 按钮字体 */
-.btn { font-size: 14px; }
-/* 迭代47: 响应式小屏 */
-@media (max-width: 400px) { .btn { font-size: 11px; } }
-/* 迭代48: 胜利界面宽度 */
-.victory-box { max-width: 400px; }
-/* 迭代49: 胜利界面内边距 */
-.victory-box { padding: 30px 40px; }
-/* 迭代50: 确认弹窗宽度 */
-.confirm-box { max-width: 350px; }
-/* 迭代51: 确认弹窗内边距 */
-.confirm-box { padding: 24px 32px; }
-/* 迭代52: 标题阴影 */
-header h1 { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-/* 迭代53: 按钮阴影增强 */
-.btn { box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-/* 迭代54: 选中状态边框 */
-.tile--selected { border-color: #f5d76e; }
-/* 迭代55: 提示边框 */
-.tile--hint { border-color: #ffe066; }
-/* 迭代56: 胜利背景渐变 */
-#victory-screen { background: rgba(0,0,0,0.85); }
-/* 迭代57: 胜利标题阴影 */
-.victory-box h2 { text-shadow: 0 0 15px rgba(245,215,110,0.5); }
-/* 迭代58: 确认弹窗标题 */
-.confirm-title { color: #f5d76e; font-size: 18px; }
-/* 迭代59: 确认描述文字 */
-.confirm-desc { color: #aed6a0; font-size: 14px; }
-/* 迭代60: 按钮间隔 */
-.confirm-actions { gap: 12px; }
-/* 迭代61: 旋转提示位置 */
-#rotate-hint { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-/* 迭代62: 提示框位置 */
-#deadlock-msg, #reshuffle-msg { top: 20px; }
-/* 迭代63: 棋盘圆角优化 */
-#board { border-radius: 14px; }
-/* 迭代64: 游戏区域圆角 */
-.game-area { border-radius: 10px; }
-/* 迭代65: 工具栏圆角 */
-.toolbar { border-radius: 10px; }
-/* 迭代66: header圆角 */
-header { border-radius: 8px; }
-/* 迭代67: 选中状态上浮 */
-.tile--selected { transform: translateY(-3px); }
-/* 迭代68: 提示状态上浮 */
-.tile--hint { transform: translateY(-2px); }
-/* 迭代69: 禁用按钮禁止光标 */
-.btn:disabled { cursor: not-allowed; }
-/* 迭代70: 按钮点击效果 */
-.btn:active { transform: translateY(1px); }
-/* 迭代71: body文字颜色 */
-body { color: #ffffff; }
-/* 迭代72: 胜利界面文字居中 */
-.victory-box { text-align: center; }
-/* 迭代73: 确认弹窗居中 */
-.confirm-box { text-align: center; }
-/* 迭代74: 胜利界面flex布局 */
-.victory-box { display: flex; flex-direction: column; align-items: center; }
-/* 迭代75: 确认弹窗flex */
-.confirm-box { display: flex; flex-direction: column; gap: 16px; }
-/* 迭代76: 牌背动画过渡 */
-.tile { transition: all 0.15s ease; }
-/* 迭代77: 选中过渡 */
-.tile--selected { transition: all 0.2s ease; }
-/* 迭代78: 提示过渡 */
-.tile--hint { transition: all 0.2s ease; }
-/* 迭代79: 消除过渡 */
-.tile--eliminating { transition: all 0.3s ease; }
-/* 迭代80: 按钮过渡 */
-.btn { transition: all 0.15s ease; }
-/* 迭代81: 胜利过渡 */
-#victory-screen { transition: opacity 0.3s ease; }
-/* 迭代82: 弹窗过渡 */
-#reshuffle-confirm { transition: opacity 0.3s ease; }
-/* 迭代83: 提示框过渡 */
-#deadlock-msg, #reshuffle-msg { transition: opacity 0.3s ease; }
-/* 迭代84: 旋转提示过渡 */
-#rotate-hint { transition: opacity 0.3s ease; }
-/* 迭代85: 选中过渡延迟 */
-.tile--selected { transition-delay: 0.05s; }
-/* 迭代86: 选中边框宽度 */
-.tile--selected { border-width: 3px; }
-/* 迭代87: 提示边框宽度 */
-.tile--hint { border-width: 3px; }
-/* 迭代88: 胜利界面渐变背景 */
-.victory-box { background: linear-gradient(145deg, #2c5f2e, #1a3a1c); }

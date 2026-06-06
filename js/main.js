@@ -2,8 +2,8 @@ import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
 import { showTutorial, hideTutorial } from './tutorial.js';
 import { initDragController } from './dragController.js';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame } from './gameController.js';
-import { recalcLayout, recalcTileSizeOnly } from './constants.js';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, showRotateHint } from './gameController.js';
+import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
 
 // main.js — 入口、初始化、按钮绑定
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       BgmController.stop();
     }
-    btnSound.textContent = on ? '🔊' : '🔇';
+    btnSound.textContent = on ? '音效' : '静音';
     btnSound.classList.toggle('btn--muted', !on);
   });
 
@@ -66,8 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       recalcLayout();
       if (BOARD_COLS !== prevCols || BOARD_ROWS !== prevRows) {
         showRotateHint();
-        BOARD_COLS = prevCols;
-        BOARD_ROWS = prevRows;
+        setBoardLayout(prevCols, prevRows);
         recalcTileSizeOnly(prevCols, prevRows);
       }
       renderBoard(window._gameState, document.getElementById('board'));
@@ -93,6 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const soundEnabled = localStorage.getItem('mahjong-sound') !== 'false';
     SoundController.setEnabled(soundEnabled);
-    btnSound.textContent = soundEnabled ? '🔊' : '🔇';
+    btnSound.textContent = soundEnabled ? '音效' : '静音';
   } catch (e) { /* 隐私模式或存储不可用 */ }
 });

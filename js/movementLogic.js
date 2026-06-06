@@ -134,9 +134,9 @@ function applySlide(state, group, direction, delta) {
  */
 function pixelsToCells(pixels, direction) {
   if (direction === DIR.HORIZONTAL) {
-    return Math.round(pixels / (TILE_WIDTH + TILE_GAP));
+    return Math.round(pixels / TILE_WIDTH);
   } else {
-    return Math.round(pixels / (TILE_HEIGHT + TILE_GAP));
+    return Math.round(pixels / TILE_HEIGHT);
   }
 }
 

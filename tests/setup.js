@@ -24,8 +24,12 @@ vm.createContext(sandbox);
 
 for (const file of files) {
   let code = fs.readFileSync(path.join(jsRoot, file), 'utf8');
-  // 将 const/let 替换为 var，使顶层声明成为 sandbox 的可枚举属性
+  // 测试在 VM 中按顺序注入源码，需移除浏览器 ES module 语法。
   code = code
+    .replace(/^\s*import\s+[^;]+;\s*$/gm, '')
+    .replace(/^\s*export\s+\{[\s\S]*?\};\s*$/gm, '')
+    .replace(/\bexport\s+(?=(var|let|const|function|class)\b)/g, '')
+    // 将 const/let 替换为 var，使顶层声明成为 sandbox 的可枚举属性。
     .replace(/\bconst\b/g, 'var')
     .replace(/\blet\b/g, 'var');
   // 传入 filename 使 V8 覆盖率引擎能将执行记录映射到源文件

@@ -1,6 +1,7 @@
 import { setTiles } from './boardState.js';
 import { countRemainingTiles } from './boardState.js';
 import { findHint } from './hintSystem.js';
+import { TILE_TYPES } from './tileDefinitions.js';
 
 // gameLogic.js — 消除规则1/2统一实现 + 连锁消除
 
@@ -19,13 +20,16 @@ import { findHint } from './hintSystem.js';
 // 扫描一行/列，返回可消除的牌对 [{row, col, instanceId}][]
 function scanLineForPairs(tiles) {
   // tiles: [{row, col, tile}]，已按位置排序
-  // 返回所有相邻同类对，去重由上层调用方负责（applyOneWave / handleTileClick）
+  // 返回不重叠的相邻同类对，避免 A-A-A 被判成两次配对。
   const pairs = [];
-  for (let i = 0; i < tiles.length - 1; i++) {
+  for (let i = 0; i < tiles.length - 1;) {
     const a = tiles[i];
     const b = tiles[i + 1];
     if (a.tile.tileTypeId === b.tile.tileTypeId) {
       pairs.push([a, b]);
+      i += 2;
+    } else {
+      i += 1;
     }
   }
   return pairs;
@@ -105,16 +109,16 @@ function applyOneWave(state) {
   const pairs = findAllPairs(state);
   if (pairs.length === 0) return { newState: state, eliminated: [] };
 
-  const usedKeys = new Set();
+  const usedIds = new Set();
   const validPairs = [];
 
   for (const { a, b } of pairs) {
-    const keyA = `${a.row},${a.col}`;
-    const keyB = `${b.row},${b.col}`;
-    if (!usedKeys.has(keyA) && !usedKeys.has(keyB)) {
+    const idA = a.tile.instanceId;
+    const idB = b.tile.instanceId;
+    if (!usedIds.has(idA) && !usedIds.has(idB)) {
       validPairs.push({ a, b });
-      usedKeys.add(keyA);
-      usedKeys.add(keyB);
+      usedIds.add(idA);
+      usedIds.add(idB);
     }
   }
 

@@ -1,4 +1,4 @@
-import { BOARD_COLS, BOARD_ROWS, TILE_WIDTH, TILE_HEIGHT, TILE_GAP, BOARD_PADDING } from './constants.js';
+import { BOARD_COLS, BOARD_ROWS, TILE_WIDTH, TILE_HEIGHT, TILE_GAP, BOARD_PADDING, DIR } from './constants.js';
 
 // renderer.js — DOM 渲染（绝对定位 + 局部更新）
 
@@ -134,6 +134,7 @@ function setGroupTransform(group, dx, dy) {
   for (const { tile } of group) {
     const el = getTileElement(tile.instanceId);
     if (el) {
+      el.classList.add('tile--dragging');
       el.style.transform = `translate(${dx}px, ${dy}px)`;
       el.style.zIndex = '100';
     }
@@ -145,6 +146,7 @@ function resetGroupTransform(group) {
   for (const { tile } of group) {
     const el = getTileElement(tile.instanceId);
     if (el) {
+      el.classList.remove('tile--dragging');
       el.style.transform = '';
       el.style.zIndex = '';
     }
@@ -158,7 +160,9 @@ function commitGroupPosition(group, direction, delta) {
     if (!el) continue;
     const newRow = direction === DIR.VERTICAL ? g.row + delta : g.row;
     const newCol = direction === DIR.HORIZONTAL ? g.col + delta : g.col;
+    el.classList.remove('tile--dragging');
     updateTilePosition(el, newRow, newCol);
+    el.style.zIndex = '';
   }
 }
 

@@ -1,4 +1,4 @@
-import { ANIM } from './constants.js';
+import { ANIM, DIR, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
 import { getTileElement, commitGroupPosition, clearAllHints } from './renderer.js';
 import { SoundController } from './soundController.js';
 
@@ -35,6 +35,7 @@ function animateSlide(group, direction, delta) {
         el.style.transition = '';
         el.style.zIndex = '';
       }
+      pulseBoard(elements[0]?.parentElement, 'board--slide-ok', 260);
       resolve();
     }, ANIM.SLIDE_DURATION);
   });
@@ -44,8 +45,10 @@ function animateSlide(group, direction, delta) {
 function animateRevert(group) {
   return new Promise(resolve => {
     const elements = group.map(g => getTileElement(g.tile.instanceId)).filter(Boolean);
+    pulseBoard(elements[0]?.parentElement, 'board--invalid', ANIM.REVERT_DURATION + 80);
 
     for (const el of elements) {
+      el.classList.add('tile--invalid');
       el.style.transition = `transform ${ANIM.REVERT_DURATION}ms ease-out`;
       el.style.transform = 'translate(0, 0)';
       el.style.zIndex = '';
@@ -53,6 +56,7 @@ function animateRevert(group) {
 
     setTimeout(() => {
       for (const el of elements) {
+        el.classList.remove('tile--dragging', 'tile--invalid');
         el.style.transition = '';
         el.style.transform = '';
       }
@@ -61,8 +65,71 @@ function animateRevert(group) {
   });
 }
 
+function pulseBoard(boardEl, className, duration) {
+  if (!boardEl) return;
+  boardEl.classList.remove(className);
+  void boardEl.offsetWidth;
+  boardEl.classList.add(className);
+  setTimeout(() => boardEl.classList.remove(className), duration);
+}
+
+function drawMatchLine(boardEl, pair) {
+  if (!boardEl) return null;
+  const elA = getTileElement(pair.a.tile.instanceId);
+  const elB = getTileElement(pair.b.tile.instanceId);
+  if (!elA || !elB) return null;
+
+  const boardRect = boardEl.getBoundingClientRect();
+  const rectA = elA.getBoundingClientRect();
+  const rectB = elB.getBoundingClientRect();
+  const x1 = rectA.left - boardRect.left + rectA.width / 2;
+  const y1 = rectA.top - boardRect.top + rectA.height / 2;
+  const x2 = rectB.left - boardRect.left + rectB.width / 2;
+  const y2 = rectB.top - boardRect.top + rectB.height / 2;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const line = document.createElement('div');
+
+  line.className = 'match-line';
+  line.style.left = `${x1}px`;
+  line.style.top = `${y1}px`;
+  line.style.width = `${Math.hypot(dx, dy)}px`;
+  line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+  boardEl.appendChild(line);
+  return line;
+}
+
+function tileCenterInBoard(boardEl, el) {
+  const boardRect = boardEl.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left - boardRect.left + rect.width / 2,
+    y: rect.top - boardRect.top + rect.height / 2,
+  };
+}
+
+function drawTileSpark(boardEl, el, index) {
+  const center = tileCenterInBoard(boardEl, el);
+  const spark = document.createElement('div');
+  spark.className = 'tile-spark';
+  spark.style.left = `${center.x}px`;
+  spark.style.top = `${center.y}px`;
+  spark.style.setProperty('--spark-delay', `${(index % 6) * 18}ms`);
+  boardEl.appendChild(spark);
+  return spark;
+}
+
+function showWaveBadge(boardEl, pairCount, waveIndex) {
+  if (!boardEl) return null;
+  const badge = document.createElement('div');
+  badge.className = 'match-badge';
+  badge.textContent = waveIndex > 0 ? `连锁 x${waveIndex + 1}` : `消除 ${pairCount * 2}`;
+  boardEl.appendChild(badge);
+  return badge;
+}
+
 // 消除动画：给定一批 {row,col,tile} 的牌，播放缩放淡出，然后移除 DOM
-function animateEliminate(pairs) {
+function animateEliminate(pairs, waveIndex = 0) {
   return new Promise(resolve => {
     const allTiles = [];
     for (const { a, b } of pairs) {
@@ -70,15 +137,30 @@ function animateEliminate(pairs) {
     }
 
     const elements = allTiles.map(t => getTileElement(t.instanceId)).filter(Boolean);
+    const boardEl = elements[0]?.parentElement || null;
+    const lines = pairs.map(pair => drawMatchLine(boardEl, pair)).filter(Boolean);
+    const sparks = boardEl
+      ? elements.map((el, index) => drawTileSpark(boardEl, el, index))
+      : [];
+    const badge = showWaveBadge(boardEl, pairs.length, waveIndex);
+
+    pulseBoard(boardEl, waveIndex > 0 ? 'board--chain' : 'board--match', ANIM.ELIMINATE_DURATION + 120);
 
     for (const el of elements) {
-      el.classList.add('tile--eliminating');
+      el.classList.add('tile--matched', 'tile--eliminating');
     }
 
     setTimeout(() => {
       for (const el of elements) {
         el.remove();
       }
+      for (const line of lines) {
+        line.remove();
+      }
+      for (const spark of sparks) {
+        spark.remove();
+      }
+      if (badge) badge.remove();
       resolve();
     }, ANIM.ELIMINATE_DURATION);
   });
@@ -93,7 +175,7 @@ async function runEliminationSequence(waves, onWaveComplete) {
   for (let i = 0; i < waves.length; i++) {
     const wave = waves[i];
     SoundController.playChainWave(i);
-    await animateEliminate(wave.eliminated);
+    await animateEliminate(wave.eliminated, i);
     await wait(ANIM.CHAIN_DELAY);
     onWaveComplete(wave.stateAfter);
   }
@@ -110,6 +192,16 @@ function animateHint(group) {
 // 清除提示动画
 function clearHintAnimation(boardEl) {
   clearAllHints(boardEl);
+}
+
+function animateInvalidTile(tile) {
+  const el = tile ? getTileElement(tile.instanceId) : null;
+  if (!el) return;
+  el.classList.remove('tile--invalid');
+  void el.offsetWidth;
+  el.classList.add('tile--invalid');
+  pulseBoard(el.parentElement, 'board--invalid', 220);
+  setTimeout(() => el.classList.remove('tile--invalid'), 240);
 }
 
 /**
@@ -151,4 +243,4 @@ async function runDealAnimation(boardEl, height) {
   }
 }
 
-export { wait, animateSlide, animateRevert, runEliminationSequence, animateHint, clearHintAnimation, runDealAnimation };
+export { wait, animateSlide, animateRevert, runEliminationSequence, animateHint, animateInvalidTile, clearHintAnimation, runDealAnimation };

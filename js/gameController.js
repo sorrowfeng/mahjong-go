@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, checkVictory, reshuffleRemainingTiles } from './gameLogic.js';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js';
 import { findHint } from './hintSystem.js';
-import { renderBoard } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, clearHintAnimation } from './animationController.js';
+import { renderBoard, resetGroupTransform } from './renderer.js';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js';
 import { SoundController } from './soundController.js';
 import { generateDeck, shuffleDeck } from './tileDefinitions.js';
 import { applySlide } from './movementLogic.js';
-import { recalcLayout, recalcTileSizeOnly } from './constants.js';
+import { recalcLayout } from './constants.js';
 import { hideTutorial } from './tutorial.js';
 
 // gameController.js — 游戏状态机（主协调器）
@@ -233,7 +233,11 @@ async function handleTileClick({ row, col }) {
     (a.row === row && a.col === col) || (b.row === row && b.col === col)
   );
 
-  if (!pair) return; // 点击的牌暂无可消除配对，忽略
+  if (!pair) {
+    SoundController.playInvalidMove();
+    animateInvalidTile(boardState.grid[row][col]);
+    return;
+  }
 
   SoundController.playTileClick();
   pushUndo(boardState);
@@ -313,7 +317,9 @@ function handleUndo() {
   clearHintAnimation(getBoardEl());
 
   const prev = undoStack.pop();
-  boardState = prev;
+  boardState = prev.state;
+  moveCount = prev.moveCount;
+  hintCount = prev.hintCount;
   window._gameState = boardState;
 
   renderBoard(boardState, getBoardEl());
@@ -329,7 +335,11 @@ function handleNewGame() {
 
 // 撤销栈管理
 function pushUndo(state) {
-  undoStack.push(cloneState(state));
+  undoStack.push({
+    state: cloneState(state),
+    moveCount,
+    hintCount,
+  });
   if (undoStack.length > MAX_UNDO_STEPS) {
     undoStack.shift();
   }
@@ -343,16 +353,22 @@ function updateUI() {
   }
 
   const remaining = countRemainingTiles(boardState);
-  const countEl = document.getElementById('tile-count');
-  if (countEl) {
-    countEl.textContent = remaining;
-  }
+  setCounterText('tile-count', remaining);
+  setCounterText('move-count', moveCount);
+  setCounterText('hint-count', hintCount);
+}
 
-  const moveEl = document.getElementById('move-count');
-  if (moveEl) moveEl.textContent = moveCount;
+function setCounterText(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
 
-  const hintEl = document.getElementById('hint-count');
-  if (hintEl) hintEl.textContent = hintCount;
+  const nextText = String(value);
+  if (el.textContent === nextText) return;
+
+  el.textContent = nextText;
+  el.classList.remove('stat-pop');
+  void el.offsetWidth;
+  el.classList.add('stat-pop');
 }
 
 // 胜利界面

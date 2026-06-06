@@ -1,16 +1,16 @@
 // constants.js — 全局常量定义
 
-export const TOTAL_TILES = 136;
+const TOTAL_TILES = 136;
 
 // 行列数：运行时由 recalcLayout() 根据屏幕动态设置
-export let BOARD_COLS = 17;
-export let BOARD_ROWS = 8;
+let BOARD_COLS = 17;
+let BOARD_ROWS = 8;
 
 // 牌尺寸：运行时由 recalcLayout() 覆盖
-export let TILE_WIDTH   = 60;
-export let TILE_HEIGHT  = 80;
-export let TILE_GAP     = 4;
-export let BOARD_PADDING = 12;
+let TILE_WIDTH   = 60;
+let TILE_HEIGHT  = 80;
+let TILE_GAP     = 4;
+let BOARD_PADDING = 12;
 
 /**
  * 测量当前可用的游戏区域尺寸（排除 header / toolbar）。
@@ -139,10 +139,15 @@ function recalcTileSizeOnly(cols, rows) {
   _applyTileSize(w);
 }
 
+function setBoardLayout(cols, rows) {
+  BOARD_COLS = cols;
+  BOARD_ROWS = rows;
+}
+
 // 动画时长（毫秒）
 const ANIM = {
   SLIDE_DURATION: 180,
-  ELIMINATE_DURATION: 300,
+  ELIMINATE_DURATION: 360,
   REVERT_DURATION: 200,
   HINT_PULSE_DURATION: 600,
   CHAIN_DELAY: 100,
@@ -180,4 +185,24 @@ const MAX_UNDO_STEPS = 20;
 // 开局可解最大重试次数
 const MAX_SHUFFLE_RETRIES = 100;
 
-export { recalcLayout, recalcTileSizeOnly, _measureAvailableArea, _applyTileSize };
+export {
+  TOTAL_TILES,
+  BOARD_COLS,
+  BOARD_ROWS,
+  TILE_WIDTH,
+  TILE_HEIGHT,
+  TILE_GAP,
+  BOARD_PADDING,
+  ANIM,
+  DRAG_THRESHOLD,
+  DIR,
+  GAME_STATE,
+  TILE_TYPE,
+  MAX_UNDO_STEPS,
+  MAX_SHUFFLE_RETRIES,
+  recalcLayout,
+  recalcTileSizeOnly,
+  setBoardLayout,
+  _measureAvailableArea,
+  _applyTileSize,
+};

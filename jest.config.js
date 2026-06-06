@@ -5,7 +5,6 @@ module.exports = {
   // V8 原生覆盖率引擎，可追踪通过 vm.runInContext 加载的代码（配合 filename 选项）
   coverageProvider: 'v8',
   collectCoverageFrom: [
-    'js/constants.js',
     'js/tileDefinitions.js',
     'js/boardState.js',
     'js/gameLogic.js',
