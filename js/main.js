@@ -1,8 +1,8 @@
 import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
-import { showTutorial, hideTutorial } from './tutorial.js?v=20260606-5';
-import { initDragController } from './dragController.js?v=20260606-5';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint } from './gameController.js?v=20260606-5';
+import { showTutorial, hideTutorial } from './tutorial.js?v=20260606-7';
+import { initDragController } from './dragController.js?v=20260606-7';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights } from './gameController.js?v=20260606-7';
 import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
 
@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setBoardLayout(window._gameState.width, window._gameState.height);
         recalcTileSizeOnly(window._gameState.width, window._gameState.height);
         renderBoard(window._gameState, document.getElementById('board'));
+        refreshTeachingHighlights();
         return;
       }
       const prevCols = BOARD_COLS;

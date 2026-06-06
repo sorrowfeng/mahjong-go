@@ -181,6 +181,22 @@
   animation: tile-hint-pulse 760ms ease-in-out 2 forwards;
 }
 
+.tile--teaching-target,
+.tile--teaching-anchor {
+  z-index: 70;
+  filter: brightness(1.045) saturate(1.06);
+}
+
+.tile--teaching-target {
+  border-color: #ffd76d;
+  animation: tile-teaching-target-pulse 1180ms ease-in-out infinite;
+}
+
+.tile--teaching-anchor {
+  border-color: #86e2bb;
+  animation: tile-teaching-anchor-pulse 1180ms ease-in-out infinite;
+}
+
 .tile--matched {
   z-index: 85;
   border-color: #ffffff;

@@ -57,6 +57,40 @@
   }
 }
 
+@keyframes tile-teaching-target-pulse {
+  0%, 100% {
+    box-shadow:
+      0 1px 0 #b99d73,
+      0 0 0 2px rgba(255, 215, 109, 0.92),
+      0 0 13px rgba(255, 215, 109, 0.42),
+      0 7px 15px rgba(42, 88, 67, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 1px 0 #b99d73,
+      0 0 0 4px rgba(255, 246, 210, 0.96),
+      0 0 22px rgba(255, 215, 109, 0.64),
+      0 10px 19px rgba(42, 88, 67, 0.25);
+  }
+}
+
+@keyframes tile-teaching-anchor-pulse {
+  0%, 100% {
+    box-shadow:
+      0 1px 0 #b99d73,
+      0 0 0 2px rgba(134, 226, 187, 0.92),
+      0 0 12px rgba(134, 226, 187, 0.38),
+      0 7px 15px rgba(42, 88, 67, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 1px 0 #b99d73,
+      0 0 0 4px rgba(224, 255, 242, 0.96),
+      0 0 22px rgba(134, 226, 187, 0.62),
+      0 10px 19px rgba(42, 88, 67, 0.24);
+  }
+}
+
 @keyframes tile-invalid {
   0%, 100% {
     filter: brightness(1);
