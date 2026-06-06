@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-1';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-2';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-1';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-2';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260607-1';
-import { hideTutorial } from './tutorial.js?v=20260607-1';
+import { applySlide } from './movementLogic.js?v=20260607-2';
+import { hideTutorial } from './tutorial.js?v=20260607-2';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -111,8 +111,8 @@ const TEACHING_STEPS = [
   },
 ];
 const TEACHING_COMPLETE = {
-  label: '教学完成',
-  text: '很好，点击消除、拖动对齐和带动整组移动都试过了。点击「新游戏」进入完整牌局，或从提示里重新打开教学。',
+  label: '自由练习',
+  text: '很好，规则已经走完了。剩下的牌都能按正常规则继续消除，试着把这盘清完。',
 };
 
 let isTeachingMode = false;
@@ -228,11 +228,11 @@ function createTeachingBoard() {
   return createTeachingState([
     { row: 0, col: 0, typeId: 9, instanceOffset: 1 },
     { row: 0, col: 3, typeId: 18, instanceOffset: 2 },
-    { row: 0, col: 7, typeId: 27, instanceOffset: 3 },
-    { row: 1, col: 0, typeId: 10, instanceOffset: 4 },
+    { row: 0, col: 7, typeId: 18, instanceOffset: 3 },
+    { row: 1, col: 0, typeId: 9, instanceOffset: 4 },
     { row: 1, col: 2, typeId: 5, instanceOffset: 5 },
     { row: 1, col: 4, typeId: 28, instanceOffset: 6 },
-    { row: 1, col: 5, typeId: 23, instanceOffset: 7 },
+    { row: 1, col: 5, typeId: 5, instanceOffset: 7 },
     { row: 1, col: 6, typeId: 21, instanceOffset: 8 },
     { row: 1, col: 7, typeId: 6, instanceOffset: 9 },
     { row: 1, col: 8, typeId: 30, instanceOffset: 10 },
@@ -244,11 +244,12 @@ function createTeachingBoard() {
     { row: 3, col: 1, typeId: 2, instanceOffset: 16 },
     { row: 3, col: 2, typeId: 21, instanceOffset: 17 },
     { row: 3, col: 3, typeId: 6, instanceOffset: 18 },
-    { row: 3, col: 8, typeId: 7, instanceOffset: 19 },
-    { row: 4, col: 1, typeId: 32, instanceOffset: 20 },
+    { row: 3, col: 8, typeId: 30, instanceOffset: 19 },
+    { row: 4, col: 0, typeId: 24, instanceOffset: 20 },
+    { row: 4, col: 1, typeId: 32, instanceOffset: 24 },
     { row: 4, col: 4, typeId: 28, instanceOffset: 21 },
-    { row: 4, col: 5, typeId: 1, instanceOffset: 22 },
-    { row: 4, col: 8, typeId: 12, instanceOffset: 23 },
+    { row: 4, col: 5, typeId: 2, instanceOffset: 22 },
+    { row: 4, col: 8, typeId: 32, instanceOffset: 23 },
   ]);
 }
 
@@ -333,17 +334,29 @@ function isExpectedTeachingClick(pair) {
     && pairMatchesPositions(pair, step.clickPair);
 }
 
-function isExpectedTeachingDrag(group, direction, delta, waves) {
-  if (!isTeachingMode || teachingCompleted) return true;
+function getExpectedTeachingDragPair(group, direction, delta, waves) {
+  if (!isTeachingMode || teachingCompleted) return null;
 
   const step = TEACHING_STEPS[teachingStepIndex];
-  if (step?.action !== 'drag' || !step.drag) return false;
-  if (direction !== step.drag.direction || delta !== step.drag.delta) return false;
-  if (!positionsMatch(group.map(({ row, col }) => ({ row, col })), step.drag.group)) return false;
+  if (step?.action !== 'drag' || !step.drag) return null;
+  if (direction !== step.drag.direction || delta !== step.drag.delta) return null;
+  if (!positionsMatch(group.map(({ row, col }) => ({ row, col })), step.drag.group)) return null;
 
-  return waves.some(wave =>
-    wave.eliminated.some(pair => pairMatchesPositions(pair, step.drag.pairAfter))
-  );
+  for (const wave of waves) {
+    const pair = wave.eliminated.find(p => pairMatchesPositions(p, step.drag.pairAfter));
+    if (pair) return pair;
+  }
+  return null;
+}
+
+function waveForSinglePair(state, pair) {
+  return {
+    eliminated: [{ a: pair.a, b: pair.b }],
+    stateAfter: eliminateTiles(state, [
+      { row: pair.a.row, col: pair.a.col },
+      { row: pair.b.row, col: pair.b.col },
+    ]),
+  };
 }
 
 function hideTeachingPanel() {
@@ -371,6 +384,8 @@ function completeTeachingLevel() {
   clearHintAnimation(getBoardEl());
   clearTeachingHighlights(getBoardEl());
   updateTeachingPanel(TEACHING_COMPLETE);
+  const panel = document.getElementById('teaching-panel');
+  if (panel) panel.classList.add('hidden');
   SoundController.playVictory();
   updateUI();
 }
@@ -524,10 +539,6 @@ async function handleDragEnd({ group, direction, delta }) {
     resetGroupTransform(group);
     return;
   }
-  if (isTeachingMode && teachingCompleted) {
-    resetGroupTransform(group);
-    return;
-  }
   if (delta === 0) {
     resetGroupTransform(group);
     return;
@@ -541,8 +552,13 @@ async function handleDragEnd({ group, direction, delta }) {
   // 只连锁消除移动后"新产生"的配对，不自动消除存量配对
   const waves = resolveNewPairChain(boardState, proposedState);
   let hasMatch = waves.length > 0;
-  if (hasMatch && isTeachingMode && !isExpectedTeachingDrag(group, direction, delta, waves)) {
-    hasMatch = false;
+  let wavesToRun = waves;
+  if (hasMatch && isTeachingMode && !teachingCompleted) {
+    const expectedPair = getExpectedTeachingDragPair(group, direction, delta, waves);
+    hasMatch = expectedPair !== null;
+    if (expectedPair) {
+      wavesToRun = [waveForSinglePair(proposedState, expectedPair)];
+    }
   }
 
   gameState = GAME_STATE.ANIMATING;
@@ -560,7 +576,7 @@ async function handleDragEnd({ group, direction, delta }) {
       boardState = proposedState;
       window._gameState = boardState;
 
-      await runEliminationSequence(waves, (stateAfter) => {
+      await runEliminationSequence(wavesToRun, (stateAfter) => {
         if (gameGeneration === myGeneration) {
           boardState = stateAfter;
           window._gameState = boardState;
@@ -601,7 +617,6 @@ async function handleDragEnd({ group, direction, delta }) {
 // 处理点击消除（用户点击有配对的牌时调用）
 async function handleTileClick({ row, col }) {
   if (gameState !== GAME_STATE.IDLE) return;
-  if (isTeachingMode && teachingCompleted) return;
 
   const myGeneration = gameGeneration;
 
@@ -677,12 +692,12 @@ async function handleTileClick({ row, col }) {
 // 提示功能
 function handleHint() {
   if (gameState !== GAME_STATE.IDLE) return;
-  if (!boardState || (isTeachingMode && teachingCompleted)) return;
+  if (!boardState) return;
 
   clearHintAnimation(getBoardEl());
   hintCount++;
 
-  if (isTeachingMode) {
+  if (isTeachingMode && !teachingCompleted) {
     showTeachingTargetHint();
     updateUI();
     return;
