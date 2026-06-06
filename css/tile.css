@@ -176,9 +176,12 @@
 }
 
 .tile--hint {
-  z-index: 60;
-  border-color: #ffe88a;
-  animation: tile-hint-pulse 760ms ease-in-out 2 forwards;
+  z-index: 80;
+  border-color: #f4c84f;
+  outline: 3px solid rgba(255, 220, 104, 0.88);
+  outline-offset: 3px;
+  filter: brightness(1.075) saturate(1.12);
+  animation: tile-hint-pulse 1080ms ease-in-out infinite;
 }
 
 .tile--teaching-target,
