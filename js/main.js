@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   btnSound.addEventListener('click', () => {
     const on = !SoundController.isEnabled();
     SoundController.setEnabled(on);
+    try {
+      localStorage.setItem('mahjong-sound', on ? 'true' : 'false');
+    } catch (e) { /* 隐私模式或存储不可用 */ }
     if (on) {
       BgmController.play();
     } else {
@@ -42,13 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 教学界面按钮：首次进入时开始游戏，游戏中查看时直接关闭
-  document.getElementById('btn-tutorial-start').addEventListener('click', () => {
+  document.getElementById('btn-tutorial-start').addEventListener('click', async () => {
     const isFirst = document.getElementById('btn-tutorial-start').dataset.first === '1';
     hideTutorial();
     if (isFirst) {
-      // 首次点击：启动 BGM（浏览器要求用户交互后才能播放音频）
-      BgmController.play();
-      initNewGame();
+      await initNewGame();
+      if (SoundController.isEnabled()) {
+        BgmController.play();
+      }
     }
   });
 
@@ -93,5 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const soundEnabled = localStorage.getItem('mahjong-sound') !== 'false';
     SoundController.setEnabled(soundEnabled);
     btnSound.textContent = soundEnabled ? '音效' : '静音';
+    btnSound.classList.toggle('btn--muted', !soundEnabled);
   } catch (e) { /* 隐私模式或存储不可用 */ }
 });

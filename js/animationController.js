@@ -9,6 +9,9 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const MAX_MATCH_LINES = 6;
+const MAX_TILE_SPARKS = 12;
+
 // 滑动动画：让牌组从当前位置（拖拽释放处）平滑滑到最终格位
 // 返回 Promise，动画结束后 resolve
 function animateSlide(group, direction, delta) {
@@ -68,8 +71,7 @@ function animateRevert(group) {
 function pulseBoard(boardEl, className, duration) {
   if (!boardEl) return;
   boardEl.classList.remove(className);
-  void boardEl.offsetWidth;
-  boardEl.classList.add(className);
+  requestAnimationFrame(() => boardEl.classList.add(className));
   setTimeout(() => boardEl.classList.remove(className), duration);
 }
 
@@ -138,9 +140,9 @@ function animateEliminate(pairs, waveIndex = 0) {
 
     const elements = allTiles.map(t => getTileElement(t.instanceId)).filter(Boolean);
     const boardEl = elements[0]?.parentElement || null;
-    const lines = pairs.map(pair => drawMatchLine(boardEl, pair)).filter(Boolean);
+    const lines = pairs.slice(0, MAX_MATCH_LINES).map(pair => drawMatchLine(boardEl, pair)).filter(Boolean);
     const sparks = boardEl
-      ? elements.map((el, index) => drawTileSpark(boardEl, el, index))
+      ? elements.slice(0, MAX_TILE_SPARKS).map((el, index) => drawTileSpark(boardEl, el, index))
       : [];
     const badge = showWaveBadge(boardEl, pairs.length, waveIndex);
 
@@ -215,10 +217,13 @@ async function runDealAnimation(boardEl, height) {
   const FLIP_DURATION = 500; // 与 CSS transition 时长一致
 
   const allTiles = boardEl.querySelectorAll('.tile');
+  const rows = Array.from({ length: height }, () => []);
 
   // 1. 所有牌立即置为背面（不触发 transition）
   for (const el of allTiles) {
     el.classList.add('tile--deal-hidden', 'tile--deal-animating');
+    const row = Number(el.dataset.row);
+    if (rows[row]) rows[row].push(el);
   }
 
   // 2. 强制一次 reflow，让浏览器记录 rotateY(180deg) 为起始状态
@@ -226,7 +231,7 @@ async function runDealAnimation(boardEl, height) {
 
   // 3. 从最底行（height-1）逐行翻到顶行（0）
   for (let row = height - 1; row >= 0; row--) {
-    const rowEls = boardEl.querySelectorAll(`.tile[data-row="${row}"]`);
+    const rowEls = rows[row];
     for (const el of rowEls) {
       el.classList.remove('tile--deal-hidden'); // 触发 rotateY(180→0) 过渡
     }
