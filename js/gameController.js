@@ -1,14 +1,13 @@
-import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES } from './constants.js';
+import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
 import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260606-3';
 import { SoundController } from './soundController.js';
-import { generateDeck, shuffleDeck } from './tileDefinitions.js';
+import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
 import { applySlide } from './movementLogic.js';
-import { recalcLayout } from './constants.js';
-import { hideTutorial } from './tutorial.js';
+import { hideTutorial } from './tutorial.js?v=20260606-3';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -25,6 +24,34 @@ let hintCount = 0;  // 使用提示次数
 let timerInterval = null;
 let timerStart = 0;
 let timerElapsed = 0;
+
+const COMBO_WINDOW_MS = 10000;
+const TEACHING_LAYOUT = { width: 7, height: 4 };
+const TEACHING_STEPS = [
+  {
+    action: 'click',
+    label: '教学 1/2',
+    text: '先点击任意一张一万。同行里只有这两张相同牌，中间没有其他牌，就会一起消除。',
+    createState: createTeachingClickBoard,
+  },
+  {
+    action: 'drag',
+    label: '教学 2/2',
+    text: '按住下方的七万向右拖，让它和上方的七万排在同一列，松手后会触发消除。',
+    createState: createTeachingDragBoard,
+  },
+];
+const TEACHING_COMPLETE = {
+  label: '教学完成',
+  text: '很好，点击消除和拖动对齐都试过了。点击「新游戏」进入完整牌局，或从提示里重新打开教学。',
+};
+
+let isTeachingMode = false;
+let teachingStepIndex = 0;
+let teachingCompleted = false;
+let comboCount = 0;
+let lastComboAt = 0;
+let comboResetTimer = null;
 
 function formatTime(secs) {
   const h = Math.floor(secs / 3600).toString().padStart(2, '0');
@@ -86,6 +113,7 @@ function resumeTimer() {
 
 // 暴露给 dragController 使用
 window._gameState = null;
+window._isTeachingMode = false;
 
 function getBoardEl() {
   return document.getElementById('board');
@@ -96,14 +124,153 @@ function syncPhase(state) {
   window._gamePhase = state;
 }
 
+function createTeachingTile(typeId, instanceOffset) {
+  const def = TILE_TYPES[typeId];
+  return {
+    instanceId: 10000 + instanceOffset,
+    tileTypeId: def.id,
+    type: def.type,
+    value: def.value,
+    label: def.label,
+    topChar: def.topChar,
+    bottomChar: def.bottomChar,
+    image: def.image,
+  };
+}
+
+function createTeachingState(tiles) {
+  const grid = Array.from(
+    { length: TEACHING_LAYOUT.height },
+    () => Array(TEACHING_LAYOUT.width).fill(null)
+  );
+
+  for (const { row, col, typeId, instanceOffset } of tiles) {
+    grid[row][col] = createTeachingTile(typeId, instanceOffset);
+  }
+
+  return {
+    width: TEACHING_LAYOUT.width,
+    height: TEACHING_LAYOUT.height,
+    grid,
+  };
+}
+
+function createTeachingClickBoard() {
+  return createTeachingState([
+    { row: 1, col: 1, typeId: 0, instanceOffset: 1 },
+    { row: 1, col: 4, typeId: 0, instanceOffset: 2 },
+  ]);
+}
+
+function createTeachingDragBoard() {
+  return createTeachingState([
+    { row: 1, col: 5, typeId: 6, instanceOffset: 3 },
+    { row: 2, col: 1, typeId: 5, instanceOffset: 4 },
+    { row: 2, col: 2, typeId: 6, instanceOffset: 5 },
+  ]);
+}
+
+function setTeachingChrome(visible) {
+  const panel = document.getElementById('teaching-panel');
+  const gameArea = document.querySelector('.game-area');
+  if (panel) panel.classList.toggle('hidden', !visible);
+  if (gameArea) gameArea.classList.toggle('game-area--teaching', visible);
+  document.body.classList.toggle('teaching-mode', visible);
+  window._isTeachingMode = visible;
+}
+
+function updateTeachingPanel(content) {
+  const labelEl = document.getElementById('teaching-step-label');
+  const textEl = document.getElementById('teaching-step-text');
+  if (labelEl) labelEl.textContent = content.label;
+  if (textEl) textEl.textContent = content.text;
+}
+
+function hideTeachingPanel() {
+  setTeachingChrome(false);
+  teachingCompleted = false;
+}
+
+function prepareTeachingLayout() {
+  setBoardLayout(TEACHING_LAYOUT.width, TEACHING_LAYOUT.height);
+  recalcTileSizeOnly(TEACHING_LAYOUT.width, TEACHING_LAYOUT.height);
+}
+
+function loadTeachingStep() {
+  const step = TEACHING_STEPS[teachingStepIndex];
+  undoStack = [];
+  clearHintAnimation(getBoardEl());
+  prepareTeachingLayout();
+  boardState = step.createState();
+  window._gameState = boardState;
+  renderBoard(boardState, getBoardEl());
+  updateTeachingPanel(step);
+  updateUI();
+}
+
+function completeTeachingLevel() {
+  teachingCompleted = true;
+  clearHintAnimation(getBoardEl());
+  updateTeachingPanel(TEACHING_COMPLETE);
+  SoundController.playVictory();
+  updateUI();
+}
+
+function advanceTeachingAfterAction(action) {
+  if (!isTeachingMode || teachingCompleted) return false;
+
+  const step = TEACHING_STEPS[teachingStepIndex];
+  if (!step || step.action !== action) return false;
+
+  if (teachingStepIndex < TEACHING_STEPS.length - 1) {
+    teachingStepIndex++;
+    loadTeachingStep();
+  } else {
+    completeTeachingLevel();
+  }
+  return true;
+}
+
+function leaveTeachingMode() {
+  isTeachingMode = false;
+  teachingStepIndex = 0;
+  hideTeachingPanel();
+}
+
+function resetCombo() {
+  comboCount = 0;
+  lastComboAt = 0;
+  if (comboResetTimer !== null) {
+    clearTimeout(comboResetTimer);
+    comboResetTimer = null;
+  }
+}
+
+function registerCombo() {
+  const now = Date.now();
+  const withinWindow = lastComboAt > 0 && now - lastComboAt <= COMBO_WINDOW_MS;
+  comboCount = withinWindow ? comboCount + 1 : 1;
+  lastComboAt = now;
+
+  if (comboResetTimer !== null) clearTimeout(comboResetTimer);
+  comboResetTimer = setTimeout(resetCombo, COMBO_WINDOW_MS);
+
+  return {
+    count: comboCount,
+    windowMs: COMBO_WINDOW_MS,
+  };
+}
+
 // 初始化新游戏
 async function initNewGame() {
   gameGeneration++;
   const myGeneration = gameGeneration;
 
+  leaveTeachingMode();
   undoStack = [];
   moveCount = 0;
   hintCount = 0;
+  resetCombo();
   resetTimer();
   // 隐藏旋转提示（如有）
   const rotateHint = document.getElementById('rotate-hint');
@@ -152,10 +319,52 @@ async function initNewGame() {
   }
 }
 
+async function startTeachingLevel() {
+  gameGeneration++;
+  const myGeneration = gameGeneration;
+
+  hideTutorial();
+  hideVictoryScreen();
+  hideReshuffleConfirm();
+  clearHintAnimation(getBoardEl());
+
+  isTeachingMode = true;
+  teachingStepIndex = 0;
+  teachingCompleted = false;
+  setTeachingChrome(true);
+  updateTeachingPanel(TEACHING_STEPS[0]);
+
+  undoStack = [];
+  moveCount = 0;
+  hintCount = 0;
+  resetCombo();
+  resetTimer();
+  gameState = GAME_STATE.ANIMATING;
+  syncPhase('ANIMATING');
+
+  prepareTeachingLayout();
+  boardState = TEACHING_STEPS[0].createState();
+  window._gameState = boardState;
+  renderBoard(boardState, getBoardEl());
+  updateUI();
+  SoundController.playNewGame();
+
+  await runDealAnimation(getBoardEl(), boardState.height);
+
+  if (gameGeneration === myGeneration) {
+    gameState = GAME_STATE.IDLE;
+    syncPhase('IDLE');
+  }
+}
+
 // 处理拖拽结束事件（由 dragController 调用）
 async function handleDragEnd({ group, direction, delta }) {
   // 动画期间不接受操作，重置可能残留的 transform
   if (gameState !== GAME_STATE.IDLE) {
+    resetGroupTransform(group);
+    return;
+  }
+  if (isTeachingMode && teachingCompleted) {
     resetGroupTransform(group);
     return;
   }
@@ -180,6 +389,7 @@ async function handleDragEnd({ group, direction, delta }) {
     if (hasMatch) {
       pushUndo(boardState);
       moveCount++;
+      const combo = registerCombo();
       SoundController.playSlideSuccess();
       await animateSlide(group, direction, delta);
 
@@ -192,7 +402,7 @@ async function handleDragEnd({ group, direction, delta }) {
           boardState = stateAfter;
           window._gameState = boardState;
         }
-      });
+      }, combo);
     } else {
       SoundController.playInvalidMove();
       await animateRevert(group);
@@ -209,6 +419,9 @@ async function handleDragEnd({ group, direction, delta }) {
   if (gameGeneration !== myGeneration) return;
 
   if (hasMatch) {
+    if (advanceTeachingAfterAction('drag')) {
+      return;
+    }
     if (checkVictory(boardState)) {
       showVictory();
       return;
@@ -222,6 +435,7 @@ async function handleDragEnd({ group, direction, delta }) {
 // 处理点击消除（用户点击有配对的牌时调用）
 async function handleTileClick({ row, col }) {
   if (gameState !== GAME_STATE.IDLE) return;
+  if (isTeachingMode && teachingCompleted) return;
 
   const myGeneration = gameGeneration;
 
@@ -242,6 +456,7 @@ async function handleTileClick({ row, col }) {
   SoundController.playTileClick();
   pushUndo(boardState);
   moveCount++;
+  const combo = registerCombo();
 
   const { a, b } = pair;
   const stateAfterFirst = eliminateTiles(boardState, [
@@ -261,7 +476,7 @@ async function handleTileClick({ row, col }) {
         boardState = stateAfter;
         window._gameState = boardState;
       }
-    });
+    }, combo);
   } finally {
     if (gameGeneration === myGeneration) {
       gameState = GAME_STATE.IDLE;
@@ -271,6 +486,10 @@ async function handleTileClick({ row, col }) {
   }
 
   if (gameGeneration !== myGeneration) return;
+
+  if (advanceTeachingAfterAction('click')) {
+    return;
+  }
 
   if (checkVictory(boardState)) {
     showVictory();
@@ -285,6 +504,7 @@ async function handleTileClick({ row, col }) {
 // 提示功能
 function handleHint() {
   if (gameState !== GAME_STATE.IDLE) return;
+  if (!boardState || (isTeachingMode && teachingCompleted)) return;
 
   clearHintAnimation(getBoardEl());
   hintCount++;
@@ -312,9 +532,11 @@ function handleHint() {
 // 撤销
 function handleUndo() {
   if (gameState !== GAME_STATE.IDLE) return;
+  if (isTeachingMode) return;
   if (undoStack.length === 0) return;
 
   clearHintAnimation(getBoardEl());
+  resetCombo();
 
   const prev = undoStack.pop();
   boardState = prev.state;
@@ -330,6 +552,15 @@ function handleUndo() {
 function handleNewGame() {
   clearHintAnimation(getBoardEl());
   hideVictoryScreen();
+  leaveTeachingMode();
+  initNewGame();
+}
+
+function exitTeachingLevel() {
+  if (!isTeachingMode) return;
+  clearHintAnimation(getBoardEl());
+  hideVictoryScreen();
+  leaveTeachingMode();
   initNewGame();
 }
 
@@ -349,8 +580,10 @@ function pushUndo(state) {
 function updateUI() {
   const undoBtn = document.getElementById('btn-undo');
   if (undoBtn) {
-    undoBtn.disabled = undoStack.length === 0;
+    undoBtn.disabled = isTeachingMode || undoStack.length === 0;
   }
+
+  if (!boardState) return;
 
   const remaining = countRemainingTiles(boardState);
   setCounterText('tile-count', remaining);
@@ -426,6 +659,7 @@ function hideReshuffleConfirm() {
 function doReshuffle() {
   hideReshuffleConfirm();
   pushUndo(boardState); // 支持撤销重排
+  resetCombo();
   const newState = reshuffleRemainingTiles(boardState);
   boardState = newState;
   window._gameState = boardState;
@@ -446,7 +680,8 @@ function showRotateHint() {
 export {
   gameState, boardState, moveCount, hintCount,
   pauseTimer, resumeTimer,
-  initNewGame, handleDragEnd, handleTileClick,
+  initNewGame, startTeachingLevel, exitTeachingLevel,
+  handleDragEnd, handleTileClick,
   handleHint, handleUndo, handleNewGame,
   doReshuffle, hideReshuffleConfirm, showRotateHint,
   pushUndo, updateUI, showVictory, hideVictoryScreen,

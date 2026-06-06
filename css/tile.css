@@ -194,6 +194,34 @@
   animation: tile-eliminate 340ms ease-out forwards;
 }
 
+.tile--combo-2.tile--eliminating,
+.tile--combo-3.tile--eliminating,
+.tile--combo-4.tile--eliminating,
+.tile--combo-5.tile--eliminating {
+  animation-name: tile-eliminate-combo;
+}
+
+.tile--combo-2.tile--matched,
+.tile--combo-3.tile--matched {
+  border-color: #fff2a8;
+  box-shadow:
+    0 1px 0 #b99d73,
+    0 0 0 2px rgba(255,255,255,0.92),
+    0 0 18px rgba(126,225,179,0.72),
+    0 0 28px rgba(238,207,120,0.34);
+}
+
+.tile--combo-4.tile--matched,
+.tile--combo-5.tile--matched {
+  border-color: #fff2a8;
+  box-shadow:
+    0 1px 0 #b99d73,
+    0 0 0 2px rgba(255,255,255,0.96),
+    0 0 22px rgba(126,225,179,0.8),
+    0 0 34px rgba(238,207,120,0.48),
+    0 10px 20px rgba(42, 88, 67, 0.18);
+}
+
 .tile--invalid {
   animation: tile-invalid 190ms ease-out;
 }

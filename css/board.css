@@ -6,21 +6,21 @@
   box-sizing: content-box;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(224, 239, 230, 0.54);
   border-radius: 8px;
-  background-color: #4d9f73;
+  background-color: #377a5c;
   background-image:
-    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.18), transparent 36%),
-    linear-gradient(145deg, rgba(255,255,255,0.18), transparent 30%),
-    linear-gradient(0deg, rgba(38, 105, 75, 0.12), transparent 48%),
-    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.11), transparent 36%),
+    linear-gradient(145deg, rgba(255,255,255,0.11), transparent 30%),
+    linear-gradient(0deg, rgba(25, 73, 52, 0.16), transparent 48%),
+    linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
   background-size: auto, auto, auto, 18px 18px, 18px 18px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.22),
-    inset 0 -10px 24px rgba(37, 95, 70, 0.18),
-    0 0 0 5px rgba(255, 255, 255, 0.36),
-    0 18px 44px rgba(34, 103, 73, 0.24);
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -10px 24px rgba(25, 67, 49, 0.24),
+    0 0 0 5px rgba(235, 245, 239, 0.24),
+    0 18px 44px rgba(28, 75, 55, 0.28);
   perspective: 1200px;
   perspective-origin: 50% 50%;
 }
@@ -30,11 +30,11 @@
   position: absolute;
   inset: 7px;
   z-index: 0;
-  border: 1px solid rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.16);
   border-radius: 6px;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.08), transparent 18%, transparent 82%, rgba(39, 95, 69, 0.08)),
-    linear-gradient(180deg, rgba(255,255,255,0.07), transparent 50%, rgba(38, 91, 66, 0.08));
+    linear-gradient(90deg, rgba(255,255,255,0.055), transparent 18%, transparent 82%, rgba(30, 74, 54, 0.1)),
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 50%, rgba(29, 72, 52, 0.11));
   pointer-events: none;
 }
 
@@ -46,9 +46,9 @@
   border-radius: 5px;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.024) 0 1px, transparent 1px 18px);
-  opacity: 0.48;
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 18px);
+  opacity: 0.4;
 }
 
 #board.board--match {
@@ -57,6 +57,14 @@
 
 #board.board--chain {
   animation: board-chain-pulse 420ms ease-out;
+}
+
+#board.board--combo {
+  animation: board-combo-pulse 520ms ease-out;
+}
+
+#board.board--combo-high {
+  animation: board-combo-high-pulse 660ms ease-out;
 }
 
 #board.board--slide-ok {
@@ -74,11 +82,20 @@
   border-radius: 999px;
   transform-origin: 0 50%;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, #7ee1b3 18%, #ffffff 50%, #f0cc66 82%, transparent);
+  background: linear-gradient(90deg, transparent, #75d5a8 18%, #f7fff9 50%, #e5be58 82%, transparent);
   box-shadow:
-    0 0 10px rgba(126, 225, 179, 0.85),
-    0 0 22px rgba(240, 204, 102, 0.42);
+    0 0 10px rgba(117, 213, 168, 0.7),
+    0 0 22px rgba(229, 190, 88, 0.34);
   animation: match-line-flash 340ms ease-out forwards;
+}
+
+.match-line[data-combo-level="3"],
+.match-line[data-combo-level="4"],
+.match-line[data-combo-level="5"] {
+  background: linear-gradient(90deg, transparent, #87e7ba 12%, #ffffff 44%, #efcf73 66%, transparent);
+  box-shadow:
+    0 0 14px rgba(135, 231, 186, 0.78),
+    0 0 28px rgba(239, 207, 115, 0.42);
 }
 
 .match-badge {
@@ -97,18 +114,79 @@
   text-align: center;
   transform: translateX(-50%);
   pointer-events: none;
-  background: linear-gradient(180deg, #ffffff, #d8f6e8);
+  background: linear-gradient(180deg, #f8fbf9, #d3ebdf);
   box-shadow:
-    0 0 18px rgba(126, 225, 179, 0.52),
-    0 8px 18px rgba(35, 93, 69, 0.18);
+    0 0 16px rgba(117, 213, 168, 0.38),
+    0 8px 18px rgba(35, 93, 69, 0.2);
   animation: match-badge-pop 360ms ease-out forwards;
+}
+
+.match-badge--combo {
+  top: 10px;
+  min-width: 92px;
+  padding: 7px 12px;
+  color: #174333;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(223, 243, 232, 0.94)),
+    #f5faf6;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.6),
+    0 0 24px rgba(126,225,179,0.45),
+    0 10px 24px rgba(35, 93, 69, 0.22);
+  animation: match-badge-combo-pop 560ms ease-out forwards;
+}
+
+.match-badge[data-combo-level="4"],
+.match-badge[data-combo-level="5"] {
+  color: #214318;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(239, 246, 218, 0.96)),
+    #f9fbec;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.62),
+    0 0 26px rgba(126,225,179,0.5),
+    0 0 34px rgba(226, 190, 87, 0.34),
+    0 12px 26px rgba(35, 93, 69, 0.22);
+}
+
+.match-badge__main,
+.match-badge__sub {
+  display: block;
+}
+
+.match-badge__main {
+  font-size: 0.92rem;
+  line-height: 1.05;
+}
+
+.match-badge__sub {
+  margin-top: 3px;
+  color: rgba(41, 84, 66, 0.78);
+  font-size: 0.66rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.combo-ripple {
+  position: absolute;
+  z-index: 90;
+  width: calc(var(--tile-w) * 1.25);
+  height: calc(var(--tile-w) * 1.25);
+  margin: 0;
+  border: 2px solid rgba(238, 207, 120, 0.72);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    0 0 18px rgba(126,225,179,0.42),
+    inset 0 0 18px rgba(255,255,255,0.28);
+  animation: combo-ripple-pop var(--combo-duration, 520ms) ease-out forwards;
 }
 
 .tile-spark {
   position: absolute;
   z-index: 110;
-  width: 9px;
-  height: 9px;
+  width: var(--spark-size, 9px);
+  height: var(--spark-size, 9px);
   margin: -4px 0 0 -4px;
   border-radius: 50%;
   pointer-events: none;
@@ -117,5 +195,14 @@
     0 0 10px rgba(255,255,255,0.95),
     0 0 18px rgba(126,225,179,0.85),
     0 0 26px rgba(240,204,102,0.4);
-  animation: tile-spark-pop 360ms ease-out var(--spark-delay, 0ms) forwards;
+  animation: tile-spark-pop var(--spark-duration, 360ms) ease-out var(--spark-delay, 0ms) forwards;
+}
+
+.tile-spark[data-combo-level="4"],
+.tile-spark[data-combo-level="5"] {
+  background: #fff7d9;
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.96),
+    0 0 20px rgba(126,225,179,0.82),
+    0 0 30px rgba(238,207,120,0.52);
 }

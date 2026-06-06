@@ -1,8 +1,8 @@
 import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
-import { showTutorial, hideTutorial } from './tutorial.js';
+import { showTutorial, hideTutorial } from './tutorial.js?v=20260606-3';
 import { initDragController } from './dragController.js';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, showRotateHint } from './gameController.js';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint } from './gameController.js?v=20260606-3';
 import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
 
@@ -15,12 +15,37 @@ document.addEventListener('DOMContentLoaded', () => {
   initDragController(boardEl, handleDragEnd, handleTileClick);
 
   // 游戏内按钮绑定
-  document.getElementById('btn-hint').addEventListener('click', handleHint);
+  const btnHint = document.getElementById('btn-hint');
+  const hintMenu = document.getElementById('hint-menu');
+  const setHintMenuOpen = (open) => {
+    hintMenu.classList.toggle('hidden', !open);
+    btnHint.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+
+  btnHint.addEventListener('click', () => {
+    setHintMenuOpen(hintMenu.classList.contains('hidden'));
+  });
+  document.getElementById('btn-show-hint').addEventListener('click', () => {
+    setHintMenuOpen(false);
+    handleHint();
+  });
+  document.getElementById('btn-teaching').addEventListener('click', () => {
+    setHintMenuOpen(false);
+    startTeachingLevel();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.hint-menu-wrap')) setHintMenuOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setHintMenuOpen(false);
+  });
+
   document.getElementById('btn-undo').addEventListener('click', handleUndo);
   document.getElementById('btn-new').addEventListener('click', handleNewGame);
   document.getElementById('btn-new-victory').addEventListener('click', handleNewGame);
   document.getElementById('btn-reshuffle-ok').addEventListener('click', doReshuffle);
   document.getElementById('btn-reshuffle-cancel').addEventListener('click', hideReshuffleConfirm);
+  document.getElementById('btn-teaching-exit').addEventListener('click', exitTeachingLevel);
 
   // 规则按钮
   document.getElementById('btn-rules').addEventListener('click', () => {
@@ -65,6 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       if (!window._gameState || window._gamePhase !== 'IDLE') return;
+      if (window._isTeachingMode) {
+        setBoardLayout(window._gameState.width, window._gameState.height);
+        recalcTileSizeOnly(window._gameState.width, window._gameState.height);
+        renderBoard(window._gameState, document.getElementById('board'));
+        return;
+      }
       const prevCols = BOARD_COLS;
       const prevRows = BOARD_ROWS;
       recalcLayout();
@@ -79,7 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 键盘快捷键支持
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'h' || e.key === 'H') document.getElementById('btn-hint').click();
+    if (e.key === 'h' || e.key === 'H') {
+      setHintMenuOpen(false);
+      handleHint();
+    }
     if (e.key === 'n' || e.key === 'N') document.getElementById('btn-new').click();
     if (e.key === 'u' || e.key === 'U') document.getElementById('btn-undo').click();
   });
