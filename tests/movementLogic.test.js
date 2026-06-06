@@ -225,9 +225,9 @@ describe('pixelsToCells()', () => {
     expect(pixelsToCells(-64, DIR.HORIZONTAL)).toBe(-1);
   });
 
-  test('水平：不足半格取近值', () => {
-    expect(pixelsToCells(29, DIR.HORIZONTAL)).toBe(0);  // 29/60 < 0.5 → 0
-    expect(pixelsToCells(31, DIR.HORIZONTAL)).toBe(1);  // 31/60 > 0.5 → 1
+  test('水平：松手时给一点对齐容错', () => {
+    expect(pixelsToCells(22, DIR.HORIZONTAL)).toBe(0);
+    expect(pixelsToCells(24, DIR.HORIZONTAL)).toBe(1);
   });
 
   test('垂直：整格像素正确换算', () => {
@@ -236,9 +236,35 @@ describe('pixelsToCells()', () => {
     expect(pixelsToCells(-84, DIR.VERTICAL)).toBe(-1);
   });
 
+  test('垂直：松手时给一点对齐容错', () => {
+    expect(pixelsToCells(30, DIR.VERTICAL)).toBe(0);
+    expect(pixelsToCells(31, DIR.VERTICAL)).toBe(1);
+  });
+
   test('零像素返回0', () => {
     expect(pixelsToCells(0, DIR.HORIZONTAL)).toBe(0);
     expect(pixelsToCells(0, DIR.VERTICAL)).toBe(0);
+  });
+});
+
+// ─── snapOffsetToGrid ────────────────────────────────────────────────────────
+describe('snapOffsetToGrid()', () => {
+  test('水平：接近格点时吸附到完整格距', () => {
+    expect(snapOffsetToGrid(50, DIR.HORIZONTAL)).toBe(64);
+    expect(snapOffsetToGrid(-50, DIR.HORIZONTAL)).toBe(-64);
+  });
+
+  test('水平：离格点较远时保留原偏移', () => {
+    expect(snapOffsetToGrid(43, DIR.HORIZONTAL)).toBe(43);
+  });
+
+  test('垂直：接近格点时吸附到完整格距', () => {
+    expect(snapOffsetToGrid(66, DIR.VERTICAL)).toBe(84);
+    expect(snapOffsetToGrid(-66, DIR.VERTICAL)).toBe(-84);
+  });
+
+  test('轻微拖动不吸附为一格', () => {
+    expect(snapOffsetToGrid(15, DIR.HORIZONTAL)).toBe(15);
   });
 });
 

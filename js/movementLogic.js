@@ -3,6 +3,24 @@ import { DIR, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
 
 // movementLogic.js — 牌组选中、移动验证、碰撞检测
 
+const ALIGN_SNAP_RATIO = 0.28;
+const ALIGN_SNAP_MIN_PX = 12;
+const ALIGN_SNAP_MAX_PX = 24;
+
+function cellSizeForDirection(direction) {
+  return direction === DIR.HORIZONTAL
+    ? TILE_WIDTH + TILE_GAP
+    : TILE_HEIGHT + TILE_GAP;
+}
+
+function alignSnapTolerance(direction) {
+  const cellSize = cellSizeForDirection(direction);
+  return Math.max(
+    ALIGN_SNAP_MIN_PX,
+    Math.min(ALIGN_SNAP_MAX_PX, cellSize * ALIGN_SNAP_RATIO)
+  );
+}
+
 /**
  * 选中连续牌组：
  * 从起始位置出发，沿指定方向收集与其连续相邻（无间隔）的所有牌。
@@ -130,14 +148,31 @@ function applySlide(state, group, direction, delta) {
 }
 
 /**
- * 将像素偏移量转换为格数（向零取整），并钳制到最大范围。
+ * 将像素偏移量转换为格数。
+ * 使用完整格距（牌宽/高 + 间距），避免拖到视觉格线附近却换算偏差。
  */
 function pixelsToCells(pixels, direction) {
-  if (direction === DIR.HORIZONTAL) {
-    return Math.round(pixels / TILE_WIDTH);
-  } else {
-    return Math.round(pixels / TILE_HEIGHT);
-  }
+  const cellSize = cellSizeForDirection(direction);
+  const sign = Math.sign(pixels);
+  if (sign === 0) return 0;
+
+  const releaseTolerance = alignSnapTolerance(direction) * 0.5;
+  const cells = Math.floor((Math.abs(pixels) + cellSize / 2 + releaseTolerance) / cellSize);
+  return sign * cells;
+}
+
+/**
+ * 当拖动位置靠近某个格点时吸附过去。
+ * 只吸附非 0 格目标，避免轻微拖动被误判为移动。
+ */
+function snapOffsetToGrid(pixels, direction) {
+  const cellSize = cellSizeForDirection(direction);
+  const nearestCell = Math.round(pixels / cellSize);
+  if (nearestCell === 0) return pixels;
+
+  const snappedOffset = nearestCell * cellSize;
+  const tolerance = alignSnapTolerance(direction);
+  return Math.abs(pixels - snappedOffset) <= tolerance ? snappedOffset : pixels;
 }
 
 /**
@@ -148,4 +183,4 @@ function clampDelta(delta, maxPositive, maxNegative) {
   return Math.max(-maxNegative, Math.min(maxPositive, delta)) || 0;
 }
 
-export { selectGroup, calcMaxSlide, applySlide, pixelsToCells, clampDelta };
+export { selectGroup, calcMaxSlide, applySlide, pixelsToCells, snapOffsetToGrid, clampDelta };

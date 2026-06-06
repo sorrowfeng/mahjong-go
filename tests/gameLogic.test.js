@@ -79,25 +79,26 @@ describe('scanLineForPairs()', () => {
     expect(scanLineForPairs(tiles)).toHaveLength(0);
   });
 
-  test('[A, A, A, A] — 配成两对', () => {
+  test('[A, A, A, A] — 返回所有相邻候选对', () => {
     const tiles = makeLineItems([
       { row: 0, col: 0, typeId: 3 },
       { row: 0, col: 1, typeId: 3 },
       { row: 0, col: 2, typeId: 3 },
       { row: 0, col: 3, typeId: 3 },
     ]);
-    // 第0配第1，第2配第3 → 两对
-    expect(scanLineForPairs(tiles)).toHaveLength(2);
+    // 0-1、1-2、2-3 都是无遮挡相邻同牌候选；真正消除时再去重。
+    expect(scanLineForPairs(tiles)).toHaveLength(3);
   });
 
-  test('[A, A, A] — 只配一对（跳过第二个A）', () => {
+  test('[A, A, A] — 三连中的后半对也应作为合法候选', () => {
     const tiles = makeLineItems([
       { row: 0, col: 0, typeId: 7 },
       { row: 0, col: 1, typeId: 7 },
       { row: 0, col: 2, typeId: 7 },
     ]);
-    // 第0配第1，跳过第2（i++后第2变成检查对象）→ 一对
-    expect(scanLineForPairs(tiles)).toHaveLength(1);
+    const pairs = scanLineForPairs(tiles);
+    expect(pairs).toHaveLength(2);
+    expect(pairs.some(([a, b]) => a.col === 1 && b.col === 2)).toBe(true);
   });
 });
 
@@ -147,6 +148,16 @@ describe('findAllPairs()', () => {
       [2, 3, 2],
     ]);
     expect(findAllPairs(board)).toHaveLength(0);
+  });
+
+  test('三连同牌时，末尾牌也能找到可点击消除对', () => {
+    const board = buildBoard([
+      [7, 7, 7],
+    ]);
+    const pairs = findAllPairs(board);
+    expect(pairs.some(({ a, b }) =>
+      (a.col === 2 || b.col === 2) && a.tile.tileTypeId === b.tile.tileTypeId
+    )).toBe(true);
   });
 });
 
@@ -198,6 +209,13 @@ describe('applyOneWave()', () => {
     expect(newState.grid[1][0]).not.toBeNull();
     expect(newState.grid[2][0]).not.toBeNull();
   });
+
+  test('三连同牌批量消除时仍避免同一张牌被重复消除', () => {
+    const board = buildBoard([[7, 7, 7]]);
+    const { eliminated, newState } = applyOneWave(board);
+    expect(eliminated).toHaveLength(1);
+    expect(countRemainingTiles(newState)).toBe(1);
+  });
 });
 
 // ─── resolveChainElimination ──────────────────────────────────────────────────
@@ -232,6 +250,24 @@ describe('resolveChainElimination()', () => {
     const waves = resolveChainElimination(board);
     expect(waves[0].stateAfter.grid[0][0]).toBeNull();
     expect(waves[0].stateAfter.grid[0][1]).toBeNull();
+  });
+});
+
+// ─── resolveNewPairChain ─────────────────────────────────────────────────────
+describe('resolveNewPairChain()', () => {
+  test('拖动后形成三连时，可以消除新出现的后半对', () => {
+    const before = buildBoard([
+      [1, 1, null],
+      [null, null, 1],
+    ]);
+    const group = [{ row: 1, col: 2, tile: before.grid[1][2] }];
+    const afterDrag = applySlide(before, group, DIR.VERTICAL, -1);
+    const waves = resolveNewPairChain(before, afterDrag);
+
+    expect(waves).toHaveLength(1);
+    expect(waves[0].eliminated.some(({ a, b }) =>
+      (a.col === 1 && b.col === 2) || (a.col === 2 && b.col === 1)
+    )).toBe(true);
   });
 });
 

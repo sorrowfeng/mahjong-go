@@ -1,6 +1,6 @@
 import { DIR, DRAG_THRESHOLD, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
 import { getTile } from './boardState.js';
-import { selectGroup, calcMaxSlide, pixelsToCells, clampDelta } from './movementLogic.js';
+import { selectGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js?v=20260606-5';
 import { getTileElement, setTileSelected, setGroupTransform } from './renderer.js';
 
 // dragController.js — 拖拽输入处理（鼠标 + 触摸，轴锁定，像素钳制）
@@ -15,6 +15,7 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
   //   group,                    // 选中的连续牌组
   //   maxPositive, maxNegative, // 可移动格数
   //   maxPxPositive, maxPxNegative, // 可移动像素数
+  //   currentOffset,            // 当前吸附/钳制后的像素偏移
   //   currentDelta,             // 当前移动格数
   // }
 
@@ -59,6 +60,7 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
       maxNegative: 0,
       maxPxPositive: 0,
       maxPxNegative: 0,
+      currentOffset: 0,
       currentDelta: 0,
     };
   }
@@ -147,9 +149,12 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
     // 计算钳制后的偏移量
     const rawOffset = dragState.direction === DIR.HORIZONTAL ? dx : dy;
     const clampedOffset = Math.max(-dragState.maxPxNegative, Math.min(dragState.maxPxPositive, rawOffset));
+    const snappedOffset = snapOffsetToGrid(clampedOffset, dragState.direction);
+    dragState.currentOffset = snappedOffset;
+    dragState.currentDelta = pixelsToCells(snappedOffset, dragState.direction);
 
-    const moveDx = dragState.direction === DIR.HORIZONTAL ? clampedOffset : 0;
-    const moveDy = dragState.direction === DIR.VERTICAL ? clampedOffset : 0;
+    const moveDx = dragState.direction === DIR.HORIZONTAL ? snappedOffset : 0;
+    const moveDy = dragState.direction === DIR.VERTICAL ? snappedOffset : 0;
     setGroupTransform(dragState.group, moveDx, moveDy);
   }
 
@@ -170,7 +175,9 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
       ? x - dragState.startX
       : y - dragState.startY;
 
-    const delta = pixelsToCells(rawOffset, dragState.direction);
+    const clampedOffset = Math.max(-dragState.maxPxNegative, Math.min(dragState.maxPxPositive, rawOffset));
+    const releaseOffset = snapOffsetToGrid(clampedOffset, dragState.direction);
+    const delta = pixelsToCells(releaseOffset, dragState.direction);
     const clampedDelta = clampDelta(delta, dragState.maxPositive, dragState.maxNegative);
 
     // 清除选中状态

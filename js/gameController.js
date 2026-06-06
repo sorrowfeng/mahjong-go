@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260606-5';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260606-3';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260606-5';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js';
-import { hideTutorial } from './tutorial.js?v=20260606-3';
+import { applySlide } from './movementLogic.js?v=20260606-5';
+import { hideTutorial } from './tutorial.js?v=20260606-5';
 
 // gameController.js — 游戏状态机（主协调器）
 
