@@ -1,6 +1,6 @@
 import { DIR, DRAG_THRESHOLD, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
 import { getTile } from './boardState.js';
-import { selectGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js?v=20260607-4';
+import { selectGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js?v=20260607-5';
 import { getTileElement, setTileSelected, setGroupTransform } from './renderer.js';
 
 // dragController.js — 拖拽输入处理（鼠标 + 触摸，轴锁定，像素钳制）

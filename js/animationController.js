@@ -57,6 +57,8 @@ function animateRevert(group) {
     pulseBoard(elements[0]?.parentElement, 'board--invalid', ANIM.REVERT_DURATION + 80);
 
     for (const el of elements) {
+      el.classList.remove('tile--invalid');
+      void el.offsetWidth;
       el.classList.add('tile--invalid');
       el.style.transition = `transform ${ANIM.REVERT_DURATION}ms ease-out`;
       el.style.transform = 'translate(0, 0)';

@@ -98,11 +98,12 @@
     filter: brightness(1);
   }
   40% {
-    filter: brightness(0.92) saturate(1.1);
+    filter: brightness(0.9) saturate(1.16);
     box-shadow:
       0 1px 0 #b99d73,
-      0 0 0 3px rgba(255, 120, 110, 0.82),
-      0 0 18px rgba(255, 120, 110, 0.46);
+      0 0 0 3px rgba(255, 120, 110, 0.92),
+      0 0 22px rgba(255, 120, 110, 0.62),
+      0 8px 18px rgba(85, 42, 42, 0.22);
   }
 }
 

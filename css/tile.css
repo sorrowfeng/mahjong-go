@@ -242,7 +242,7 @@
 }
 
 .tile--invalid {
-  animation: tile-invalid 190ms ease-out;
+  animation: tile-invalid 260ms ease-out;
 }
 
 @media (hover: hover) {
