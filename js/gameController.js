@@ -1,13 +1,13 @@
-import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
+import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260606-7';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-1';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260606-7';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-1';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260606-7';
-import { hideTutorial } from './tutorial.js?v=20260606-7';
+import { applySlide } from './movementLogic.js?v=20260607-1';
+import { hideTutorial } from './tutorial.js?v=20260607-1';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -32,7 +32,10 @@ const TEACHING_STEPS = [
     action: 'click',
     label: '教学 1/5',
     text: '从高亮的一万开始。同行两张相同牌之间没有阻挡，点击任意一张即可消除。',
-    createState: createTeachingRowPairBoard,
+    clickPair: [
+      { row: 2, col: 1 },
+      { row: 2, col: 5 },
+    ],
     highlights: [
       { row: 2, col: 1, role: 'target' },
       { row: 2, col: 5, role: 'target' },
@@ -42,7 +45,10 @@ const TEACHING_STEPS = [
     action: 'click',
     label: '教学 2/5',
     text: '这次看同一列。高亮的两张南中间是空的，点击其中一张即可消除。',
-    createState: createTeachingColumnPairBoard,
+    clickPair: [
+      { row: 1, col: 4 },
+      { row: 4, col: 4 },
+    ],
     highlights: [
       { row: 1, col: 4, role: 'target' },
       { row: 4, col: 4, role: 'target' },
@@ -52,7 +58,17 @@ const TEACHING_STEPS = [
     action: 'drag',
     label: '教学 3/5',
     text: '按住黄色七万向右拖，让它落到绿色七万下方。同列对齐后松手就会消除。',
-    createState: createTeachingSingleDragBoard,
+    drag: {
+      direction: DIR.HORIZONTAL,
+      delta: 4,
+      group: [
+        { row: 3, col: 3 },
+      ],
+      pairAfter: [
+        { row: 1, col: 7 },
+        { row: 3, col: 7 },
+      ],
+    },
     highlights: [
       { row: 3, col: 3, role: 'target' },
       { row: 1, col: 7, role: 'anchor' },
@@ -62,7 +78,18 @@ const TEACHING_STEPS = [
     action: 'drag',
     label: '教学 4/5',
     text: '从左侧黄色三万开始向右拖，旁边的四筒会一起移动。让黄色四筒对齐绿色四筒。',
-    createState: createTeachingGroupDragBoard,
+    drag: {
+      direction: DIR.HORIZONTAL,
+      delta: 4,
+      group: [
+        { row: 3, col: 1 },
+        { row: 3, col: 2 },
+      ],
+      pairAfter: [
+        { row: 1, col: 6 },
+        { row: 3, col: 6 },
+      ],
+    },
     highlights: [
       { row: 3, col: 1, role: 'target' },
       { row: 3, col: 2, role: 'target' },
@@ -73,7 +100,10 @@ const TEACHING_STEPS = [
     action: 'click',
     label: '教学 5/5',
     text: '最后来一个更像实战的小局面。找到高亮的白板，点击任意一张完成教学。',
-    createState: createTeachingPracticeBoard,
+    clickPair: [
+      { row: 2, col: 0 },
+      { row: 2, col: 8 },
+    ],
     highlights: [
       { row: 2, col: 0, role: 'target' },
       { row: 2, col: 8, role: 'target' },
@@ -194,99 +224,31 @@ function createTeachingState(tiles) {
   };
 }
 
-function createTeachingRowPairBoard() {
+function createTeachingBoard() {
   return createTeachingState([
     { row: 0, col: 0, typeId: 9, instanceOffset: 1 },
     { row: 0, col: 3, typeId: 18, instanceOffset: 2 },
     { row: 0, col: 7, typeId: 27, instanceOffset: 3 },
-    { row: 1, col: 2, typeId: 5, instanceOffset: 4 },
-    { row: 1, col: 6, typeId: 14, instanceOffset: 5 },
-    { row: 2, col: 1, typeId: 0, instanceOffset: 6 },
-    { row: 2, col: 5, typeId: 0, instanceOffset: 7 },
-    { row: 2, col: 8, typeId: 22, instanceOffset: 8 },
-    { row: 3, col: 0, typeId: 26, instanceOffset: 9 },
-    { row: 3, col: 4, typeId: 29, instanceOffset: 10 },
-    { row: 3, col: 8, typeId: 7, instanceOffset: 11 },
-    { row: 4, col: 2, typeId: 31, instanceOffset: 12 },
-    { row: 4, col: 6, typeId: 11, instanceOffset: 13 },
-  ]);
-}
-
-function createTeachingColumnPairBoard() {
-  return createTeachingState([
-    { row: 0, col: 1, typeId: 3, instanceOffset: 20 },
-    { row: 0, col: 7, typeId: 20, instanceOffset: 22 },
-    { row: 1, col: 0, typeId: 10, instanceOffset: 23 },
-    { row: 1, col: 4, typeId: 28, instanceOffset: 21 },
-    { row: 1, col: 5, typeId: 23, instanceOffset: 24 },
-    { row: 1, col: 8, typeId: 30, instanceOffset: 25 },
-    { row: 2, col: 2, typeId: 6, instanceOffset: 26 },
-    { row: 2, col: 6, typeId: 15, instanceOffset: 27 },
-    { row: 3, col: 0, typeId: 24, instanceOffset: 28 },
-    { row: 3, col: 7, typeId: 2, instanceOffset: 30 },
-    { row: 4, col: 1, typeId: 32, instanceOffset: 31 },
-    { row: 4, col: 4, typeId: 28, instanceOffset: 29 },
-    { row: 4, col: 5, typeId: 1, instanceOffset: 32 },
-    { row: 4, col: 8, typeId: 12, instanceOffset: 33 },
-  ]);
-}
-
-function createTeachingSingleDragBoard() {
-  return createTeachingState([
-    { row: 0, col: 0, typeId: 9, instanceOffset: 40 },
-    { row: 0, col: 3, typeId: 18, instanceOffset: 41 },
-    { row: 0, col: 5, typeId: 27, instanceOffset: 42 },
-    { row: 1, col: 1, typeId: 4, instanceOffset: 43 },
-    { row: 1, col: 7, typeId: 6, instanceOffset: 44 },
-    { row: 2, col: 0, typeId: 21, instanceOffset: 45 },
-    { row: 2, col: 4, typeId: 13, instanceOffset: 46 },
-    { row: 2, col: 8, typeId: 29, instanceOffset: 47 },
-    { row: 3, col: 3, typeId: 6, instanceOffset: 48 },
-    { row: 4, col: 2, typeId: 31, instanceOffset: 49 },
-    { row: 4, col: 6, typeId: 16, instanceOffset: 50 },
-    { row: 4, col: 8, typeId: 25, instanceOffset: 51 },
-  ]);
-}
-
-function createTeachingGroupDragBoard() {
-  return createTeachingState([
-    { row: 0, col: 0, typeId: 10, instanceOffset: 60 },
-    { row: 0, col: 4, typeId: 24, instanceOffset: 61 },
-    { row: 0, col: 8, typeId: 30, instanceOffset: 63 },
-    { row: 1, col: 1, typeId: 5, instanceOffset: 64 },
-    { row: 1, col: 5, typeId: 14, instanceOffset: 65 },
-    { row: 1, col: 6, typeId: 21, instanceOffset: 62 },
-    { row: 2, col: 0, typeId: 28, instanceOffset: 66 },
-    { row: 2, col: 3, typeId: 17, instanceOffset: 67 },
-    { row: 2, col: 7, typeId: 26, instanceOffset: 68 },
-    { row: 3, col: 1, typeId: 2, instanceOffset: 69 },
-    { row: 3, col: 2, typeId: 21, instanceOffset: 70 },
-    { row: 4, col: 2, typeId: 31, instanceOffset: 71 },
-    { row: 4, col: 5, typeId: 8, instanceOffset: 72 },
-    { row: 4, col: 8, typeId: 19, instanceOffset: 73 },
-  ]);
-}
-
-function createTeachingPracticeBoard() {
-  return createTeachingState([
-    { row: 0, col: 0, typeId: 3, instanceOffset: 80 },
-    { row: 0, col: 2, typeId: 12, instanceOffset: 81 },
-    { row: 0, col: 4, typeId: 22, instanceOffset: 82 },
-    { row: 0, col: 6, typeId: 27, instanceOffset: 83 },
-    { row: 0, col: 8, typeId: 5, instanceOffset: 84 },
-    { row: 1, col: 1, typeId: 18, instanceOffset: 85 },
-    { row: 1, col: 3, typeId: 31, instanceOffset: 86 },
-    { row: 1, col: 5, typeId: 15, instanceOffset: 87 },
-    { row: 1, col: 7, typeId: 24, instanceOffset: 88 },
-    { row: 2, col: 0, typeId: 33, instanceOffset: 89 },
-    { row: 2, col: 8, typeId: 33, instanceOffset: 90 },
-    { row: 3, col: 1, typeId: 7, instanceOffset: 91 },
-    { row: 3, col: 4, typeId: 28, instanceOffset: 92 },
-    { row: 3, col: 6, typeId: 20, instanceOffset: 93 },
-    { row: 4, col: 0, typeId: 11, instanceOffset: 94 },
-    { row: 4, col: 3, typeId: 26, instanceOffset: 95 },
-    { row: 4, col: 5, typeId: 1, instanceOffset: 96 },
-    { row: 4, col: 8, typeId: 29, instanceOffset: 97 },
+    { row: 1, col: 0, typeId: 10, instanceOffset: 4 },
+    { row: 1, col: 2, typeId: 5, instanceOffset: 5 },
+    { row: 1, col: 4, typeId: 28, instanceOffset: 6 },
+    { row: 1, col: 5, typeId: 23, instanceOffset: 7 },
+    { row: 1, col: 6, typeId: 21, instanceOffset: 8 },
+    { row: 1, col: 7, typeId: 6, instanceOffset: 9 },
+    { row: 1, col: 8, typeId: 30, instanceOffset: 10 },
+    { row: 2, col: 0, typeId: 33, instanceOffset: 11 },
+    { row: 2, col: 1, typeId: 0, instanceOffset: 12 },
+    { row: 2, col: 5, typeId: 0, instanceOffset: 13 },
+    { row: 2, col: 8, typeId: 33, instanceOffset: 14 },
+    { row: 3, col: 0, typeId: 24, instanceOffset: 15 },
+    { row: 3, col: 1, typeId: 2, instanceOffset: 16 },
+    { row: 3, col: 2, typeId: 21, instanceOffset: 17 },
+    { row: 3, col: 3, typeId: 6, instanceOffset: 18 },
+    { row: 3, col: 8, typeId: 7, instanceOffset: 19 },
+    { row: 4, col: 1, typeId: 32, instanceOffset: 20 },
+    { row: 4, col: 4, typeId: 28, instanceOffset: 21 },
+    { row: 4, col: 5, typeId: 1, instanceOffset: 22 },
+    { row: 4, col: 8, typeId: 12, instanceOffset: 23 },
   ]);
 }
 
@@ -346,6 +308,44 @@ function refreshTeachingHighlights() {
   showTeachingTargetHint();
 }
 
+function positionKey(pos) {
+  return `${pos.row}:${pos.col}`;
+}
+
+function positionsMatch(actual, expected) {
+  if (!actual || !expected || actual.length !== expected.length) return false;
+  const expectedKeys = new Set(expected.map(positionKey));
+  return actual.every(pos => expectedKeys.has(positionKey(pos)));
+}
+
+function pairMatchesPositions(pair, expected) {
+  return positionsMatch([
+    { row: pair.a.row, col: pair.a.col },
+    { row: pair.b.row, col: pair.b.col },
+  ], expected);
+}
+
+function isExpectedTeachingClick(pair) {
+  if (!isTeachingMode || teachingCompleted) return true;
+
+  const step = TEACHING_STEPS[teachingStepIndex];
+  return step?.action === 'click'
+    && pairMatchesPositions(pair, step.clickPair);
+}
+
+function isExpectedTeachingDrag(group, direction, delta, waves) {
+  if (!isTeachingMode || teachingCompleted) return true;
+
+  const step = TEACHING_STEPS[teachingStepIndex];
+  if (step?.action !== 'drag' || !step.drag) return false;
+  if (direction !== step.drag.direction || delta !== step.drag.delta) return false;
+  if (!positionsMatch(group.map(({ row, col }) => ({ row, col })), step.drag.group)) return false;
+
+  return waves.some(wave =>
+    wave.eliminated.some(pair => pairMatchesPositions(pair, step.drag.pairAfter))
+  );
+}
+
 function hideTeachingPanel() {
   clearTeachingHighlights(getBoardEl());
   setTeachingChrome(false);
@@ -359,13 +359,8 @@ function prepareTeachingLayout() {
 
 function loadTeachingStep() {
   const step = TEACHING_STEPS[teachingStepIndex];
-  undoStack = [];
   clearHintAnimation(getBoardEl());
   clearTeachingHighlights(getBoardEl());
-  prepareTeachingLayout();
-  boardState = step.createState();
-  window._gameState = boardState;
-  renderBoard(boardState, getBoardEl());
   updateTeachingPanel(step);
   showTeachingTargetHint(step);
   updateUI();
@@ -507,7 +502,7 @@ async function startTeachingLevel() {
   syncPhase('ANIMATING');
 
   prepareTeachingLayout();
-  boardState = TEACHING_STEPS[0].createState();
+  boardState = createTeachingBoard();
   window._gameState = boardState;
   renderBoard(boardState, getBoardEl());
   updateUI();
@@ -545,7 +540,10 @@ async function handleDragEnd({ group, direction, delta }) {
   const proposedState = applySlide(boardState, group, direction, delta);
   // 只连锁消除移动后"新产生"的配对，不自动消除存量配对
   const waves = resolveNewPairChain(boardState, proposedState);
-  const hasMatch = waves.length > 0;
+  let hasMatch = waves.length > 0;
+  if (hasMatch && isTeachingMode && !isExpectedTeachingDrag(group, direction, delta, waves)) {
+    hasMatch = false;
+  }
 
   gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
@@ -578,6 +576,9 @@ async function handleDragEnd({ group, direction, delta }) {
       gameState = GAME_STATE.IDLE;
       syncPhase('IDLE');
       updateUI();
+      if (isTeachingMode && !teachingCompleted && !hasMatch) {
+        showTeachingTargetHint();
+      }
     }
   }
 
@@ -615,6 +616,13 @@ async function handleTileClick({ row, col }) {
   if (!pair) {
     SoundController.playInvalidMove();
     animateInvalidTile(boardState.grid[row][col]);
+    return;
+  }
+
+  if (isTeachingMode && !isExpectedTeachingClick(pair)) {
+    SoundController.playInvalidMove();
+    animateInvalidTile(boardState.grid[row][col]);
+    showTeachingTargetHint();
     return;
   }
 
