@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-6';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-7';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-6';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-7';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260607-6';
-import { hideTutorial } from './tutorial.js?v=20260607-6';
+import { applySlide } from './movementLogic.js?v=20260607-7';
+import { hideTutorial } from './tutorial.js?v=20260607-7';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -24,6 +24,8 @@ let hintCount = 0;  // 使用提示次数
 let timerInterval = null;
 let timerStart = 0;
 let timerElapsed = 0;
+let timerPaused = false;
+let timerPausedAt = 0;
 
 const COMBO_WINDOW_MS = 10000;
 const TEACHING_LAYOUT = { width: 9, height: 5 };
@@ -129,12 +131,26 @@ function formatTime(secs) {
   return `${h}:${m}:${s}`;
 }
 
+function getElapsedSeconds(now = Date.now()) {
+  if (timerStart <= 0) return timerElapsed;
+  const elapsed = Math.floor((now - timerStart) / 1000);
+  return Math.max(0, elapsed);
+}
+
+function renderTimer(secs = getElapsedSeconds()) {
+  const el = document.getElementById('game-timer');
+  if (el) el.textContent = formatTime(secs);
+}
+
 function startTimer() {
+  if (timerInterval !== null) clearInterval(timerInterval);
   timerStart = Date.now();
+  timerElapsed = 0;
+  timerPaused = false;
+  timerPausedAt = 0;
+  renderTimer(0);
   timerInterval = setInterval(() => {
-    const secs = Math.floor((Date.now() - timerStart) / 1000);
-    const el = document.getElementById('game-timer');
-    if (el) el.textContent = formatTime(secs);
+    renderTimer();
   }, 1000);
 }
 
@@ -143,40 +159,45 @@ function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
-  timerElapsed = Math.floor((Date.now() - timerStart) / 1000);
+  timerElapsed = getElapsedSeconds(timerPaused ? timerPausedAt : Date.now());
+  timerStart = 0;
+  timerPaused = false;
+  timerPausedAt = 0;
   return timerElapsed;
 }
 
 function resetTimer() {
-  stopTimer();
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
   timerStart = 0;
   timerElapsed = 0;
-  const el = document.getElementById('game-timer');
-  if (el) el.textContent = '00:00:00';
+  timerPaused = false;
+  timerPausedAt = 0;
+  renderTimer(0);
 }
 
 // 暂停/恢复计时器（覆盖层显示时调用）
-let timerPaused = false;
-let timerPausedAt = 0;
-
 function pauseTimer() {
-  if (timerInterval === null || timerPaused) return;
+  if (timerStart <= 0 || timerInterval === null || timerPaused) return;
   timerPaused = true;
   timerPausedAt = Date.now();
+  timerElapsed = getElapsedSeconds(timerPausedAt);
   clearInterval(timerInterval);
   timerInterval = null;
 }
 
 function resumeTimer() {
-  if (!timerPaused) return;
+  if (!timerPaused || timerStart <= 0) return;
   timerPaused = false;
   // 补偿暂停的时间差
   const pausedDuration = Date.now() - timerPausedAt;
   timerStart += pausedDuration;
+  timerPausedAt = 0;
+  renderTimer();
   timerInterval = setInterval(() => {
-    const secs = Math.floor((Date.now() - timerStart) / 1000);
-    const el = document.getElementById('game-timer');
-    if (el) el.textContent = formatTime(secs);
+    renderTimer();
   }, 1000);
 }
 
@@ -529,6 +550,7 @@ async function startTeachingLevel() {
     showTeachingTargetHint(TEACHING_STEPS[0]);
     gameState = GAME_STATE.IDLE;
     syncPhase('IDLE');
+    startTimer();
   }
 }
 
