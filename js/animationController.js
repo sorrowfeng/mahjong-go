@@ -203,13 +203,17 @@ function showWaveBadge(boardEl, pairCount, waveIndex, combo, effectLevel) {
     if ((combo?.count || 1) > 1 && waveIndex > 0) {
       sub.textContent = `连锁 x${waveIndex + 1}`;
     } else if ((combo?.count || 1) > 1) {
-      sub.textContent = effectLevel >= 5
-        ? '满格爆发'
-        : effectLevel >= 4
-          ? '强连击'
-          : effectLevel >= 3
-            ? '节奏升级'
-            : '10秒内继续';
+      if ((combo?.gain || 1) > 1) {
+        sub.textContent = `本次 +${combo.gain}`;
+      } else if (effectLevel >= 5) {
+        sub.textContent = '满格爆发';
+      } else if (effectLevel >= 4) {
+        sub.textContent = '强连击';
+      } else if (effectLevel >= 3) {
+        sub.textContent = '节奏升级';
+      } else {
+        sub.textContent = '10秒内继续';
+      }
     } else {
       sub.textContent = '效果增强';
     }

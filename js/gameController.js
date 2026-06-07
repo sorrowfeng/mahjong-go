@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-9';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-10';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-9';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-10';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260607-9';
-import { hideTutorial } from './tutorial.js?v=20260607-9';
+import { applySlide } from './movementLogic.js?v=20260607-10';
+import { hideTutorial } from './tutorial.js?v=20260607-10';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -479,10 +479,15 @@ function resetCombo() {
   }
 }
 
-function registerCombo() {
+function countEliminatedPairs(waves) {
+  return waves.reduce((total, wave) => total + wave.eliminated.length, 0);
+}
+
+function registerCombo(gain = 1) {
   const now = Date.now();
+  const comboGain = Math.max(1, gain);
   const withinWindow = lastComboAt > 0 && now - lastComboAt <= COMBO_WINDOW_MS;
-  comboCount = withinWindow ? comboCount + 1 : 1;
+  comboCount = withinWindow ? comboCount + comboGain : comboGain;
   lastComboAt = now;
 
   if (comboResetTimer !== null) clearTimeout(comboResetTimer);
@@ -490,6 +495,7 @@ function registerCombo() {
 
   return {
     count: comboCount,
+    gain: comboGain,
     windowMs: COMBO_WINDOW_MS,
   };
 }
@@ -645,7 +651,7 @@ async function handleDragEnd({ group, direction, delta }) {
     if (hasMatch) {
       pushUndo(boardState);
       moveCount++;
-      const combo = registerCombo();
+      const combo = registerCombo(countEliminatedPairs(wavesToRun));
       SoundController.playSlideSuccess();
       await animateSlide(group, direction, delta);
 
@@ -721,7 +727,6 @@ async function handleTileClick({ row, col }) {
   SoundController.playTileClick();
   pushUndo(boardState);
   moveCount++;
-  const combo = registerCombo();
 
   const { a, b } = pair;
   const stateAfterFirst = eliminateTiles(boardState, [
@@ -731,6 +736,7 @@ async function handleTileClick({ row, col }) {
 
   // 点击只消除用户选中的那一对，不触发自动连锁（用户手动找下一对）
   const allWaves = [{ eliminated: [{ a, b }], stateAfter: stateAfterFirst }];
+  const combo = registerCombo(countEliminatedPairs(allWaves));
 
   gameState = GAME_STATE.ANIMATING;
   syncPhase('ANIMATING');
