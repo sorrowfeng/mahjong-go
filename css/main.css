@@ -166,72 +166,6 @@ header h1::after {
 #btn-rules::before { content: "i"; font-family: Georgia, serif; font-style: italic; }
 #btn-sound::before { content: "\266A"; }
 
-.hint-menu-wrap {
-  position: relative;
-  z-index: 5;
-  display: inline-flex;
-}
-
-.hint-menu {
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 0;
-  z-index: 30;
-  width: 118px;
-  padding: 5px;
-  box-sizing: border-box;
-  border: 1px solid rgba(59, 117, 91, 0.18);
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(247,251,248,0.96), rgba(226,236,230,0.94)),
-    #eef5f1;
-  box-shadow: 0 14px 30px rgba(29, 74, 55, 0.2);
-  backdrop-filter: blur(12px);
-}
-
-.hint-menu::before {
-  content: "";
-  position: absolute;
-  top: -5px;
-  left: 22px;
-  width: 9px;
-  height: 9px;
-  border-top: 1px solid rgba(59, 117, 91, 0.18);
-  border-left: 1px solid rgba(59, 117, 91, 0.18);
-  background: rgba(247,251,248,0.96);
-  transform: rotate(45deg);
-}
-
-.hint-menu.hidden {
-  display: none;
-}
-
-.hint-menu__item {
-  width: 100%;
-  min-height: 30px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  color: #245e49;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-  background: transparent;
-}
-
-.hint-menu__item:hover,
-.hint-menu__item:focus-visible {
-  outline: none;
-  color: #174635;
-  background: rgba(82, 153, 119, 0.12);
-}
-
 .btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.02);
@@ -629,10 +563,6 @@ header h1::after {
     font-size: 0.82rem;
   }
 
-  .hint-menu {
-    width: 108px;
-  }
-
   .teaching-panel {
     top: 8px;
     width: min(94vw, 460px);
@@ -675,28 +605,6 @@ header h1::after {
     min-height: 28px;
     padding: 4px 6px;
     font-size: 0.68rem;
-  }
-
-  .hint-menu-wrap {
-    width: 100%;
-  }
-
-  .hint-menu-wrap .btn {
-    width: 100%;
-  }
-
-  .hint-menu {
-    top: 0;
-    left: calc(100% + 7px);
-    width: 102px;
-  }
-
-  .hint-menu::before {
-    top: 10px;
-    left: -5px;
-    border-top: 0;
-    border-right: 0;
-    border-bottom: 1px solid rgba(59, 117, 91, 0.18);
   }
 
   .toolbar-stats {

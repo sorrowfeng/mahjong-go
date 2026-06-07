@@ -1,8 +1,8 @@
 import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
-import { showTutorial, hideTutorial } from './tutorial.js?v=20260607-5';
-import { initDragController } from './dragController.js?v=20260607-5';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights } from './gameController.js?v=20260607-5';
+import { showTutorial, hideTutorial } from './tutorial.js?v=20260607-6';
+import { initDragController } from './dragController.js?v=20260607-6';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights } from './gameController.js?v=20260607-6';
 import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
 
@@ -15,26 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDragController(boardEl, handleDragEnd, handleTileClick);
 
   // 游戏内按钮绑定
-  const btnHint = document.getElementById('btn-hint');
-  const hintMenu = document.getElementById('hint-menu');
-  const setHintMenuOpen = (open) => {
-    hintMenu.classList.toggle('hidden', !open);
-    btnHint.setAttribute('aria-expanded', open ? 'true' : 'false');
-  };
-
-  btnHint.addEventListener('click', () => {
-    setHintMenuOpen(hintMenu.classList.contains('hidden'));
-  });
-  document.getElementById('btn-show-hint').addEventListener('click', () => {
-    setHintMenuOpen(false);
-    handleHint();
-  });
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.hint-menu-wrap')) setHintMenuOpen(false);
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') setHintMenuOpen(false);
-  });
+  document.getElementById('btn-hint').addEventListener('click', handleHint);
 
   document.getElementById('btn-undo').addEventListener('click', handleUndo);
   document.getElementById('btn-new').addEventListener('click', handleNewGame);
@@ -112,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 键盘快捷键支持
   document.addEventListener('keydown', (e) => {
     if (e.key === 'h' || e.key === 'H') {
-      setHintMenuOpen(false);
       handleHint();
     }
     if (e.key === 'n' || e.key === 'N') document.getElementById('btn-new').click();
