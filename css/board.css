@@ -101,52 +101,122 @@
 .match-badge {
   position: absolute;
   left: 50%;
-  top: 14px;
-  z-index: 120;
-  min-width: 74px;
-  padding: 5px 10px;
-  border: 1px solid rgba(255,255,255,0.42);
+  top: 50%;
+  z-index: 150;
+  min-width: 116px;
+  min-height: 50px;
+  padding: 9px 16px;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.62);
   border-radius: 8px;
   color: #164536;
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1.1;
   font-weight: 900;
   text-align: center;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   pointer-events: none;
-  background: linear-gradient(180deg, #f8fbf9, #d3ebdf);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(222, 244, 233, 0.96)),
+    #f5fbf7;
   box-shadow:
-    0 0 16px rgba(117, 213, 168, 0.38),
-    0 8px 18px rgba(35, 93, 69, 0.2);
-  animation: match-badge-pop 360ms ease-out forwards;
+    0 0 0 1px rgba(255,255,255,0.72),
+    0 0 20px rgba(117, 213, 168, 0.48),
+    0 12px 30px rgba(30, 85, 63, 0.24);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.82);
+  animation: match-badge-pop var(--badge-duration, 560ms) ease-out forwards;
+}
+
+.match-badge::before,
+.match-badge::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  z-index: -1;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.match-badge::before {
+  border: 1px solid rgba(236, 205, 113, 0.58);
+  background: radial-gradient(circle, rgba(255,255,255,0.42), rgba(128, 226, 182, 0.18) 42%, transparent 72%);
+  animation: match-badge-halo var(--badge-duration, 560ms) ease-out forwards;
+}
+
+.match-badge::after {
+  inset: 1px;
+  border-radius: 7px;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.72) 42%, transparent 64%);
+  opacity: 0;
+  transform: translateX(-45%);
+  animation: match-badge-shine var(--badge-duration, 560ms) ease-out forwards;
 }
 
 .match-badge--combo {
-  top: 10px;
-  min-width: 92px;
-  padding: 7px 12px;
+  min-width: 140px;
+  min-height: 64px;
+  padding: 11px 19px;
   color: #174333;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(223, 243, 232, 0.94)),
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(224, 246, 235, 0.96)),
     #f5faf6;
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.6),
-    0 0 24px rgba(126,225,179,0.45),
-    0 10px 24px rgba(35, 93, 69, 0.22);
-  animation: match-badge-combo-pop 560ms ease-out forwards;
+    0 0 0 1px rgba(255,255,255,0.74),
+    0 0 30px rgba(126,225,179,0.56),
+    0 16px 38px rgba(28, 78, 58, 0.28);
+  animation: match-badge-combo-pop var(--badge-duration, 860ms) ease-out forwards;
+}
+
+.match-badge[data-combo-level="2"] {
+  min-width: 144px;
+  color: #15523d;
+}
+
+.match-badge[data-combo-level="3"] {
+  min-width: 158px;
+  min-height: 70px;
+  color: #155642;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.99), rgba(218, 246, 232, 0.97)),
+    #f3fbf5;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.78),
+    0 0 34px rgba(116, 226, 176, 0.64),
+    0 0 42px rgba(236, 205, 113, 0.2),
+    0 18px 42px rgba(28, 78, 58, 0.3);
 }
 
 .match-badge[data-combo-level="4"],
 .match-badge[data-combo-level="5"] {
+  min-height: 76px;
   color: #214318;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.98), rgba(239, 246, 218, 0.96)),
     #f9fbec;
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.62),
-    0 0 26px rgba(126,225,179,0.5),
-    0 0 34px rgba(226, 190, 87, 0.34),
-    0 12px 26px rgba(35, 93, 69, 0.22);
+    0 0 40px rgba(126,225,179,0.68),
+    0 0 54px rgba(226, 190, 87, 0.42),
+    0 20px 48px rgba(35, 93, 69, 0.32);
+}
+
+.match-badge[data-combo-level="4"] {
+  min-width: 172px;
+}
+
+.match-badge[data-combo-level="5"] {
+  min-width: 188px;
+  color: #263f12;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.8),
+    0 0 46px rgba(126,225,179,0.75),
+    0 0 66px rgba(226, 190, 87, 0.52),
+    0 0 0 8px rgba(239, 207, 115, 0.16),
+    0 22px 54px rgba(35, 93, 69, 0.34);
 }
 
 .match-badge__main,
@@ -155,23 +225,40 @@
 }
 
 .match-badge__main {
-  font-size: 0.92rem;
+  font-size: 1.12rem;
   line-height: 1.05;
 }
 
+.match-badge--combo .match-badge__main {
+  font-size: 1.42rem;
+}
+
+.match-badge[data-combo-level="4"] .match-badge__main {
+  font-size: 1.58rem;
+}
+
+.match-badge[data-combo-level="5"] .match-badge__main {
+  font-size: 1.72rem;
+}
+
 .match-badge__sub {
-  margin-top: 3px;
+  margin-top: 5px;
   color: rgba(41, 84, 66, 0.78);
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   line-height: 1;
   font-weight: 800;
+}
+
+.match-badge[data-combo-level="4"] .match-badge__sub,
+.match-badge[data-combo-level="5"] .match-badge__sub {
+  color: rgba(70, 85, 32, 0.82);
 }
 
 .combo-ripple {
   position: absolute;
   z-index: 90;
-  width: calc(var(--tile-w) * 1.25);
-  height: calc(var(--tile-w) * 1.25);
+  width: var(--ripple-size, calc(var(--tile-w) * 1.25));
+  height: var(--ripple-size, calc(var(--tile-w) * 1.25));
   margin: 0;
   border: 2px solid rgba(238, 207, 120, 0.72);
   border-radius: 50%;
@@ -179,7 +266,14 @@
   box-shadow:
     0 0 18px rgba(126,225,179,0.42),
     inset 0 0 18px rgba(255,255,255,0.28);
-  animation: combo-ripple-pop var(--combo-duration, 520ms) ease-out forwards;
+  animation: combo-ripple-pop var(--combo-duration, 520ms) ease-out var(--combo-delay, 0ms) forwards;
+}
+
+.combo-ripple--echo {
+  border-color: rgba(128, 226, 182, 0.56);
+  box-shadow:
+    0 0 24px rgba(126,225,179,0.34),
+    inset 0 0 22px rgba(255,255,255,0.18);
 }
 
 .tile-spark {
@@ -205,4 +299,38 @@
     0 0 10px rgba(255,255,255,0.96),
     0 0 20px rgba(126,225,179,0.82),
     0 0 30px rgba(238,207,120,0.52);
+}
+
+@media (max-width: 520px) {
+  .match-badge {
+    min-width: 104px;
+    min-height: 46px;
+    padding: 8px 12px;
+  }
+
+  .match-badge--combo {
+    min-width: 126px;
+    min-height: 58px;
+  }
+
+  .match-badge[data-combo-level="4"] {
+    min-width: 148px;
+  }
+
+  .match-badge[data-combo-level="5"] {
+    min-width: 162px;
+  }
+
+  .match-badge__main {
+    font-size: 1rem;
+  }
+
+  .match-badge--combo .match-badge__main {
+    font-size: 1.22rem;
+  }
+
+  .match-badge[data-combo-level="4"] .match-badge__main,
+  .match-badge[data-combo-level="5"] .match-badge__main {
+    font-size: 1.34rem;
+  }
 }

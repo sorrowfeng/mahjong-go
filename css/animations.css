@@ -125,49 +125,93 @@
 @keyframes match-badge-pop {
   0% {
     opacity: 0;
-    transform: translate(-50%, 8px) scale(0.88);
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.84);
   }
   22% {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1.04);
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -18px) scale(1);
+    transform: translate(-50%, calc(-50% - 20px)) scale(0.98);
   }
 }
 
 @keyframes match-badge-combo-pop {
   0% {
     opacity: 0;
-    transform: translate(-50%, 12px) scale(0.78);
+    filter: brightness(1.08) saturate(1.08);
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.62) rotate(-1deg);
   }
-  18% {
+  16% {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1.12);
+    filter: brightness(1.18) saturate(1.18);
+    transform: translate(-50%, -50%) scale(1.22) rotate(0deg);
   }
-  48% {
+  34% {
     opacity: 1;
-    transform: translate(-50%, -4px) scale(1);
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -24px) scale(0.96);
+    filter: brightness(1.06) saturate(1.08);
+    transform: translate(-50%, calc(-50% - 26px)) scale(1.04);
+  }
+}
+
+@keyframes match-badge-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+  24% {
+    opacity: 0.86;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(var(--badge-halo-scale, 1.22));
+  }
+}
+
+@keyframes match-badge-shine {
+  0%, 18% {
+    opacity: 0;
+    transform: translateX(-52%);
+  }
+  34% {
+    opacity: 0.7;
+  }
+  58% {
+    opacity: 0;
+    transform: translateX(56%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(56%);
   }
 }
 
 @keyframes tile-spark-pop {
   0% {
     opacity: 0;
-    transform: translate(0, 0) scale(0.4);
+    transform: translate(0, 0) scale(0.36);
   }
-  26% {
+  22% {
     opacity: 1;
-    transform: translate(calc(var(--spark-x, 0px) * 0.22), calc(var(--spark-y, -18px) * 0.22)) scale(1.15);
+    transform: translate(calc(var(--spark-x, 0px) * 0.18), calc(var(--spark-y, -18px) * 0.18)) scale(1.18);
   }
   100% {
     opacity: 0;
-    transform: translate(var(--spark-x, 0px), var(--spark-y, -18px)) scale(0.2);
+    transform: translate(var(--spark-x, 0px), var(--spark-y, -18px)) scale(0.18);
   }
 }
 

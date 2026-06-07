@@ -10,7 +10,7 @@ function wait(ms) {
 }
 
 const MAX_MATCH_LINES = 6;
-const MAX_TILE_SPARKS = 34;
+const MAX_TILE_SPARKS = 48;
 const MAX_SPARK_SOURCE_TILES = 6;
 
 function getComboEffectLevel(combo, waveIndex) {
@@ -128,35 +128,46 @@ function drawTileSpark(boardEl, el, index, effectLevel = 1, burstIndex = 0) {
   spark.style.left = `${center.x}px`;
   spark.style.top = `${center.y}px`;
   const angle = ((index * 137.5 + burstIndex * 43) % 360) * Math.PI / 180;
-  const distance = 12 + effectLevel * 5 + burstIndex * 3;
+  const distance = 14 + effectLevel * 7 + burstIndex * 4;
   spark.style.setProperty('--spark-x', `${Math.cos(angle) * distance}px`);
   spark.style.setProperty('--spark-y', `${Math.sin(angle) * distance - 10}px`);
-  spark.style.setProperty('--spark-size', `${8 + Math.min(5, effectLevel)}px`);
-  spark.style.setProperty('--spark-delay', `${(index % 8) * 14}ms`);
-  spark.style.setProperty('--spark-duration', `${360 + effectLevel * 48}ms`);
+  spark.style.setProperty('--spark-size', `${8 + Math.min(7, effectLevel + burstIndex)}px`);
+  spark.style.setProperty('--spark-delay', `${(index % 10) * 12}ms`);
+  spark.style.setProperty('--spark-duration', `${410 + effectLevel * 58}ms`);
   spark.dataset.comboLevel = String(effectLevel);
   boardEl.appendChild(spark);
   return spark;
 }
 
-function drawComboRipple(boardEl, pairs, effectLevel) {
-  if (!boardEl || effectLevel < 2 || pairs.length === 0) return null;
+function drawComboRipples(boardEl, pairs, effectLevel) {
+  if (!boardEl || effectLevel < 2 || pairs.length === 0) return [];
   const firstPair = pairs[0];
   const elA = getTileElement(firstPair.a.tile.instanceId);
   const elB = getTileElement(firstPair.b.tile.instanceId);
-  if (!elA || !elB) return null;
+  if (!elA || !elB) return [];
 
   const centerA = tileCenterInBoard(boardEl, elA);
   const centerB = tileCenterInBoard(boardEl, elB);
-  const ripple = document.createElement('div');
-  ripple.className = 'combo-ripple';
-  ripple.style.left = `${(centerA.x + centerB.x) / 2}px`;
-  ripple.style.top = `${(centerA.y + centerB.y) / 2}px`;
-  ripple.style.setProperty('--combo-scale', `${1.15 + effectLevel * 0.2}`);
-  ripple.style.setProperty('--combo-duration', `${440 + effectLevel * 58}ms`);
-  ripple.dataset.comboLevel = String(effectLevel);
-  boardEl.appendChild(ripple);
-  return ripple;
+  const x = (centerA.x + centerB.x) / 2;
+  const y = (centerA.y + centerB.y) / 2;
+  const rippleCount = effectLevel >= 5 ? 3 : effectLevel >= 3 ? 2 : 1;
+  const ripples = [];
+
+  for (let i = 0; i < rippleCount; i++) {
+    const ripple = document.createElement('div');
+    ripple.className = i === 0 ? 'combo-ripple' : 'combo-ripple combo-ripple--echo';
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    ripple.style.setProperty('--combo-scale', `${1.22 + effectLevel * 0.24 + i * 0.34}`);
+    ripple.style.setProperty('--combo-duration', `${520 + effectLevel * 76 + i * 110}ms`);
+    ripple.style.setProperty('--combo-delay', `${i * 82}ms`);
+    ripple.style.setProperty('--ripple-size', `${TILE_WIDTH * (1.2 + effectLevel * 0.13 + i * 0.18)}px`);
+    ripple.dataset.comboLevel = String(effectLevel);
+    boardEl.appendChild(ripple);
+    ripples.push(ripple);
+  }
+
+  return ripples;
 }
 
 function showWaveBadge(boardEl, pairCount, waveIndex, combo, effectLevel) {
@@ -166,7 +177,14 @@ function showWaveBadge(boardEl, pairCount, waveIndex, combo, effectLevel) {
   if ((combo?.count || 1) > 1 || waveIndex > 0) {
     badge.classList.add('match-badge--combo');
   }
+  badge.classList.add(`match-badge--level-${effectLevel}`);
   badge.dataset.comboLevel = String(effectLevel);
+  badge.style.setProperty('--combo-level', effectLevel);
+  badge.style.setProperty('--badge-halo-scale', `${1.16 + effectLevel * 0.05}`);
+  const badgeDuration = (combo?.count || 1) > 1 || waveIndex > 0
+    ? 780 + effectLevel * 92
+    : 560;
+  badge.style.setProperty('--badge-duration', `${badgeDuration}ms`);
 
   const main = document.createElement('span');
   main.className = 'match-badge__main';
@@ -185,7 +203,13 @@ function showWaveBadge(boardEl, pairCount, waveIndex, combo, effectLevel) {
     if ((combo?.count || 1) > 1 && waveIndex > 0) {
       sub.textContent = `连锁 x${waveIndex + 1}`;
     } else if ((combo?.count || 1) > 1) {
-      sub.textContent = '10秒内继续';
+      sub.textContent = effectLevel >= 5
+        ? '满格爆发'
+        : effectLevel >= 4
+          ? '强连击'
+          : effectLevel >= 3
+            ? '节奏升级'
+            : '10秒内继续';
     } else {
       sub.textContent = '效果增强';
     }
@@ -193,7 +217,7 @@ function showWaveBadge(boardEl, pairCount, waveIndex, combo, effectLevel) {
   }
 
   boardEl.appendChild(badge);
-  return badge;
+  return { element: badge, duration: badgeDuration };
 }
 
 // 消除动画：给定一批 {row,col,tile} 的牌，播放缩放淡出，然后移除 DOM
@@ -211,7 +235,7 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
     const lines = pairs.slice(0, MAX_MATCH_LINES).map(pair => drawMatchLine(boardEl, pair, effectLevel)).filter(Boolean);
     const sparks = [];
     if (boardEl) {
-      const sparksPerTile = Math.min(4, Math.max(1, effectLevel));
+      const sparksPerTile = Math.min(5, Math.max(1, effectLevel + 1));
       const sourceTiles = elements.slice(0, MAX_SPARK_SOURCE_TILES);
       for (let tileIndex = 0; tileIndex < sourceTiles.length; tileIndex++) {
         for (let burstIndex = 0; burstIndex < sparksPerTile; burstIndex++) {
@@ -220,7 +244,7 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
         }
       }
     }
-    const ripple = drawComboRipple(boardEl, pairs, effectLevel);
+    const ripples = drawComboRipples(boardEl, pairs, effectLevel);
     const badge = showWaveBadge(boardEl, pairs.length, waveIndex, combo, effectLevel);
 
     const boardPulse = effectLevel >= 4
@@ -246,10 +270,15 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
       for (const spark of sparks) {
         spark.remove();
       }
-      if (ripple) ripple.remove();
-      if (badge) badge.remove();
+      for (const ripple of ripples) {
+        ripple.remove();
+      }
       resolve();
     }, duration);
+
+    if (badge) {
+      setTimeout(() => badge.element.remove(), Math.max(duration, badge.duration));
+    }
   });
 }
 

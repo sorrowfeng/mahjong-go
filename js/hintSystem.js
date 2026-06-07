@@ -1,6 +1,6 @@
 import { DIR } from './constants.js';
-import { selectGroup, calcMaxSlide, applySlide } from './movementLogic.js?v=20260607-8';
-import { hasAnyPair } from './gameLogic.js?v=20260607-8';
+import { selectGroup, calcMaxSlide, applySlide } from './movementLogic.js?v=20260607-9';
+import { hasAnyPair } from './gameLogic.js?v=20260607-9';
 
 // hintSystem.js — 提示算法
 
