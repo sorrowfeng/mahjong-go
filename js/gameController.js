@@ -1,13 +1,13 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-7';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-8';
 import { findHint } from './hintSystem.js';
 import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-7';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-8';
 import { SoundController } from './soundController.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260607-7';
-import { hideTutorial } from './tutorial.js?v=20260607-7';
+import { applySlide } from './movementLogic.js?v=20260607-8';
+import { hideTutorial } from './tutorial.js?v=20260607-8';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -355,6 +355,25 @@ function isExpectedTeachingClick(pair) {
     && pairMatchesPositions(pair, step.clickPair);
 }
 
+function isTeachingStepAvailable(step = TEACHING_STEPS[teachingStepIndex]) {
+  if (!isTeachingMode || teachingCompleted || !step || !boardState) return false;
+
+  if (step.action === 'click') {
+    return findAllPairs(boardState).some(pair =>
+      pairMatchesPositions(pair, step.clickPair)
+    );
+  }
+
+  if (step.action === 'drag' && step.drag) {
+    return [
+      ...step.drag.group,
+      ...(step.highlights || []),
+    ].every(pos => Boolean(boardState.grid[pos.row]?.[pos.col]));
+  }
+
+  return false;
+}
+
 function getExpectedTeachingDragPair(group, direction, delta, waves) {
   if (!isTeachingMode || teachingCompleted) return null;
 
@@ -400,6 +419,20 @@ function loadTeachingStep() {
   updateUI();
 }
 
+function loadNextAvailableTeachingStep() {
+  while (teachingStepIndex < TEACHING_STEPS.length && !isTeachingStepAvailable()) {
+    teachingStepIndex++;
+  }
+
+  if (teachingStepIndex >= TEACHING_STEPS.length) {
+    completeTeachingLevel();
+    return true;
+  }
+
+  loadTeachingStep();
+  return true;
+}
+
 function completeTeachingLevel() {
   teachingCompleted = true;
   clearHintAnimation(getBoardEl());
@@ -411,19 +444,24 @@ function completeTeachingLevel() {
   updateUI();
 }
 
-function advanceTeachingAfterAction(action) {
-  if (!isTeachingMode || teachingCompleted) return false;
+function advanceTeachingAfterAction(action, matchedExpectedStep = true) {
+  if (!isTeachingMode || teachingCompleted || !matchedExpectedStep) return false;
 
   const step = TEACHING_STEPS[teachingStepIndex];
   if (!step || step.action !== action) return false;
 
-  if (teachingStepIndex < TEACHING_STEPS.length - 1) {
-    teachingStepIndex++;
-    loadTeachingStep();
-  } else {
+  teachingStepIndex++;
+  if (teachingStepIndex >= TEACHING_STEPS.length) {
     completeTeachingLevel();
+  } else {
+    loadNextAvailableTeachingStep();
   }
   return true;
+}
+
+function refreshTeachingAfterFreeAction() {
+  if (!isTeachingMode || teachingCompleted) return false;
+  return loadNextAvailableTeachingStep();
 }
 
 function leaveTeachingMode() {
@@ -591,9 +629,10 @@ async function handleDragEnd({ group, direction, delta }) {
   const waves = resolveNewPairChain(boardState, proposedState);
   let hasMatch = waves.length > 0;
   let wavesToRun = waves;
+  let matchedTeachingDrag = false;
   if (hasMatch && isTeachingMode && !teachingCompleted) {
     const expectedPair = getExpectedTeachingDragPair(group, direction, delta, waves);
-    hasMatch = expectedPair !== null;
+    matchedTeachingDrag = expectedPair !== null;
     if (expectedPair) {
       wavesToRun = [waveForSinglePair(proposedState, expectedPair)];
     }
@@ -639,11 +678,14 @@ async function handleDragEnd({ group, direction, delta }) {
   if (gameGeneration !== myGeneration) return;
 
   if (hasMatch) {
-    if (advanceTeachingAfterAction('drag')) {
+    if (advanceTeachingAfterAction('drag', matchedTeachingDrag)) {
       return;
     }
     if (checkVictory(boardState)) {
       showVictory();
+      return;
+    }
+    if (refreshTeachingAfterFreeAction()) {
       return;
     }
     if (findHint(boardState) === null) {
@@ -672,12 +714,9 @@ async function handleTileClick({ row, col }) {
     return;
   }
 
-  if (isTeachingMode && !isExpectedTeachingClick(pair)) {
-    SoundController.playInvalidMove();
-    animateInvalidTile(boardState.grid[row][col]);
-    showTeachingTargetHint();
-    return;
-  }
+  const matchedTeachingClick = isTeachingMode && !teachingCompleted
+    ? isExpectedTeachingClick(pair)
+    : false;
 
   SoundController.playTileClick();
   pushUndo(boardState);
@@ -713,12 +752,16 @@ async function handleTileClick({ row, col }) {
 
   if (gameGeneration !== myGeneration) return;
 
-  if (advanceTeachingAfterAction('click')) {
+  if (advanceTeachingAfterAction('click', matchedTeachingClick)) {
     return;
   }
 
   if (checkVictory(boardState)) {
     showVictory();
+    return;
+  }
+
+  if (refreshTeachingAfterFreeAction()) {
     return;
   }
 

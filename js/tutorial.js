@@ -1,4 +1,4 @@
-import { pauseTimer, resumeTimer } from './gameController.js?v=20260607-7';
+import { pauseTimer, resumeTimer } from './gameController.js?v=20260607-8';
 
 // tutorial.js — 规则教学动画
 

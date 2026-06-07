@@ -1,6 +1,6 @@
 import { setTiles } from './boardState.js';
 import { countRemainingTiles } from './boardState.js';
-import { findHint } from './hintSystem.js?v=20260607-7';
+import { findHint } from './hintSystem.js?v=20260607-8';
 import { TILE_TYPES } from './tileDefinitions.js';
 
 // gameLogic.js — 消除规则1/2统一实现 + 连锁消除
