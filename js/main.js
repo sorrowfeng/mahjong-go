@@ -16,6 +16,9 @@ import { LEVELS, LEVEL_COUNT, loadProgress, isUnlocked } from './levels.js';
 import { ACHIEVEMENTS, loadAchievements, unlockCount } from './achievements.js';
 import { buildShareText, shareText, drawScoreCard, downloadCard } from './share.js';
 import { registerServiceWorker } from './sw-register.js';
+import { createKeyboardController } from './keyboardNav.js';
+import { getTileElement } from './renderer.js';
+import { announce } from './announcer.js';
 
 // main.js — 入口、初始化、按钮绑定
 
@@ -377,6 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 应用已保存的用户设置（主题/音量/动画速度/色弱/左手）
   applySettings(loadSettings());
 
+  // 初始化键盘控制器：对局中启用（方向键+回车可玩），非对局禁用
+  syncKeyboardUI();
+  // 轮询同步键盘态（对局开始/结束/胜利等 phase 变化由 gameController 驱动，
+  // 这里低频兜底，保证键盘控制器跟随状态开关）
+  setInterval(syncKeyboardUI, 800);
+
   // 初始化道具栏（显示库存）
   refreshItemBar();
 
@@ -412,6 +421,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   });
 
+  // 无障碍播报：写入 sr-live 区域（读屏可感知，可视用户不可见）
+  // 复用 js/announcer.js 的 announce，键盘控制器 DI 也用它
+
+  // 键盘控制器（可访问性：方向键 + 回车完全可玩）
+  const kbHelp = document.getElementById('kb-help');
+  const kbController = createKeyboardController({
+    getState,
+    getPhase,
+    getTileElement,
+    handleTileClick,
+    handleDragEnd,
+    announce,
+  });
+
+  function syncKeyboardUI() {
+    const state = getState();
+    const phase = getPhase();
+    const inGame = !!state && phase === 'IDLE' && !isTeachingModeActive();
+    if (inGame) {
+      kbController.enable();
+      if (kbHelp) kbHelp.classList.remove('hidden');
+    } else {
+      kbController.disable();
+      if (kbHelp) kbHelp.classList.add('hidden');
+    }
+  }
+
   // 键盘快捷键支持
   //
   // 覆盖层（规则弹窗 / 重排确认 / 胜利界面）是全屏遮罩，按钮被盖住点不到，
@@ -429,6 +465,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isOpen(DECISION_OVERLAYS)) return; // 决策弹窗打开时屏蔽全部快捷键
 
     const onVictory = isOpen(['victory-screen']);
+
+    // 方向键 / 回车 / 空格 / Esc：交给键盘控制器（棋盘可玩）
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Escape'].includes(e.key)) {
+      const handled = kbController.handleKey(e);
+      if (handled !== false) return;
+    }
 
     if (e.key === 'h' || e.key === 'H') {
       if (!onVictory) handleHint();

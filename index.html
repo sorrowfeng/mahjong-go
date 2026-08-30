@@ -183,6 +183,16 @@
   <!-- 通用提示 -->
   <div id="toast-msg" class="hidden"></div>
 
+  <!-- 无障碍：读屏播报区（对可视用户不可见） -->
+  <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- 键盘操作帮助提示 -->
+  <div id="kb-help" class="kb-help hidden" aria-hidden="true">
+    <span class="kb-help__key">方向键</span> 移动
+    <span class="kb-help__key">回车</span> 选中/消除/拖拽
+    <span class="kb-help__key">Esc</span> 取消
+  </div>
+
   <!-- 统计面板 -->
   <div id="stats-panel" class="hidden">
     <div class="stats-box">

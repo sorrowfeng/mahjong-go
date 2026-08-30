@@ -24,6 +24,7 @@ module.exports = {
     'js/levels.js',
     'js/achievements.js',
     'js/share.js',
+    'js/keyboardNav.js',
     // imagePreload 在 gameController 测试中被 mock（jsdom 不真正加载图片），
     // 仅 20 行且逻辑 trivial，不纳入覆盖率统计
   ],
@@ -44,5 +45,6 @@ module.exports = {
     '**/js/items.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/levels.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/achievements.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/keyboardNav.js': { functions: 80, lines: 80, statements: 80 },
   },
 };

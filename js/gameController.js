@@ -17,6 +17,7 @@ import { createScore, addWave, settleScore, defaultStarThresholds, recordScore }
 import { loadItems, saveItems, spendItem, getCount } from './items.js';
 import { getLevel, loadProgress, saveProgress, recordLevelResult, levelStarThresholds } from './levels.js';
 import { recordEvent } from './achievements.js';
+import { announce } from './announcer.js';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -1391,6 +1392,7 @@ function finishTimedOut() {
     elapsed, remaining,
     settlement, mode: currentMode,
   });
+  announce('时间到，未能在限时内清盘');
 }
 
 // 步数模式达上限结算（未通关）
@@ -1416,6 +1418,7 @@ function finishMoveLimit() {
     elapsed, remaining: null,
     settlement, mode: currentMode,
   });
+  announce(`步数用尽，已达 ${currentMode.moveBudget} 步上限`);
 }
 
 // 通用结算界面（胜利/超时/步数上限共用）
@@ -1443,6 +1446,7 @@ function showResultScreen({ title, subtitle, elapsed, remaining, settlement, mod
 // 胜利界面
 function showVictory() {
   gameState = GAME_STATE.VICTORY;
+  announce('恭喜通关，所有麻将已全部消除！');
   SoundController.playVictory();
   const elapsed = stopGameTimer();
   const best = recordBest(elapsed, moveCount);
@@ -1536,6 +1540,7 @@ function flashElement(el, durationMs) {
 
 // 死局提示
 function showDeadlock() {
+  announce('当前无可消除步骤，请使用提示或撤销');
   flashElement(document.getElementById('deadlock-msg'), 3000);
 }
 
@@ -1568,6 +1573,7 @@ function doReshuffle() {
   updateUI();
   SoundController.playReshuffle();
   showReshuffle();
+  announce('已重新随机排列剩余牌');
   persistSave();
 }
 
