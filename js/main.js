@@ -41,8 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-hint').addEventListener('click', handleHint);
 
   document.getElementById('btn-undo').addEventListener('click', handleUndo);
-  document.getElementById('btn-new').addEventListener('click', handleNewGame);
-  document.getElementById('btn-new-victory').addEventListener('click', handleNewGame);
+  // "新游戏"按钮：先隐藏可能仍在显示的提示消息（deadlock/reshuffle/rotate），
+  // 避免上一局死局提示在 flashElement 3 秒窗口内残影到新一局。
+  const dismissFlashMessages = () => {
+    document.querySelectorAll('#deadlock-msg, #reshuffle-msg, #rotate-hint')
+      .forEach(el => el.classList.add('hidden'));
+  };
+  document.getElementById('btn-new').addEventListener('click', () => {
+    dismissFlashMessages();
+    handleNewGame();
+  });
+  document.getElementById('btn-new-victory').addEventListener('click', () => {
+    dismissFlashMessages();
+    handleNewGame();
+  });
   document.getElementById('btn-reshuffle-ok').addEventListener('click', doReshuffle);
   document.getElementById('btn-reshuffle-cancel').addEventListener('click', hideReshuffleConfirm);
   document.getElementById('btn-teaching-exit').addEventListener('click', exitTeachingLevel);
@@ -569,7 +581,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         tick();
       }),
-      newGame: async () => { handleNewGame(); await new Promise(r => setTimeout(r, 80)); return { ok: true }; },
+      newGame: async () => {
+        // 与 btn-new 同步：先隐藏残留提示消息
+        document.querySelectorAll('#deadlock-msg, #reshuffle-msg, #rotate-hint')
+          .forEach(el => el.classList.add('hidden'));
+        handleNewGame();
+        await new Promise(r => setTimeout(r, 80));
+        return { ok: true };
+      },
       // 用给定 seed 重开一局（教学关卡或 deterministic 测试需要）
       reseed: async (seed) => {
         try {

@@ -291,3 +291,16 @@ CDP 截图发现：**死局提示与 h1 标题在同一位置**（top 18-50px）
 1. **静态截图 + 单元测试 ≠ 真实行为**：仅靠这两者，前几轮改动都"看起来对但无法证实"。CDP 让"看到"成为可能。
 2. **TDZ 错误是隐形杀手**：浏览器 console.error 不会中断后续代码，**单元测试看不到、用户感知不到**——但所有 IIFE 后续逻辑被吞。**必须用真实浏览器跑**才能发现。
 3. **CSS 改动前的视觉假设要验证**："top: 18px 应该避开标题"——但实际 header 高度 50px，标题中心在 25px，deadlock-msg 高度 32px 正好压在标题上。这类问题只能靠截图确认。
+
+### 7.6 进一步发现：deadlock-msg 残影到新一局
+
+**问题**：`#deadlock-msg` 用 `flashElement(el, 3000)` 显示 3 秒后自动隐藏。但如果在 3 秒内点"新游戏"，deadlock-msg 仍然显示——**会误导玩家以为新一局是死局**。
+
+**复现路径**（CDP 验证）：
+1. `solveOnce()` 多次直到触发死局 → `showDeadlock()` → `flashElement(3000)` 开始
+2. 1-2 秒内调用 `__demo.newGame()`（demo 钩子）或点击"新游戏"按钮
+3. 截图显示红色 deadlock-msg 仍可见，叠加在新一局的"剩余 136 张"上
+
+**修复**（`js/main.js`）：在 btn-new 和 btn-new-victory 的 click 监听中先调 `dismissFlashMessages()`，隐藏所有可能残留的提示消息（deadlock-msg / reshuffle-msg / rotate-hint）。demo 钩子的 `__demo.newGame()` 同步此逻辑。
+
+**验证**（截图 `06_fresh_board.png`）：修复后新一局截图干净，无任何提示残影。
