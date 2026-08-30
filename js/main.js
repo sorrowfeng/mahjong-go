@@ -3,6 +3,10 @@ import { BgmController } from './bgmController.js';
 import { showTutorial, hideTutorial } from './tutorial.js';
 import { initDragController } from './dragController.js';
 import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights, getState, getPhase, isTeachingModeActive, loadSaveSnapshot, restoreFromSnapshot, showResumeConfirm, hideResumeConfirm, persistSave, useItem, getItems, getModeInfo, getMoveRemaining, cancelHammer, finishTimedOut, getLevelInfo } from './gameController.js';
+import { findHint } from './hintSystem.js';
+import { collectDragGroup } from './movementLogic.js';
+import { findAllPairs, hasAnyPair } from './pairDetection.js';
+import { isDeadlock } from './gameLogic.js';
 import { startTimerFromElapsed, startCountdown } from './timer.js';
 import { BOARD_COLS, BOARD_ROWS, recalcLayout, recalcTileSizeOnly, setBoardLayout } from './constants.js';
 import { renderBoard } from './renderer.js';
@@ -381,9 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
   applySettings(loadSettings());
 
   // 初始化键盘控制器：对局中启用（方向键+回车可玩），非对局禁用
-  syncKeyboardUI();
-  // 轮询同步键盘态（对局开始/结束/胜利等 phase 变化由 gameController 驱动，
-  // 这里低频兜底，保证键盘控制器跟随状态开关）
+  // kbController 在下方（line 433+）才创建，此处先注册轮询，
+  // 800ms 后第一次执行时 kbController 已就绪，避开 TDZ。
   setInterval(syncKeyboardUI, 800);
 
   // 初始化道具栏（显示库存）
@@ -501,4 +504,81 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSound.textContent = soundEnabled ? '音效' : '静音';
     btnSound.classList.toggle('btn--muted', !soundEnabled);
   } catch (e) { /* 隐私模式或存储不可用 */ }
+
+  // ── 测试/视觉验证钩子（仅 ?demo=1 激活；普通用户零影响） ──
+  // 暴露给 CDP/Playwright 等自动化工具，可程序化触发"开始 → 消除 → 等待动画"
+  // 等纯 UI 也能做的操作，便于在浏览器中真实看到动画效果。
+  // 不绕过任何游戏规则；不暴露未在 UI 中已可访问的内部状态。
+  if (typeof window !== 'undefined') {
+    window.__demoDiag = {
+      hasSearch: location.search,
+      demo: new URLSearchParams(location.search).get('demo'),
+      docReady: document.readyState,
+      ts: Date.now(),
+    };
+  }
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    window.__demo = {
+      // 当前状态摘要（phase、剩余牌数、是否死局）
+      inspect: () => {
+        const s = getState();
+        if (!s) return { phase: 'none' };
+        const pairs = findAllPairs(s);
+        return {
+          phase: getPhase(),
+          tiles: s.grid.flat().filter(Boolean).length,
+          directPairs: pairs.length,
+          isDeadlock: isDeadlock(s),
+        };
+      },
+      // 触发一次合法拖动消除（优先直接配对 → 否则拖动提示）。
+      // await 返回时本次拖动产生的所有动画（含连锁）已结束。
+      solveOnce: async () => {
+        const waitIdle = () => new Promise(resolve => {
+          if (getPhase() === 'IDLE') return resolve();
+          const i = setInterval(() => { if (getPhase() === 'IDLE') { clearInterval(i); resolve(); } }, 16);
+        });
+        await waitIdle();
+        const s = getState();
+        if (!s) return { ok: false, reason: 'no-state' };
+        // 1) 直接配对：模拟点击（不实际派发 pointer 事件，走 handleTileClick）
+        // handleTileClick 期望 {row, col}，不是 tile 对象。
+        // 必须用两轮：先点 a 建立选中态，再点 b 触发消除。
+        const direct = findAllPairs(s);
+        if (direct.length > 0) {
+          const a = direct[0].a, b = direct[0].b;
+          await handleTileClick({ row: a.row, col: a.col });
+          await waitIdle();
+          await handleTileClick({ row: b.row, col: b.col });
+        } else {
+          // 2) 拖动提示
+          const hint = findHint(s);
+          if (!hint) return { ok: false, reason: 'deadlock', isDeadlock: isDeadlock(s) };
+          await handleDragEnd({ group: hint.group, direction: hint.direction, delta: hint.delta });
+        }
+        await waitIdle();
+        return { ok: true };
+      },
+      // 等待 phase=IDLE（动画结束）。timeout 保护避免死等。
+      waitIdle: () => new Promise((resolve, reject) => {
+        const t0 = Date.now();
+        const tick = () => {
+          if (getPhase() === 'IDLE') return resolve();
+          if (Date.now() - t0 > 5000) return reject(new Error('waitIdle timeout'));
+          setTimeout(tick, 16);
+        };
+        tick();
+      }),
+      newGame: async () => { handleNewGame(); await new Promise(r => setTimeout(r, 80)); return { ok: true }; },
+      // 用给定 seed 重开一局（教学关卡或 deterministic 测试需要）
+      reseed: async (seed) => {
+        try {
+          sessionStorage.setItem('mahjong-force-seed', String(seed));
+        } catch (_) {}
+        handleNewGame();
+        await new Promise(r => setTimeout(r, 120));
+        return { ok: true };
+      },
+    };
+  }
 });

@@ -20,8 +20,9 @@
   border-radius: 6px;
   cursor: grab;
   touch-action: none;
-  will-change: transform, opacity;
-  transform-style: preserve-3d;
+  /* 常驻 will-change 会让 136 张牌全部提前提升为独立合成层，
+     低端设备上大量常驻层反而拖慢合成器 —— 改为拖拽/动画时动态添加。
+     静态牌的 transform/opacity 动画仍会被合成器按需提升。 */
   backface-visibility: hidden;
   transform-origin: center;
   background:
@@ -33,7 +34,17 @@
     inset -1px -2px 0 rgba(139,107,69,0.12),
     0 1px 0 #b99d73,
     0 4px 12px rgba(42, 88, 67, 0.2);
-  transition: box-shadow 140ms ease, filter 140ms ease, border-color 140ms ease;
+  /* 移除 transition 中的 filter：filter 过渡每帧强制软件重绘整张牌（含大图），
+     不可合成。牌的状态切换（hover/selected）使用纯 opacity / transform / box-shadow
+     表达，已能覆盖视觉反馈。 */
+  transition: box-shadow 140ms ease, border-color 140ms ease;
+}
+
+/* 动态提升：拖拽中的牌 / 正在消除动画的牌才需要独立合成层。
+   由 JS 在 setGroupTransform / animateEliminate 时临时添加，结束后移除，
+   避免 136 张牌全部常驻 GPU 层（低端设备卡顿来源）。 */
+.tile--composited {
+  will-change: transform, opacity;
 }
 
 .tile::before {
@@ -106,7 +117,9 @@
   object-fit: fill;
   border-radius: 4px;
   pointer-events: none;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.28)) drop-shadow(0 1px 1px rgba(0,0,0,0.18));
+  /* 用 box-shadow 替代 filter:drop-shadow —— drop-shadow 每帧重采样图片 alpha，
+     ×136 张牌是持续成本；box-shadow 不重采样，视觉接近且便宜得多。 */
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
 }
 
 .tile--deal-hidden {
@@ -180,7 +193,13 @@
   border-color: #f4c84f;
   outline: 3px solid rgba(255, 220, 104, 0.88);
   outline-offset: 3px;
-  filter: brightness(1.075) saturate(1.12);
+  /* 静态 box-shadow 提供呼吸光晕（原由 keyframe 逐帧动画提供；
+     改为静态可让提示动画走可合成的 transform，避免 box-shadow 每帧重算） */
+  box-shadow:
+    0 1px 0 #b99d73,
+    0 0 0 2px rgba(244, 200, 79, 0.6),
+    0 0 18px rgba(255, 220, 104, 0.4),
+    0 8px 18px rgba(42, 88, 67, 0.2);
   animation: tile-hint-pulse 1080ms ease-in-out infinite;
 }
 
@@ -299,7 +318,6 @@
 
 @media (hover: hover) {
   .tile:hover {
-      filter: brightness(1.035);
       box-shadow:
       0 1px 0 #b99d73,
       0 7px 16px rgba(42, 88, 67, 0.24);

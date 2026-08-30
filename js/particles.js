@@ -12,6 +12,10 @@
 
 const CANVAS_ID = 'fx-canvas';
 const CONFETTI_COLORS = ['#e05a5a', '#e0a53a', '#4cba8f', '#4a90d9', '#b06ad9', '#e07aa8'];
+// 粒子 canvas 内部降采样系数（<1）：碎片/彩带为无锐边的视觉特效，
+// 降采样后由 CSS 拉伸全屏，肉眼几乎无差，但像素填充量大幅下降，
+// 连锁消除 + 彩带时全屏 clearRect 每帧的开销显著降低（性能优化）。
+const RENDER_SCALE = 0.6;
 
 const state = {
   canvas: null,
@@ -61,8 +65,9 @@ function ensureCanvas() {
 }
 
 function _resize(canvas) {
-  const w = Math.max(1, window.innerWidth || 320);
-  const h = Math.max(1, window.innerHeight || 240);
+  // 降采样：内部分辨率 = 视口 × RENDER_SCALE（CSS 拉伸到全屏）
+  const w = Math.max(1, Math.round((window.innerWidth || 320) * RENDER_SCALE));
+  const h = Math.max(1, Math.round((window.innerHeight || 240) * RENDER_SCALE));
   // 只在尺寸变化时重设，避免清空进行中的帧
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w;
@@ -72,8 +77,9 @@ function _resize(canvas) {
 
 function _spawn(particle) {
   state.particles.push(particle);
-  if (state.particles.length > 600) {
-    state.particles.splice(0, state.particles.length - 600);
+  // 粒子上限：连锁消除 / 彩带叠加时避免 canvas 每帧重绘海量粒子
+  if (state.particles.length > 400) {
+    state.particles.splice(0, state.particles.length - 400);
   }
   _startLoop();
 }
@@ -118,7 +124,7 @@ function confetti(count = 140) {
   const ctx = ensureCanvas();
   if (!ctx) return 0;
 
-  const w = state.canvas.width;
+  const w = state.canvas.width / RENDER_SCALE; // 视口宽度（canvas 内部已降采样）
   const n = Math.max(1, Math.min(400, Math.floor(count) || 140));
 
   for (let i = 0; i < n; i++) {
@@ -155,7 +161,9 @@ function _step(p) {
   }
   p.rotation += p.vr;
   p.life -= p.decay;
-  return p.life > 0 && p.y < (state.canvas ? state.canvas.height + 40 : 4000);
+  // 粒子坐标是视口像素，用视口高度判界（canvas 内部已降采样）
+  const viewportH = state.canvas ? state.canvas.height / RENDER_SCALE : 4000;
+  return p.life > 0 && p.y < viewportH + 40;
 }
 
 function _draw(ctx, p) {
@@ -187,10 +195,14 @@ function _startLoop() {
 
     state.particles = state.particles.filter(_step);
     ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-
+    // 统一缩放变换：粒子坐标保持视口像素，绘制时自动映射到降采样画布。
+    // 避免每帧逐粒子 setTransform 的开销。
+    ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
     for (const p of state.particles) {
       _draw(ctx, p);
     }
+    // 恢复单位矩阵，供 clearRect 使用完整画布尺寸
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     if (state.particles.length === 0) {
       state.running = false;

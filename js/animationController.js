@@ -45,7 +45,7 @@ function animateSlide(group, direction, delta) {
         el.style.transition = '';
         el.style.zIndex = '';
       }
-      pulseBoard(elements[0]?.parentElement, 'board--slide-ok', 260);
+      pulseBoard(elements[0]?.parentElement, 'board--slide-ok', 230);
       resolve();
     }, ANIM.SLIDE_DURATION);
   });
@@ -55,20 +55,22 @@ function animateSlide(group, direction, delta) {
 function animateRevert(group) {
   return new Promise(resolve => {
     const elements = group.map(g => getTileElement(g.tile.instanceId)).filter(Boolean);
-    pulseBoard(elements[0]?.parentElement, 'board--invalid', ANIM.REVERT_DURATION + 80);
+    pulseBoard(elements[0]?.parentElement, 'board--invalid', 250);
 
     for (const el of elements) {
       el.classList.remove('tile--invalid');
       void el.offsetWidth;
       el.classList.add('tile--invalid');
-      el.style.transition = `transform ${ANIM.REVERT_DURATION}ms ease-out`;
+      // 回弹用 spring 曲线（overshoot 1.06）—— 拖错时回弹更有"短促有力"的手感，
+      // 仍是单段 cubic-bezier，无额外运行时开销。
+      el.style.transition = `transform ${ANIM.REVERT_DURATION}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
       el.style.transform = 'translate(0, 0)';
       el.style.zIndex = '';
     }
 
     setTimeout(() => {
       for (const el of elements) {
-        el.classList.remove('tile--dragging', 'tile--invalid');
+        el.classList.remove('tile--dragging', 'tile--invalid', 'tile--composited');
         el.style.transition = '';
         el.style.transform = '';
       }
@@ -84,19 +86,21 @@ function pulseBoard(boardEl, className, duration) {
   setTimeout(() => boardEl.classList.remove(className), duration);
 }
 
-function drawMatchLine(boardEl, pair, effectLevel = 1) {
+function drawMatchLine(boardEl, pair, effectLevel = 1, lineDuration = 340) {
   if (!boardEl) return null;
   const elA = getTileElement(pair.a.tile.instanceId);
   const elB = getTileElement(pair.b.tile.instanceId);
   if (!elA || !elB) return null;
 
-  const boardRect = boardEl.getBoundingClientRect();
-  const rectA = elA.getBoundingClientRect();
-  const rectB = elB.getBoundingClientRect();
-  const x1 = rectA.left - boardRect.left + rectA.width / 2;
-  const y1 = rectA.top - boardRect.top + rectA.height / 2;
-  const x2 = rectB.left - boardRect.left + rectB.width / 2;
-  const y2 = rectB.top - boardRect.top + rectB.height / 2;
+  // 直接用牌元素的绝对定位 left/top（相对 board），避免 getBoundingClientRect
+  // 造成的强制同步布局（layout thrashing）—— 这是消除动画卡顿的来源之一。
+  const a = parseStylePos(elA);
+  const b = parseStylePos(elB);
+  if (!a || !b) return null;
+  const x1 = a.left + a.width / 2;
+  const y1 = a.top + a.height / 2;
+  const x2 = b.left + b.width / 2;
+  const y2 = b.top + b.height / 2;
   const dx = x2 - x1;
   const dy = y2 - y1;
   const line = document.createElement('div');
@@ -108,17 +112,35 @@ function drawMatchLine(boardEl, pair, effectLevel = 1) {
   line.style.height = `${4 + Math.max(0, effectLevel - 1)}px`;
   line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
   line.style.setProperty('--combo-level', effectLevel);
+  // 连线闪光时长与消除动画同步，避免"连线已淡出、牌还在消"的节奏脱节。
+  line.style.setProperty('--line-duration', `${lineDuration}ms`);
   line.dataset.comboLevel = String(effectLevel);
   boardEl.appendChild(line);
   return line;
 }
 
+// 从牌的绝对定位 style 读取 {left, top, width, height}（px）。
+// 牌用绝对定位且 transform 归零时，style 值即最终位置，无需读布局。
+function parseStylePos(el) {
+  const left = parseFloat(el.style.left);
+  const top = parseFloat(el.style.top);
+  if (!Number.isFinite(left) || !Number.isFinite(top)) return null;
+  return { left, top, width: TILE_WIDTH, height: TILE_HEIGHT };
+}
+
 function tileCenterInBoard(boardEl, el) {
-  const boardRect = boardEl.getBoundingClientRect();
-  const rect = el.getBoundingClientRect();
+  const pos = parseStylePos(el);
+  if (!pos) {
+    const boardRect = boardEl.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    return {
+      x: rect.left - boardRect.left + rect.width / 2,
+      y: rect.top - boardRect.top + rect.height / 2,
+    };
+  }
   return {
-    x: rect.left - boardRect.left + rect.width / 2,
-    y: rect.top - boardRect.top + rect.height / 2,
+    x: pos.left + pos.width / 2,
+    y: pos.top + pos.height / 2,
   };
 }
 
@@ -237,11 +259,13 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
 
     const elements = allTiles.map(t => getTileElement(t.instanceId)).filter(Boolean);
     const boardEl = elements[0]?.parentElement || null;
-    const lines = pairs.slice(0, MAX_MATCH_LINES).map(pair => drawMatchLine(boardEl, pair, effectLevel)).filter(Boolean);
+    const lines = pairs.slice(0, MAX_MATCH_LINES).map(pair => drawMatchLine(boardEl, pair, effectLevel, Math.round(duration * 0.8))).filter(Boolean);
     const sparks = [];
     if (boardEl) {
-      const sparksPerTile = Math.min(5, Math.max(1, effectLevel + 1));
-      const sourceTiles = elements.slice(0, MAX_SPARK_SOURCE_TILES);
+      // 精简粒子数：低 combo 少而精致，高 combo 适度增加，避免连锁时
+      // 一次性创建数十个 CSS 动画元素造成合成器压力（低端设备卡顿来源）。
+      const sparksPerTile = Math.min(3, Math.max(1, effectLevel - 1));
+      const sourceTiles = elements.slice(0, Math.min(4, MAX_SPARK_SOURCE_TILES));
       for (let tileIndex = 0; tileIndex < sourceTiles.length; tileIndex++) {
         for (let burstIndex = 0; burstIndex < sparksPerTile; burstIndex++) {
           if (sparks.length >= MAX_TILE_SPARKS) break;
@@ -257,19 +281,38 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
       : effectLevel >= 2
         ? 'board--combo'
         : waveIndex > 0 ? 'board--chain' : 'board--match';
-    pulseBoard(boardEl, boardPulse, duration + 130);
+    // pulseBoard 时长需与 CSS 动画时长匹配（见 board.css：--match 280 / --chain 340 / --combo 420 / --combo-high 540）
+    const boardPulseMs = effectLevel >= 4 ? 540
+      : effectLevel >= 2 ? 420
+      : waveIndex > 0 ? 340 : 280;
+    pulseBoard(boardEl, boardPulse, boardPulseMs + 30);
+
+    // 连锁/连击震动：高 combo 时给棋盘加轻微位移，增强"打击感"。
+    // 纯 translate 可合成，0 软件光栅化；与 pulse 互斥，不复用同帧 animation。
+    // 用 CSS 变量按连击等级控制震幅，避免 JS 逐帧改样式。
+    if (boardEl && effectLevel >= 3) {
+      const amp = effectLevel >= 5 ? 4 : effectLevel >= 4 ? 3 : 2;
+      boardEl.style.setProperty('--shake-amp', `${amp}px`);
+      pulseBoard(boardEl, 'board--shake', 230);
+    }
 
     for (const el of elements) {
-      el.classList.add('tile--matched', 'tile--eliminating', `tile--combo-${effectLevel}`);
+      el.classList.add('tile--matched', 'tile--eliminating', 'tile--composited', `tile--combo-${effectLevel}`);
       el.style.setProperty('--combo-level', effectLevel);
+      // 上抛高度按连击等级增强（combo 越高消除越"有力度"）。
+      // 纯 transform translateY，可合成；reduced-motion 下由全局 CSS 缩短到 1ms。
+      el.style.setProperty('--eliminate-lift', `${4 + effectLevel * 1.5}px`);
       el.style.animationDuration = `${duration}ms`;
       // Canvas 粒子迸发（独立叠加层；reduced-motion / 无 canvas 时内部自动 no-op）
-      burstAtElement(el, { count: 6 + effectLevel * 2, power: 0.6 + effectLevel * 0.12 });
+      burstAtElement(el, { count: 5 + effectLevel, power: 0.6 + effectLevel * 0.12 });
     }
 
     setTimeout(() => {
       // 必须走 removeTileElement：直接 el.remove() 会绕过 _tileElementCache
       // 的清理，留下已脱离 DOM 的僵尸条目阻止 GC，并拖慢后续 getTileElement。
+      for (const el of elements) {
+        el.classList.remove('tile--composited');
+      }
       for (const t of allTiles) {
         removeTileElement(t.instanceId);
       }
@@ -355,8 +398,8 @@ function animateInvalidTile(tile) {
   el.classList.remove('tile--invalid');
   void el.offsetWidth;
   el.classList.add('tile--invalid');
-  pulseBoard(el.parentElement, 'board--invalid', 220);
-  setTimeout(() => el.classList.remove('tile--invalid'), 240);
+  pulseBoard(el.parentElement, 'board--invalid', 250);
+  setTimeout(() => el.classList.remove('tile--invalid'), 260);
 }
 
 /**
@@ -368,6 +411,10 @@ function animateInvalidTile(tile) {
 async function runDealAnimation(boardEl, height) {
   const ROW_INTERVAL  = 120; // 每行间隔 ms
   const FLIP_DURATION = 500; // 与 CSS transition 时长一致
+
+  // 发牌期间才开启透视（3D 翻牌需要），结束后移除：
+  // 常开 perspective 会让全部牌进入 3D 渲染上下文 → 每张牌独立合成层 → 卡顿。
+  boardEl.classList.add('board--dealing');
 
   const allTiles = boardEl.querySelectorAll('.tile');
   const rows = Array.from({ length: height }, () => []);
@@ -399,6 +446,8 @@ async function runDealAnimation(boardEl, height) {
   for (const el of allTiles) {
     el.classList.remove('tile--deal-animating');
   }
+  // 6. 发牌结束，移除透视，让牌回到平面渲染（避免长期 3D 合成开销）
+  boardEl.classList.remove('board--dealing');
 }
 
 export { wait, animateSlide, animateRevert, runEliminationSequence, animateHint, animateInvalidTile, clearHintAnimation, runDealAnimation };

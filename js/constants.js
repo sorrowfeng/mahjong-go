@@ -146,11 +146,14 @@ function setBoardLayout(cols, rows) {
 
 // 动画时长（毫秒）
 const ANIM = {
-  SLIDE_DURATION: 180,
-  ELIMINATE_DURATION: 360,
-  REVERT_DURATION: 200,
+  // 时长为表现层参数（不在"主消除逻辑冻结"约束内）：缩短以改善"操作后
+  // 等待感"，连锁时尤其明显（3 波从 ~1.4s 降到 ~1.0s）。可由设置面板的
+  // "动画速度"档位整体缩放（0.5x/1x/2x）。
+  SLIDE_DURATION: 150,
+  ELIMINATE_DURATION: 280,
+  REVERT_DURATION: 170,
   HINT_PULSE_DURATION: 600,
-  CHAIN_DELAY: 100,
+  CHAIN_DELAY: 60,
 };
 
 // 动画速度档位（设置面板可选）
@@ -161,11 +164,11 @@ const ANIM_SPEED_PRESETS = Object.freeze([0.5, 1, 2]);
 // 因此这里改完即刻生效，无需重建任何模块。
 function setAnimSpeed(multiplier) {
   const m = ANIM_SPEED_PRESETS.includes(Number(multiplier)) ? Number(multiplier) : 1;
-  ANIM.SLIDE_DURATION = Math.round(180 / m);
-  ANIM.ELIMINATE_DURATION = Math.round(360 / m);
-  ANIM.REVERT_DURATION = Math.round(200 / m);
+  ANIM.SLIDE_DURATION = Math.round(150 / m);
+  ANIM.ELIMINATE_DURATION = Math.round(280 / m);
+  ANIM.REVERT_DURATION = Math.round(170 / m);
   ANIM.HINT_PULSE_DURATION = Math.round(600 / m);
-  ANIM.CHAIN_DELAY = Math.round(100 / m);
+  ANIM.CHAIN_DELAY = Math.round(60 / m);
   return m;
 }
 

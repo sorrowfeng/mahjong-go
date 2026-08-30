@@ -32,6 +32,8 @@ function createTileElement(tileInstance, row, col) {
     img.alt = tileInstance.label;
     img.className = 'tile__img';
     img.loading = 'lazy';
+    img.decoding = 'async';      // 异步解码，避免大图解码阻塞主线程（低端设备卡顿来源）
+    img.fetchpriority = 'low';   // 136 张牌图低优先级加载，先保证交互响应
     // 加载失败时降级为文字占位（topChar + bottomChar 都要显示）
     img.onerror = () => {
       img.remove();
@@ -145,7 +147,7 @@ function setGroupTransform(group, dx, dy) {
   for (const { tile } of group) {
     const el = getTileElement(tile.instanceId);
     if (el) {
-      el.classList.add('tile--dragging');
+      el.classList.add('tile--dragging', 'tile--composited');
       el.style.transform = `translate(${dx}px, ${dy}px)`;
       el.style.zIndex = '100';
     }
@@ -157,7 +159,7 @@ function resetGroupTransform(group) {
   for (const { tile } of group) {
     const el = getTileElement(tile.instanceId);
     if (el) {
-      el.classList.remove('tile--dragging');
+      el.classList.remove('tile--dragging', 'tile--composited');
       el.style.transform = '';
       el.style.zIndex = '';
     }
@@ -171,7 +173,7 @@ function commitGroupPosition(group, direction, delta) {
     if (!el) continue;
     const newRow = direction === DIR.VERTICAL ? g.row + delta : g.row;
     const newCol = direction === DIR.HORIZONTAL ? g.col + delta : g.col;
-    el.classList.remove('tile--dragging');
+    el.classList.remove('tile--dragging', 'tile--composited');
     updateTilePosition(el, newRow, newCol);
     el.style.zIndex = '';
   }

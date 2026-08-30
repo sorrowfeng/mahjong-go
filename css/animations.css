@@ -1,61 +1,52 @@
 /* animations.css — 关键帧 */
 
+/* 性能说明：消除动画只使用可 GPU 合成的 transform/opacity。
+ * 原版包含 filter:brightness/saturate —— filter 无法合成，
+ * 每帧强制软件光栅化整张牌（含大图），是低端机卡顿的主因。
+ * 亮度增强感由 transform:scale 的"放大逼近"近似，肉眼几乎无差。
+ * --eliminate-lift 由 JS 按 combo 注入：牌消除时轻微上抛再缩小淡出，
+ * 比纯原地缩放更有"被移除"的质感。默认为 0，避免无动画时的位移。
+ */
 @keyframes tile-eliminate {
   0% {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
     opacity: 1;
-    filter: brightness(1.08) saturate(1.08);
   }
-  42% {
-    transform: scale(1.12);
-    opacity: 0.92;
-    filter: brightness(1.22) saturate(1.18);
+  40% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 0px))) scale(1.1);
+    opacity: 0.96;
   }
   100% {
-    transform: scale(0.22) rotate(7deg);
+    transform: translateY(calc(-1 * var(--eliminate-lift, 0px) * 0.6)) scale(0.22) rotate(7deg);
     opacity: 0;
-    filter: brightness(1.35) saturate(1.2);
   }
 }
 
 @keyframes tile-eliminate-combo {
   0% {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
     opacity: 1;
-    filter: brightness(1.1) saturate(1.08);
   }
-  30% {
-    transform: scale(1.18);
+  28% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 6px))) scale(1.14);
     opacity: 1;
-    filter: brightness(1.28) saturate(1.2);
   }
-  62% {
-    transform: scale(0.95) rotate(-4deg);
-    opacity: 0.82;
-    filter: brightness(1.38) saturate(1.26);
+  60% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 6px) * 0.4)) scale(0.92) rotate(-4deg);
+    opacity: 0.85;
   }
   100% {
-    transform: scale(0.12) rotate(12deg);
+    transform: translateY(0) scale(0.12) rotate(12deg);
     opacity: 0;
-    filter: brightness(1.52) saturate(1.32);
   }
 }
 
 @keyframes tile-hint-pulse {
   0%, 100% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 2px rgba(244, 200, 79, 0.94),
-      0 0 18px rgba(255, 220, 104, 0.58),
-      0 8px 18px rgba(42, 88, 67, 0.24);
+    transform: translateY(0) scale(1);
   }
   50% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 5px rgba(255, 252, 228, 0.98),
-      0 0 28px rgba(255, 220, 104, 0.86),
-      0 0 42px rgba(112, 221, 171, 0.58),
-      0 11px 22px rgba(42, 88, 67, 0.28);
+    transform: translateY(-2px) scale(1.035);
   }
 }
 
@@ -72,44 +63,28 @@
 
 @keyframes tile-teaching-target-pulse {
   0%, 100% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 2px rgba(255, 215, 109, 0.92),
-      0 0 13px rgba(255, 215, 109, 0.42),
-      0 7px 15px rgba(42, 88, 67, 0.22);
+    transform: translateY(0) scale(1);
   }
   50% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 4px rgba(255, 246, 210, 0.96),
-      0 0 22px rgba(255, 215, 109, 0.64),
-      0 10px 19px rgba(42, 88, 67, 0.25);
+    transform: translateY(-2px) scale(1.04);
   }
 }
 
 @keyframes tile-teaching-anchor-pulse {
   0%, 100% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 2px rgba(134, 226, 187, 0.92),
-      0 0 12px rgba(134, 226, 187, 0.38),
-      0 7px 15px rgba(42, 88, 67, 0.2);
+    transform: translateY(0) scale(1);
   }
   50% {
-    box-shadow:
-      0 1px 0 #b99d73,
-      0 0 0 4px rgba(224, 255, 242, 0.96),
-      0 0 22px rgba(134, 226, 187, 0.62),
-      0 10px 19px rgba(42, 88, 67, 0.24);
+    transform: translateY(-2px) scale(1.04);
   }
 }
 
 @keyframes tile-invalid {
   0%, 100% {
-    filter: brightness(1);
+    transform: scale(1);
   }
   40% {
-    filter: brightness(0.9) saturate(1.16);
+    transform: scale(1.06);
     box-shadow:
       0 1px 0 #b99d73,
       0 0 0 3px rgba(255, 120, 110, 0.92),
@@ -121,15 +96,12 @@
 @keyframes match-line-flash {
   0% {
     opacity: 0;
-    filter: blur(1px);
   }
   22% {
     opacity: 1;
-    filter: blur(0);
   }
   100% {
     opacity: 0;
-    filter: blur(2px);
   }
 }
 
@@ -241,81 +213,56 @@
   }
 }
 
+/* 棋盘脉冲：只使用可合成的 transform + opacity。
+ * 原版包含 filter:brightness/saturate + 大半径 box-shadow 逐帧动画，
+ * 作用在含 136 张牌的整个 #board 上，每帧强制整盘软件光栅化 —— 卡顿主因。
+ * 改为轻微缩放脉冲，视觉反馈保留，代价从"整盘重绘"降到"合成层变换"。
+ */
 @keyframes board-match-pulse {
   0%, 100% {
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.22),
-      inset 0 -10px 24px rgba(37, 95, 70, 0.18),
-      0 0 0 5px rgba(255,255,255,0.36),
-      0 18px 44px rgba(34,103,73,0.24);
+    transform: scale(1);
   }
   45% {
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.28),
-      inset 0 -10px 24px rgba(37,95,70,0.16),
-      0 0 0 5px rgba(255,255,255,0.4),
-      0 0 0 8px rgba(126,225,179,0.28),
-      0 20px 48px rgba(34,103,73,0.26);
+    transform: scale(0.992);
   }
 }
 
 @keyframes board-chain-pulse {
   0%, 100% {
-    filter: brightness(1);
+    transform: scale(1);
   }
   45% {
-    filter: brightness(1.08) saturate(1.12);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.28),
-      inset 0 -10px 24px rgba(37,95,70,0.15),
-      0 0 0 5px rgba(255,255,255,0.4),
-      0 0 0 8px rgba(126,225,179,0.32),
-      0 20px 48px rgba(34,103,73,0.28);
+    transform: scale(0.99);
   }
 }
 
 @keyframes board-combo-pulse {
   0%, 100% {
-    filter: brightness(1) saturate(1);
+    transform: scale(1);
   }
   42% {
-    filter: brightness(1.1) saturate(1.18);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.3),
-      inset 0 -10px 24px rgba(37,95,70,0.12),
-      0 0 0 5px rgba(255,255,255,0.42),
-      0 0 0 10px rgba(126,225,179,0.32),
-      0 0 34px rgba(234,198,94,0.18),
-      0 22px 52px rgba(34,103,73,0.3);
+    transform: scale(0.988);
   }
 }
 
 @keyframes board-combo-high-pulse {
   0%, 100% {
-    filter: brightness(1) saturate(1);
+    transform: scale(1);
   }
   35% {
-    filter: brightness(1.15) saturate(1.28);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.34),
-      inset 0 -10px 24px rgba(37,95,70,0.1),
-      0 0 0 5px rgba(255,255,255,0.46),
-      0 0 0 12px rgba(126,225,179,0.38),
-      0 0 0 18px rgba(234,198,94,0.18),
-      0 0 44px rgba(126,225,179,0.36),
-      0 24px 56px rgba(34,103,73,0.32);
+    transform: scale(0.986);
   }
   68% {
-    filter: brightness(1.06) saturate(1.18);
+    transform: scale(0.995);
   }
 }
 
 @keyframes board-slide-pulse {
   0%, 100% {
-    filter: brightness(1);
+    transform: scale(1);
   }
   45% {
-    filter: brightness(1.05);
+    transform: scale(0.994);
   }
 }
 
@@ -331,6 +278,27 @@
   }
   75% {
     transform: translateX(-1px);
+  }
+}
+
+/* 连锁/连击消除时的棋盘震动：只使用可合成的 translate，0 软件光栅化。
+ * 震幅由 JS 通过 --shake-amp 按连击等级注入（combo 越高震感越强），
+ * 用 var() 默认 0 保证无 animation 时不产生任何位移。 */
+@keyframes board-shake {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(calc(-1 * var(--shake-amp, 2px)), calc(var(--shake-amp, 2px) * 0.4));
+  }
+  40% {
+    transform: translate(calc(var(--shake-amp, 2px) * 0.8), calc(-1 * var(--shake-amp, 2px) * 0.6));
+  }
+  60% {
+    transform: translate(calc(-1 * var(--shake-amp, 2px) * 0.6), calc(var(--shake-amp, 2px) * 0.3));
+  }
+  80% {
+    transform: translate(calc(var(--shake-amp, 2px) * 0.5), calc(-1 * var(--shake-amp, 2px) * 0.25));
   }
 }
 

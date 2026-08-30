@@ -8,6 +8,10 @@
   isolation: isolate;
   border: 1px solid rgba(224, 239, 230, 0.54);
   border-radius: 8px;
+  /* 棋盘提升为独立合成层：复杂渐变背景（多层 radial/linear + 18px 网格）
+     一次性光栅化缓存。pulse 动画作用在 #board 上时只需合成，无需重绘背景。
+     单个合成层的 GPU 开销远小于 136 张牌各自为层。 */
+  will-change: transform;
   background-color: #377a5c;
   background-image:
     radial-gradient(circle at 50% 18%, rgba(255,255,255,0.11), transparent 36%),
@@ -21,8 +25,9 @@
     inset 0 -10px 24px rgba(25, 67, 49, 0.24),
     0 0 0 5px rgba(235, 245, 239, 0.24),
     0 18px 44px rgba(28, 75, 55, 0.28);
-  perspective: 1200px;
-  perspective-origin: 50% 50%;
+  /* perspective 由 JS 在发牌动画时临时设置（.board--dealing），
+     平时移除：perspective 让所有牌进入 3D 渲染上下文，
+     136 张牌全部提升合成层，是卡顿来源之一。 */
 }
 
 #board::before {
@@ -51,20 +56,27 @@
   opacity: 0.4;
 }
 
+/* 发牌翻牌时的透视上下文：仅此期间开启，翻完即移除。
+   常开会让全部 136 张牌进入 3D 渲染上下文 → 每张牌独立合成层 → 卡顿。 */
+#board.board--dealing {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+
 #board.board--match {
-  animation: board-match-pulse 360ms ease-out;
+  animation: board-match-pulse 280ms ease-out;
 }
 
 #board.board--chain {
-  animation: board-chain-pulse 420ms ease-out;
+  animation: board-chain-pulse 340ms ease-out;
 }
 
 #board.board--combo {
-  animation: board-combo-pulse 520ms ease-out;
+  animation: board-combo-pulse 420ms ease-out;
 }
 
 #board.board--combo-high {
-  animation: board-combo-high-pulse 660ms ease-out;
+  animation: board-combo-high-pulse 540ms ease-out;
 }
 
 #board.board--slide-ok {
@@ -73,6 +85,12 @@
 
 #board.board--invalid {
   animation: board-invalid-shake 230ms ease-out;
+}
+
+/* 连锁消除震动：与 pulse 动画互斥（animation 属性单值），
+ * shake 放在 pulse 之后由 JS 单独触发，不叠加在同一帧。 */
+#board.board--shake {
+  animation: board-shake 230ms ease-out;
 }
 
 .match-line {
@@ -86,7 +104,7 @@
   box-shadow:
     0 0 10px rgba(117, 213, 168, 0.7),
     0 0 22px rgba(229, 190, 88, 0.34);
-  animation: match-line-flash 340ms ease-out forwards;
+  animation: match-line-flash var(--line-duration, 340ms) ease-out forwards;
 }
 
 .match-line[data-combo-level="3"],

@@ -412,12 +412,15 @@ header h1::after {
 }
 
 #deadlock-msg {
-  top: 18px;
+  /* 放在 header(50px) + toolbar(50px) 之下，避开工具栏按钮
+   * header 含 h1 标题 + 渐变下划线；toolbar 一行高度约 50px */
+  top: 108px;
   background: rgba(218, 89, 86, 0.94);
 }
 
 #reshuffle-msg {
-  top: 18px;
+  /* 与 deadlock-msg 对齐：同样避开工具栏 */
+  top: 108px;
   background: rgba(37, 143, 111, 0.94);
 }
 
