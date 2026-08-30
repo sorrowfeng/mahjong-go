@@ -8,6 +8,9 @@
 ## 修复状态（2026-08-30 更新）
 
 第一节的 5 项缺陷已全部修复；第二节架构债 6 项也已全部修复（2026-08-30）。
+第三、四、五节已于 2026-08-30 全部修复。此外，按 `UPGRADE_PLAN.md` 路线图，
+**P0 快赢（统计/设置/动效/主题）与 P1 游戏性（模式/计分/每日挑战/道具）两个升级阶段均已实施完成**，
+测试扩展至 **220 项全绿（15 套件）**，详见各节状态标注。
 
 | 级别 | 缺陷 | 状态 | 核心改动 |
 |------|------|------|----------|
@@ -266,6 +269,10 @@ const isDeadlock = (s) => !hasAnyPair(s) && findHint(s) === null;
 **覆盖率结果**：全局 statements 74.55% / lines 74.55% / functions 约 60%；纯逻辑五文件全部 ≥ 80%
 （gameLogic 82.85%，hintSystem / movementLogic / boardState / tileDefinitions 均 100%）；
 renderer 84%、dragController 98%、gameController 57.7%（未覆盖主要是教学模式分支）。
+
+> **P0/P1 升级后（2026-08-30）**：测试扩至 **220 项全绿（15 套件）**，全局覆盖率 **78.41%**，
+> gameController 提升至 **66.53%**；新增纯逻辑模块 modes.js / score.js / items.js 均 ≥ 80% 达标。
+> P0 阶段新增 settings/themes/stats 测试（100%），particles.js 因 canvas 层 jsdom 不可测为预期低覆盖。
 
 **踩坑记录**：gameLogic.js 同时被 vm 注入与 ESM 双通道加载时，v8 覆盖率报告只保留一份，
 导致其覆盖率虚降至 52.5% 触发门槛失败——根治方式正是退役 vm 注入、统一 ESM 加载。
