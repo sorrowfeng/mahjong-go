@@ -45,7 +45,6 @@ function animateSlide(group, direction, delta) {
         el.style.transition = '';
         el.style.zIndex = '';
       }
-      pulseBoard(elements[0]?.parentElement, 'board--slide-ok', 230);
       resolve();
     }, ANIM.SLIDE_DURATION);
   });
@@ -55,7 +54,6 @@ function animateSlide(group, direction, delta) {
 function animateRevert(group) {
   return new Promise(resolve => {
     const elements = group.map(g => getTileElement(g.tile.instanceId)).filter(Boolean);
-    pulseBoard(elements[0]?.parentElement, 'board--invalid', 250);
 
     for (const el of elements) {
       el.classList.remove('tile--invalid');
@@ -77,13 +75,6 @@ function animateRevert(group) {
       resolve();
     }, ANIM.REVERT_DURATION);
   });
-}
-
-function pulseBoard(boardEl, className, duration) {
-  if (!boardEl) return;
-  boardEl.classList.remove(className);
-  requestAnimationFrame(() => boardEl.classList.add(className));
-  setTimeout(() => boardEl.classList.remove(className), duration);
 }
 
 function drawMatchLine(boardEl, pair, effectLevel = 1, lineDuration = 340) {
@@ -276,33 +267,8 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
     const ripples = drawComboRipples(boardEl, pairs, effectLevel);
     const badge = showWaveBadge(boardEl, pairs.length, waveIndex, combo, effectLevel);
 
-    // 棋盘 pulse：仅在连锁（waveIndex>0）或连击（effectLevel>=2）时触发。
-    // 普通单次消除（effectLevel 1 + 第一波）不再让整个棋盘弹一下——
-    // 那样每次消除棋盘整体缩放抖动，干扰操作手感。单消的反馈集中在牌本身、
-    // 连线与粒子即可。
-    const isHighlight = waveIndex > 0 || effectLevel >= 2;
-    if (boardEl && isHighlight) {
-      const boardPulse = effectLevel >= 4
-        ? 'board--combo-high'
-        : effectLevel >= 2
-          ? 'board--combo'
-          : 'board--chain';
-      // pulseBoard 时长需与 CSS 动画时长匹配（见 board.css：--chain 340 / --combo 420 / --combo-high 540）
-      const boardPulseMs = effectLevel >= 4 ? 540
-        : effectLevel >= 2 ? 420
-        : 340;
-      pulseBoard(boardEl, boardPulse, boardPulseMs + 30);
-    }
-
-    // 连锁/连击震动：高 combo 时给棋盘加轻微位移，增强"打击感"。
-    // 纯 translate 可合成，0 软件光栅化；与 pulse 互斥，不复用同帧 animation。
-    // 用 CSS 变量按连击等级控制震幅，避免 JS 逐帧改样式。
-    // 门槛提到 effectLevel>=4，且幅度整体降低，避免低连击也晃棋盘影响手感。
-    if (boardEl && effectLevel >= 4) {
-      const amp = effectLevel >= 5 ? 3 : 2;
-      boardEl.style.setProperty('--shake-amp', `${amp}px`);
-      pulseBoard(boardEl, 'board--shake', 210);
-    }
+    // 棋盘整体脉冲/震动已完全移除：每次消除让整个棋盘缩放或位移会干扰
+    // 操作手感。消除反馈集中在牌本身的缩放淡出、连线与粒子即可。
 
     for (const el of elements) {
       el.classList.add('tile--matched', 'tile--eliminating', 'tile--composited', `tile--combo-${effectLevel}`);
@@ -406,7 +372,6 @@ function animateInvalidTile(tile) {
   el.classList.remove('tile--invalid');
   void el.offsetWidth;
   el.classList.add('tile--invalid');
-  pulseBoard(el.parentElement, 'board--invalid', 250);
   setTimeout(() => el.classList.remove('tile--invalid'), 260);
 }
 

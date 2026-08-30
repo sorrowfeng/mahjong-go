@@ -1,5 +1,5 @@
 import { DIR, DRAG_THRESHOLD, GAME_STATE, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
-import { collectDragGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js';
+import { collectDragGroup, selectGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js';
 import { getTileElement, setTileSelected, setGroupTransform } from './renderer.js';
 
 // dragController.js — 拖拽输入处理（鼠标 + 触摸，轴锁定，像素钳制）
@@ -105,6 +105,18 @@ function initDragController(boardEl, { getState, getPhase, onDragEnd, onTileClic
         dragState.direction,
         sign
       );
+
+      // 当朝拖动方向只收集到单张（按下点在该方向一侧没有连续牌，通常发生在
+      // 玩家按住牌组边缘却朝"外侧"拖，或按住提示标亮的中间牌）时，会只拖动
+      // 这一张，与玩家"想拖动整排亮起的棋子"的直觉不符。
+      // 此时扩展为按下点所在的完整连续段，让整排跟随拖动。
+      // 若该方向本身就能收集到多张，则保持原样（不改变与 hint 完全一致的行为）。
+      if (dragState.group.length === 1) {
+        const full = selectGroup(gameState, dragState.startRow, dragState.startCol, dragState.direction);
+        if (full.length > 1) {
+          dragState.group = full;
+        }
+      }
 
       // 标记选中
       for (const g of dragState.group) {
