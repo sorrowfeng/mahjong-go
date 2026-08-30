@@ -7,8 +7,8 @@ describe('themes', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
-  test('提供三套主题且默认主题有效', () => {
-    expect(THEMES.map(t => t.id)).toEqual(['default', 'dark', 'fresh']);
+  test('提供四套主题（木韵/暗夜/清新/暮色）且默认主题有效', () => {
+    expect(THEMES.map(t => t.id)).toEqual(['default', 'dark', 'fresh', 'sunset']);
     expect(THEMES.every(t => t.name && t.id)).toBe(true);
     expect(isValidTheme(DEFAULT_THEME_ID)).toBe(true);
   });
@@ -16,6 +16,7 @@ describe('themes', () => {
   test('isValidTheme 判定合法/非法主题', () => {
     expect(isValidTheme('dark')).toBe(true);
     expect(isValidTheme('fresh')).toBe(true);
+    expect(isValidTheme('sunset')).toBe(true);
     expect(isValidTheme('unknown')).toBe(false);
   });
 

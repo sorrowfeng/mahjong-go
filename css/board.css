@@ -1,4 +1,8 @@
-/* board.css — 棋盘容器与配对连线 */
+/* board.css — 棋盘容器与配对连线
+ *
+ * 视觉原则：木质桌面的"麻将桌"质感——深绿绒布+细密纹理+温暖光晕。
+ * 性能原则：棋盘提升为合成层（will-change: transform），
+ *          pulse/shake 走 transform 而非 box-shadow，可 GPU 合成。 */
 
 #board {
   position: relative;
@@ -6,25 +10,39 @@
   box-sizing: content-box;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid rgba(224, 239, 230, 0.54);
-  border-radius: 8px;
+  border: 1px solid rgba(38, 84, 60, 0.5);
+  border-radius: 12px;
   /* 棋盘提升为独立合成层：复杂渐变背景（多层 radial/linear + 18px 网格）
      一次性光栅化缓存。pulse 动画作用在 #board 上时只需合成，无需重绘背景。
      单个合成层的 GPU 开销远小于 136 张牌各自为层。 */
   will-change: transform;
-  background-color: #377a5c;
+  background-color: #2f6c52;
   background-image:
-    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.11), transparent 36%),
-    linear-gradient(145deg, rgba(255,255,255,0.11), transparent 30%),
-    linear-gradient(0deg, rgba(25, 73, 52, 0.16), transparent 48%),
-    linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
-  background-size: auto, auto, auto, 18px 18px, 18px 18px;
+    /* 顶部高光（来自头顶的光） */
+    radial-gradient(ellipse 60% 35% at 50% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+    /* 中央温暖光晕（焦点在玩家视觉中心） */
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(195, 230, 205, 0.12) 0%, transparent 65%),
+    /* 底部暗调（增加深度感） */
+    linear-gradient(180deg, transparent 50%, rgba(15, 56, 38, 0.32) 100%),
+    /* 主对角线渐变 */
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.12) 100%),
+    /* 细密网格 */
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, auto, auto, 18px 18px, 18px 18px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -10px 24px rgba(25, 67, 49, 0.24),
-    0 0 0 5px rgba(235, 245, 239, 0.24),
-    0 18px 44px rgba(28, 75, 55, 0.28);
+    /* 内顶高光（更细更精致） */
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    /* 内底深色（增加牌桌深度） */
+    inset 0 -16px 36px rgba(15, 56, 38, 0.42),
+    /* 内外边框（玻璃质感） */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 6px rgba(238, 248, 240, 0.18),
+    /* 外光晕（翡翠柔光） */
+    0 0 32px rgba(126, 225, 179, 0.18),
+    /* 外阴影（深度） */
+    0 22px 56px rgba(20, 60, 44, 0.34),
+    0 6px 16px rgba(20, 60, 44, 0.18);
   /* perspective 由 JS 在发牌动画时临时设置（.board--dealing），
      平时移除：perspective 让所有牌进入 3D 渲染上下文，
      136 张牌全部提升合成层，是卡顿来源之一。 */
@@ -33,27 +51,33 @@
 #board::before {
   content: "";
   position: absolute;
-  inset: 7px;
+  inset: 8px;
   z-index: 0;
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.055), transparent 18%, transparent 82%, rgba(30, 74, 54, 0.1)),
-    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 50%, rgba(29, 72, 52, 0.11));
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 18%, transparent 82%, rgba(15, 56, 38, 0.14)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 50%, rgba(15, 56, 38, 0.14)),
+    /* 角落装饰（模拟牌桌的边角镶边） */
+    radial-gradient(circle at 0% 0%, rgba(238, 248, 240, 0.1) 0%, transparent 14%),
+    radial-gradient(circle at 100% 0%, rgba(238, 248, 240, 0.1) 0%, transparent 14%),
+    radial-gradient(circle at 0% 100%, rgba(238, 248, 240, 0.1) 0%, transparent 14%),
+    radial-gradient(circle at 100% 100%, rgba(238, 248, 240, 0.1) 0%, transparent 14%);
   pointer-events: none;
 }
 
 #board::after {
   content: "";
   position: absolute;
-  inset: 11px;
+  inset: 12px;
   z-index: 0;
-  border-radius: 5px;
+  border-radius: 7px;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 18px);
-  opacity: 0.4;
+    /* 中央柔和聚光 */
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255, 255, 255, 0.04), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 18px);
+  opacity: 0.6;
 }
 
 /* 发牌翻牌时的透视上下文：仅此期间开启，翻完即移除。

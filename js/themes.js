@@ -6,6 +6,7 @@ const THEMES = [
   { id: 'default', name: '木韵' },
   { id: 'dark', name: '暗夜' },
   { id: 'fresh', name: '清新' },
+  { id: 'sunset', name: '暮色' },
 ];
 
 const DEFAULT_THEME_ID = 'default';
