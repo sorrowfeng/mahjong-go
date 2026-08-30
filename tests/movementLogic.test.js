@@ -1,5 +1,9 @@
 // tests/movementLogic.test.js
 
+import { DIR } from '../js/constants.js';
+import { selectGroup, calcMaxSlide, applySlide, pixelsToCells, snapOffsetToGrid, clampDelta } from '../js/movementLogic.js';
+
+
 /** 创建一张测试用牌 */
 function makeTile(tileTypeId, instanceId) {
   return { instanceId: instanceId ?? tileTypeId, tileTypeId, type: 'wan', value: 1, label: 'test', topChar: '', bottomChar: '' };

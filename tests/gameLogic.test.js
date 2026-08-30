@@ -1,5 +1,12 @@
 // tests/gameLogic.test.js
 
+import { DIR } from '../js/constants.js';
+import { generateDeck } from '../js/tileDefinitions.js';
+import { countRemainingTiles, createBoardFromDeck, createEmptyBoard, setTile } from '../js/boardState.js';
+import { applySlide } from '../js/movementLogic.js';
+import { scanLineForPairs, applyOneWave, checkVictory, findAllPairs, resolveChainElimination, resolveNewPairChain } from '../js/gameLogic.js';
+
+
 // ─── 辅助函数 ────────────────────────────────────────────────────────────────
 
 /** 创建一张最简牌，只需 tileTypeId（instanceId 随便给） */

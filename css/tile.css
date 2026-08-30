@@ -184,6 +184,58 @@
   animation: tile-hint-pulse 1080ms ease-in-out infinite;
 }
 
+/* 提示的拖动起点：玩家必须按住这张牌朝箭头方向拖 */
+.tile--hint-origin {
+  z-index: 82;
+  outline-style: solid;
+  outline-width: 4px;
+  outline-color: #ff9f1c;
+  outline-offset: 4px;
+}
+
+.tile__hint-arrow {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(31, 83, 54, 0.45));
+  animation: tile-hint-arrow 1080ms ease-in-out infinite;
+}
+
+.tile__hint-arrow[data-dir="right"] {
+  left: 100%;
+  top: 50%;
+  margin: -9px 0 0 5px;
+  border-left-color: #ffb020;
+  --hint-arrow-nudge: translate(5px, 0);
+}
+
+.tile__hint-arrow[data-dir="left"] {
+  right: 100%;
+  top: 50%;
+  margin: -9px 5px 0 0;
+  border-right-color: #ffb020;
+  --hint-arrow-nudge: translate(-5px, 0);
+}
+
+.tile__hint-arrow[data-dir="down"] {
+  top: 100%;
+  left: 50%;
+  margin: 5px 0 0 -9px;
+  border-top-color: #ffb020;
+  --hint-arrow-nudge: translate(0, 5px);
+}
+
+.tile__hint-arrow[data-dir="up"] {
+  bottom: 100%;
+  left: 50%;
+  margin: 0 0 5px -9px;
+  border-bottom-color: #ffb020;
+  --hint-arrow-nudge: translate(0, -5px);
+}
+
 .tile--teaching-target,
 .tile--teaching-anchor {
   z-index: 70;

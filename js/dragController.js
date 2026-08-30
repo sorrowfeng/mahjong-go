@@ -1,11 +1,15 @@
-import { DIR, DRAG_THRESHOLD, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
-import { getTile } from './boardState.js';
-import { selectGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js?v=20260607-10';
+import { DIR, DRAG_THRESHOLD, GAME_STATE, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
+import { collectDragGroup, calcMaxSlide, pixelsToCells, snapOffsetToGrid, clampDelta } from './movementLogic.js';
 import { getTileElement, setTileSelected, setGroupTransform } from './renderer.js';
 
 // dragController.js — 拖拽输入处理（鼠标 + 触摸，轴锁定，像素钳制）
+//
+// 通过依赖注入访问游戏状态，不直接依赖 gameController：
+//   getState()  -> 当前棋盘 state（boardState）
+//   getPhase()  -> 当前游戏阶段（gameState，'IDLE' 时才允许交互）
+//   onDragEnd / onTileClick -> 回调给 gameController 处理
 
-function initDragController(boardEl, onDragEnd, onTileClick) {
+function initDragController(boardEl, { getState, getPhase, onDragEnd, onTileClick }) {
   let dragState = null;
 
   // dragState = {
@@ -42,7 +46,7 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
   function onPointerDown(e) {
     if (dragState) return;
     // 动画期间不允许新拖拽
-    if (window._gamePhase !== 'IDLE') return;
+    if (getPhase() !== GAME_STATE.IDLE) return;
     const tileInfo = getTileFromEvent(e);
     if (!tileInfo) return;
 
@@ -82,50 +86,21 @@ function initDragController(boardEl, onDragEnd, onTileClick) {
       dragState.direction = absDx >= absDy ? DIR.HORIZONTAL : DIR.VERTICAL;
 
       // 计算牌组和移动限制
-      const gameState = window._gameState;
+      const gameState = getState();
       if (!gameState) return;
 
-      // 沿拖动方向收集连续相邻的牌（只向拖动侧延伸，不向反方向扩展）
-      const startTile = getTile(gameState, dragState.startRow, dragState.startCol);
-      const group = startTile
-        ? [{ row: dragState.startRow, col: dragState.startCol, tile: startTile }]
-        : [];
-
-      if (startTile && dragState.direction === DIR.HORIZONTAL) {
-        if (dx > 0) {
-          // 向右拖：收集右侧相邻牌
-          for (let c = dragState.startCol + 1; c < gameState.width; c++) {
-            const t = getTile(gameState, dragState.startRow, c);
-            if (!t) break;
-            group.push({ row: dragState.startRow, col: c, tile: t });
-          }
-        } else {
-          // 向左拖：收集左侧相邻牌
-          for (let c = dragState.startCol - 1; c >= 0; c--) {
-            const t = getTile(gameState, dragState.startRow, c);
-            if (!t) break;
-            group.unshift({ row: dragState.startRow, col: c, tile: t });
-          }
-        }
-      } else if (startTile && dragState.direction === DIR.VERTICAL) {
-        if (dy > 0) {
-          // 向下拖：收集下方相邻牌
-          for (let r = dragState.startRow + 1; r < gameState.height; r++) {
-            const t = getTile(gameState, r, dragState.startCol);
-            if (!t) break;
-            group.push({ row: r, col: dragState.startCol, tile: t });
-          }
-        } else {
-          // 向上拖：收集上方相邻牌
-          for (let r = dragState.startRow - 1; r >= 0; r--) {
-            const t = getTile(gameState, r, dragState.startCol);
-            if (!t) break;
-            group.unshift({ row: r, col: dragState.startCol, tile: t });
-          }
-        }
-      }
-
-      dragState.group = group;
+      // 沿拖动方向收集连续相邻的牌。
+      // 必须与 hintSystem 用同一个函数，否则提示给出的牌组玩家拖不出来。
+      const sign = dragState.direction === DIR.HORIZONTAL
+        ? (dx > 0 ? 1 : -1)
+        : (dy > 0 ? 1 : -1);
+      dragState.group = collectDragGroup(
+        gameState,
+        dragState.startRow,
+        dragState.startCol,
+        dragState.direction,
+        sign
+      );
 
       // 标记选中
       for (const g of dragState.group) {

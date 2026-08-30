@@ -1,4 +1,4 @@
-import { BOARD_COLS, BOARD_ROWS, TILE_WIDTH, TILE_HEIGHT, TILE_GAP, BOARD_PADDING, DIR } from './constants.js';
+import { TILE_WIDTH, TILE_HEIGHT, TILE_GAP, BOARD_PADDING, DIR } from './constants.js';
 
 // renderer.js — DOM 渲染（绝对定位 + 局部更新）
 
@@ -32,13 +32,21 @@ function createTileElement(tileInstance, row, col) {
     img.alt = tileInstance.label;
     img.className = 'tile__img';
     img.loading = 'lazy';
-    // 加载失败时显示文字占位
+    // 加载失败时降级为文字占位（topChar + bottomChar 都要显示）
     img.onerror = () => {
-      img.style.display = 'none';
-      const fallback = document.createElement('span');
-      fallback.className = 'tile__top';
-      fallback.textContent = tileInstance.topChar;
-      el.appendChild(fallback);
+      img.remove();
+      if (tileInstance.topChar) {
+        const top = document.createElement('span');
+        top.className = 'tile__top';
+        top.textContent = tileInstance.topChar;
+        el.appendChild(top);
+      }
+      if (tileInstance.bottomChar) {
+        const bottom = document.createElement('span');
+        bottom.className = 'tile__bottom';
+        bottom.textContent = tileInstance.bottomChar;
+        el.appendChild(bottom);
+      }
     };
     el.appendChild(img);
   } else {
@@ -58,9 +66,11 @@ function renderBoard(state, boardEl) {
   boardEl.innerHTML = '';
   _tileElementCache.clear();
 
-  // 设置棋盘尺寸（内容区 + 两侧内边距）
-  const contentW = BOARD_COLS * (TILE_WIDTH + TILE_GAP) - TILE_GAP;
-  const contentH = BOARD_ROWS * (TILE_HEIGHT + TILE_GAP) - TILE_GAP;
+  // 设置棋盘尺寸（内容区 + 两侧内边距）。
+  // 尺寸直接取自 state.width/height —— 数据自己说了算，
+  // 不再依赖全局 BOARD_COLS/ROWS（教学模式 / resize 漏同步也不会错位）。
+  const contentW = state.width * (TILE_WIDTH + TILE_GAP) - TILE_GAP;
+  const contentH = state.height * (TILE_HEIGHT + TILE_GAP) - TILE_GAP;
   boardEl.style.width = (contentW + 2 * BOARD_PADDING) + 'px';
   boardEl.style.height = (contentH + 2 * BOARD_PADDING) + 'px';
 
@@ -115,11 +125,12 @@ function setTileHinted(el, hinted) {
   el.classList.toggle('tile--hint', hinted);
 }
 
-// 清除所有提示高亮
+// 清除所有提示高亮（含拖动起点标记与方向箭头）
 function clearAllHints(boardEl) {
-  boardEl.querySelectorAll('.tile--hint').forEach(el => {
-    el.classList.remove('tile--hint');
+  boardEl.querySelectorAll('.tile--hint, .tile--hint-origin').forEach(el => {
+    el.classList.remove('tile--hint', 'tile--hint-origin');
   });
+  boardEl.querySelectorAll('.tile__hint-arrow').forEach(el => el.remove());
 }
 
 // 清除所有选中状态
@@ -166,4 +177,43 @@ function commitGroupPosition(group, direction, delta) {
   }
 }
 
-export { tilePixelPos, createTileElement, renderBoard, getTileElement, updateTilePosition, removeTileElement, setTileSelected, setTileHinted, clearAllHints, clearAllSelected, setGroupTransform, resetGroupTransform, commitGroupPosition };
+// 增量渲染：对比前后两个 state，按 instanceId 只增删/移动变化的牌。
+// 用于撤销等"结构相似"的场景，避免全量重建 136 个节点造成的闪烁，
+// 也保住元素缓存与动画状态。
+function diffRenderBoard(prevState, nextState, boardEl) {
+  const prevPos = new Map(); // instanceId -> {row, col}
+  for (let r = 0; r < prevState.height; r++) {
+    for (let c = 0; c < prevState.width; c++) {
+      const tile = prevState.grid[r][c];
+      if (tile) prevPos.set(tile.instanceId, { row: r, col: c });
+    }
+  }
+
+  const nextTiles = new Map(); // instanceId -> {tile, row, col}
+  for (let r = 0; r < nextState.height; r++) {
+    for (let c = 0; c < nextState.width; c++) {
+      const tile = nextState.grid[r][c];
+      if (tile) nextTiles.set(tile.instanceId, { tile, row: r, col: c });
+    }
+  }
+
+  // 消失的牌：移除 DOM 并清缓存
+  for (const id of prevPos.keys()) {
+    if (!nextTiles.has(id)) removeTileElement(id);
+  }
+
+  // 新增的牌：创建并追加；已存在的牌：位置变了就平移
+  for (const [id, { tile, row, col }] of nextTiles) {
+    if (!prevPos.has(id)) {
+      boardEl.appendChild(createTileElement(tile, row, col));
+    } else {
+      const prev = prevPos.get(id);
+      if (prev.row !== row || prev.col !== col) {
+        const el = getTileElement(id);
+        if (el) updateTilePosition(el, row, col);
+      }
+    }
+  }
+}
+
+export { tilePixelPos, createTileElement, renderBoard, diffRenderBoard, getTileElement, updateTilePosition, removeTileElement, setTileSelected, setTileHinted, clearAllHints, clearAllSelected, setGroupTransform, resetGroupTransform, commitGroupPosition };

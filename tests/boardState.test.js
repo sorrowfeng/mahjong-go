@@ -1,5 +1,10 @@
 // tests/boardState.test.js
 
+import { BOARD_COLS, BOARD_ROWS } from '../js/constants.js';
+import { generateDeck } from '../js/tileDefinitions.js';
+import { cloneState, countRemainingTiles, createBoardFromDeck, createEmptyBoard, getTile, setTile, setTiles } from '../js/boardState.js';
+
+
 describe('boardState', () => {
 
   // ─── createEmptyBoard ───────────────────────────────────────────────────────

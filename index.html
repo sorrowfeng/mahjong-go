@@ -8,12 +8,12 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
   <title>麻将消消乐</title>
   <link rel="icon" href="assets/icon.ico" />
-  <link rel="stylesheet" href="css/reset.css?v=20260607-10" />
-  <link rel="stylesheet" href="css/main.css?v=20260607-10" />
-  <link rel="stylesheet" href="css/board.css?v=20260607-10" />
-  <link rel="stylesheet" href="css/tile.css?v=20260607-10" />
-  <link rel="stylesheet" href="css/animations.css?v=20260607-10" />
-  <link rel="stylesheet" href="css/tutorial.css?v=20260607-10" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/board.css" />
+  <link rel="stylesheet" href="css/tile.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/tutorial.css" />
 </head>
 <body>
 
@@ -73,7 +73,7 @@
 
         <!-- 规则3：连锁文字说明 -->
         <div class="tutorial-rule tutorial-rule--text">
-          <p class="tutorial-rule__desc">③ 消除后若出现新的可消除对，会自动<strong>连锁消除</strong>；当无任何步骤可用时，点击<strong>提示</strong>按钮可重新随机排列剩余牌</p>
+          <p class="tutorial-rule__desc">③ 拖动消除后若出现新的可消除对，会自动<strong>连锁消除</strong>；当无任何步骤可用时，点击<strong>提示</strong>按钮，确认后即可重新随机排列剩余牌</p>
         </div>
 
       </div>
@@ -81,6 +81,18 @@
       <div class="tutorial-actions">
         <button id="btn-tutorial-teaching" class="btn btn--secondary" type="button">教学关卡</button>
         <button id="btn-tutorial-start" class="btn btn--primary" type="button">开始新游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 继续上局弹窗 -->
+  <div id="resume-confirm" class="hidden">
+    <div class="confirm-box">
+      <p class="confirm-title">发现上局进度</p>
+      <p id="resume-desc" class="confirm-desc"></p>
+      <div class="confirm-actions">
+        <button id="btn-resume-continue" class="btn btn--primary">继续上局</button>
+        <button id="btn-resume-new" class="btn btn--secondary">开新局</button>
       </div>
     </div>
   </div>
@@ -114,11 +126,12 @@
       <p id="victory-time-display" class="victory-time"></p>
       <p id="victory-move-display" class="victory-stat"></p>
       <p id="victory-hint-display" class="victory-stat"></p>
+      <p id="victory-best-display" class="victory-stat"></p>
       <button id="btn-new-victory" class="btn btn--primary">再来一局</button>
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=20260607-10"></script>
+  <script type="module" src="js/main.js"></script>
 
 </body>
 </html>

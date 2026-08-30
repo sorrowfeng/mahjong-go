@@ -1,5 +1,9 @@
 // tests/tileDefinitions.test.js
 
+import { TILE_TYPE } from '../js/constants.js';
+import { generateDeck, shuffleDeck } from '../js/tileDefinitions.js';
+
+
 describe('tileDefinitions', () => {
   describe('generateDeck()', () => {
     let deck;

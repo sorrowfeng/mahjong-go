@@ -1,5 +1,13 @@
 // tests/hintSystem.test.js
 
+import { DIR } from '../js/constants.js';
+import { generateDeck, shuffleDeck } from '../js/tileDefinitions.js';
+import { createBoardFromDeck, createEmptyBoard, setTile } from '../js/boardState.js';
+import { applySlide } from '../js/movementLogic.js';
+import { checkVictory, findAllPairs, resolveChainElimination } from '../js/gameLogic.js';
+import { findHint } from '../js/hintSystem.js';
+
+
 function makeTile(tileTypeId, instanceId) {
   return { instanceId: instanceId ?? tileTypeId, tileTypeId, type: 'wan', value: 1, label: 'test', topChar: '', bottomChar: '' };
 }

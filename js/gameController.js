@@ -1,13 +1,15 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, reshuffleRemainingTiles } from './gameLogic.js?v=20260607-10';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, isDeadlock, reshuffleRemainingTiles } from './gameLogic.js';
 import { findHint } from './hintSystem.js';
-import { renderBoard, resetGroupTransform, getTileElement } from './renderer.js';
-import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js?v=20260607-10';
+import { renderBoard, diffRenderBoard, resetGroupTransform, getTileElement } from './renderer.js';
+import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js';
 import { SoundController } from './soundController.js';
+import { formatTime, getElapsedSeconds, startTimer, startTimerFromElapsed, stopTimer, resetTimer, pauseTimer, resumeTimer } from './timer.js';
+import { preloadTileImages } from './imagePreload.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
-import { applySlide } from './movementLogic.js?v=20260607-10';
-import { hideTutorial } from './tutorial.js?v=20260607-10';
+import { applySlide } from './movementLogic.js';
+import { hideTutorial } from './tutorial.js';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -19,13 +21,6 @@ let gameGeneration = 0; // 每次新游戏自增，使旧 async 任务失效
 // 统计数据
 let moveCount = 0;  // 有效操作步数（拖动产生消除 + 点击消除）
 let hintCount = 0;  // 使用提示次数
-
-// 计时器状态
-let timerInterval = null;
-let timerStart = 0;
-let timerElapsed = 0;
-let timerPaused = false;
-let timerPausedAt = 0;
 
 const COMBO_WINDOW_MS = 10000;
 const TEACHING_LAYOUT = { width: 9, height: 5 };
@@ -124,94 +119,22 @@ let comboCount = 0;
 let lastComboAt = 0;
 let comboResetTimer = null;
 
-function formatTime(secs) {
-  const h = Math.floor(secs / 3600).toString().padStart(2, '0');
-  const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
-  const s = (secs % 60).toString().padStart(2, '0');
-  return `${h}:${m}:${s}`;
+// 供 dragController / main.js 依赖注入使用的只读访问器。
+// 取代原先的 window._gameState / _gamePhase / _isTeachingMode 全局通信。
+function getState() {
+  return boardState;
 }
 
-function getElapsedSeconds(now = Date.now()) {
-  if (timerStart <= 0) return timerElapsed;
-  const elapsed = Math.floor((now - timerStart) / 1000);
-  return Math.max(0, elapsed);
+function getPhase() {
+  return gameState;
 }
 
-function renderTimer(secs = getElapsedSeconds()) {
-  const el = document.getElementById('game-timer');
-  if (el) el.textContent = formatTime(secs);
+function isTeachingModeActive() {
+  return isTeachingMode;
 }
-
-function startTimer() {
-  if (timerInterval !== null) clearInterval(timerInterval);
-  timerStart = Date.now();
-  timerElapsed = 0;
-  timerPaused = false;
-  timerPausedAt = 0;
-  renderTimer(0);
-  timerInterval = setInterval(() => {
-    renderTimer();
-  }, 1000);
-}
-
-function stopTimer() {
-  if (timerInterval !== null) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-  timerElapsed = getElapsedSeconds(timerPaused ? timerPausedAt : Date.now());
-  timerStart = 0;
-  timerPaused = false;
-  timerPausedAt = 0;
-  return timerElapsed;
-}
-
-function resetTimer() {
-  if (timerInterval !== null) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-  timerStart = 0;
-  timerElapsed = 0;
-  timerPaused = false;
-  timerPausedAt = 0;
-  renderTimer(0);
-}
-
-// 暂停/恢复计时器（覆盖层显示时调用）
-function pauseTimer() {
-  if (timerStart <= 0 || timerInterval === null || timerPaused) return;
-  timerPaused = true;
-  timerPausedAt = Date.now();
-  timerElapsed = getElapsedSeconds(timerPausedAt);
-  clearInterval(timerInterval);
-  timerInterval = null;
-}
-
-function resumeTimer() {
-  if (!timerPaused || timerStart <= 0) return;
-  timerPaused = false;
-  // 补偿暂停的时间差
-  const pausedDuration = Date.now() - timerPausedAt;
-  timerStart += pausedDuration;
-  timerPausedAt = 0;
-  renderTimer();
-  timerInterval = setInterval(() => {
-    renderTimer();
-  }, 1000);
-}
-
-// 暴露给 dragController 使用
-window._gameState = null;
-window._isTeachingMode = false;
 
 function getBoardEl() {
   return document.getElementById('board');
-}
-
-// 同步游戏阶段到全局（供 dragController 检查）
-function syncPhase(state) {
-  window._gamePhase = state;
 }
 
 function createTeachingTile(typeId, instanceOffset) {
@@ -280,7 +203,6 @@ function setTeachingChrome(visible) {
   if (panel) panel.classList.toggle('hidden', !visible);
   if (gameArea) gameArea.classList.toggle('game-area--teaching', visible);
   document.body.classList.toggle('teaching-mode', visible);
-  window._isTeachingMode = visible;
 }
 
 function updateTeachingPanel(content) {
@@ -506,6 +428,7 @@ async function initNewGame() {
   const myGeneration = gameGeneration;
 
   leaveTeachingMode();
+  clearSave();
   undoStack = [];
   moveCount = 0;
   hintCount = 0;
@@ -515,7 +438,6 @@ async function initNewGame() {
   const rotateHint = document.getElementById('rotate-hint');
   if (rotateHint) rotateHint.classList.add('hidden');
   gameState = GAME_STATE.ANIMATING;
-  syncPhase('ANIMATING');
 
   // 根据当前视口重算牌尺寸
   recalcLayout();
@@ -543,18 +465,20 @@ async function initNewGame() {
   }
 
   boardState = state;
-  window._gameState = boardState;
 
   renderBoard(boardState, getBoardEl());
   updateUI();
+
+  // 先预加载本局用到的牌图（弱网下发牌动画不再跑在图片前面），再发牌
+  await preloadTileImages(boardState);
 
   // 发牌动画：背面朝上，从底行到顶行逐行翻起
   await runDealAnimation(getBoardEl(), boardState.height);
 
   if (gameGeneration === myGeneration) {
     gameState = GAME_STATE.IDLE;
-    syncPhase('IDLE');
     startTimer();
+    persistSave();
   }
 }
 
@@ -579,11 +503,9 @@ async function startTeachingLevel() {
   resetCombo();
   resetTimer();
   gameState = GAME_STATE.ANIMATING;
-  syncPhase('ANIMATING');
 
   prepareTeachingLayout();
   boardState = createTeachingBoard();
-  window._gameState = boardState;
   renderBoard(boardState, getBoardEl());
   updateUI();
   SoundController.playNewGame();
@@ -593,7 +515,6 @@ async function startTeachingLevel() {
   if (gameGeneration === myGeneration) {
     showTeachingTargetHint(TEACHING_STEPS[0]);
     gameState = GAME_STATE.IDLE;
-    syncPhase('IDLE');
     startTimer();
   }
 }
@@ -609,14 +530,12 @@ async function handleDragEnd({ group, direction, delta }) {
     const myGeneration = gameGeneration;
     clearHintAnimation(getBoardEl());
     gameState = GAME_STATE.ANIMATING;
-    syncPhase('ANIMATING');
     SoundController.playInvalidMove();
     try {
       await animateRevert(group);
     } finally {
       if (gameGeneration === myGeneration) {
         gameState = GAME_STATE.IDLE;
-        syncPhase('IDLE');
         updateUI();
         if (isTeachingMode && !teachingCompleted) {
           showTeachingTargetHint();
@@ -645,7 +564,6 @@ async function handleDragEnd({ group, direction, delta }) {
   }
 
   gameState = GAME_STATE.ANIMATING;
-  syncPhase('ANIMATING');
 
   try {
     if (hasMatch) {
@@ -657,12 +575,10 @@ async function handleDragEnd({ group, direction, delta }) {
 
       if (gameGeneration !== myGeneration) return; // 新游戏已启动，放弃
       boardState = proposedState;
-      window._gameState = boardState;
 
       await runEliminationSequence(wavesToRun, (stateAfter) => {
         if (gameGeneration === myGeneration) {
           boardState = stateAfter;
-          window._gameState = boardState;
         }
       }, combo);
     } else {
@@ -673,7 +589,6 @@ async function handleDragEnd({ group, direction, delta }) {
     // 无论是否异常，都解锁游戏状态
     if (gameGeneration === myGeneration) {
       gameState = GAME_STATE.IDLE;
-      syncPhase('IDLE');
       updateUI();
       if (isTeachingMode && !teachingCompleted && !hasMatch) {
         showTeachingTargetHint();
@@ -684,6 +599,7 @@ async function handleDragEnd({ group, direction, delta }) {
   if (gameGeneration !== myGeneration) return;
 
   if (hasMatch) {
+    persistSave();
     if (advanceTeachingAfterAction('drag', matchedTeachingDrag)) {
       return;
     }
@@ -694,7 +610,7 @@ async function handleDragEnd({ group, direction, delta }) {
     if (refreshTeachingAfterFreeAction()) {
       return;
     }
-    if (findHint(boardState) === null) {
+    if (isDeadlock(boardState)) {
       showDeadlock();
     }
   }
@@ -739,24 +655,23 @@ async function handleTileClick({ row, col }) {
   const combo = registerCombo(countEliminatedPairs(allWaves));
 
   gameState = GAME_STATE.ANIMATING;
-  syncPhase('ANIMATING');
 
   try {
     await runEliminationSequence(allWaves, (stateAfter) => {
       if (gameGeneration === myGeneration) {
         boardState = stateAfter;
-        window._gameState = boardState;
       }
     }, combo);
   } finally {
     if (gameGeneration === myGeneration) {
       gameState = GAME_STATE.IDLE;
-      syncPhase('IDLE');
       updateUI();
     }
   }
 
   if (gameGeneration !== myGeneration) return;
+
+  persistSave();
 
   if (advanceTeachingAfterAction('click', matchedTeachingClick)) {
     return;
@@ -771,7 +686,7 @@ async function handleTileClick({ row, col }) {
     return;
   }
 
-  if (findHint(boardState) === null) {
+  if (isDeadlock(boardState)) {
     showDeadlock();
   }
 }
@@ -799,10 +714,13 @@ function handleHint() {
     return;
   }
 
-  // 再查找需要移动的步骤
+  // 再查找需要移动的步骤。
+  // 能走到这里说明 directPairs 为空，即 hasAnyPair 为 false，
+  // 因此 findHint === null 与 isDeadlock(boardState) 等价。
   const hint = findHint(boardState);
   if (hint) {
-    animateHint(hint.group);
+    // 传入 hint 本身：动画会标记"按住哪张牌、往哪个方向拖"
+    animateHint(hint.group, hint);
     updateUI();
   } else {
     // 死局：弹窗询问用户是否重排
@@ -810,7 +728,7 @@ function handleHint() {
   }
 }
 
-// 撤销
+// 撤销：增量 diff 渲染，不做全量重建（避免闪烁、丢缓存）
 function handleUndo() {
   if (gameState !== GAME_STATE.IDLE) return;
   if (isTeachingMode) return;
@@ -819,20 +737,31 @@ function handleUndo() {
   clearHintAnimation(getBoardEl());
   resetCombo();
 
+  const prevState = boardState;
   const prev = undoStack.pop();
   boardState = prev.state;
   moveCount = prev.moveCount;
   hintCount = prev.hintCount;
-  window._gameState = boardState;
 
-  renderBoard(boardState, getBoardEl());
+  diffRenderBoard(prevState, boardState, getBoardEl());
   updateUI();
+  persistSave();
+}
+
+// 关闭所有可能盖住棋盘的覆盖层。
+// 快捷键/按钮可以在遮罩打开时程序化触发新游戏，若不统一兜底关闭，
+// 新一局会被 z-index 2000 的遮罩盖住，界面直接锁死。
+function closeAllOverlays() {
+  hideReshuffleConfirm(); // 内部会 resumeTimer
+  hideTutorial();         // 内部会 resumeTimer
+  hideVictoryScreen();
+  hideResumeConfirm();
 }
 
 // 新游戏
 function handleNewGame() {
   clearHintAnimation(getBoardEl());
-  hideVictoryScreen();
+  closeAllOverlays();
   leaveTeachingMode();
   initNewGame();
 }
@@ -840,9 +769,93 @@ function handleNewGame() {
 function exitTeachingLevel() {
   if (!isTeachingMode) return;
   clearHintAnimation(getBoardEl());
-  hideVictoryScreen();
+  closeAllOverlays();
   leaveTeachingMode();
   initNewGame();
+}
+
+// ── 存档（localStorage）──────────────────────────────────────────────
+// 棋盘快照 + 步数 + 用时。刷新/关闭页面后可"继续上一局"。
+// 教学模式与胜利状态不存档。
+
+const SAVE_KEY = 'mahjong-save-v1';
+const BEST_KEY = 'mahjong-best-v1';
+
+function buildSnapshot() {
+  return {
+    version: 1,
+    width: boardState.width,
+    height: boardState.height,
+    grid: boardState.grid,
+    moveCount,
+    hintCount,
+    elapsed: getElapsedSeconds(),
+    savedAt: Date.now(),
+  };
+}
+
+function persistSave() {
+  if (!boardState || isTeachingMode) return;
+  if (gameState === GAME_STATE.VICTORY) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(buildSnapshot()));
+  } catch (e) { /* 隐私模式或存储不可用 */ }
+}
+
+function clearSave() {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+  } catch (e) { /* ignore */ }
+}
+
+function loadSaveSnapshot() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    if (!snap || snap.version !== 1) return null;
+    if (!Number.isInteger(snap.width) || !Number.isInteger(snap.height)) return null;
+    if (!Array.isArray(snap.grid) || snap.grid.length !== snap.height) return null;
+    return snap;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 从存档快照恢复棋盘与计数（不含计时器 —— 由调用方 startTimerFromElapsed 接管）
+function restoreFromSnapshot(snap) {
+  gameGeneration++; // 使仍在飞行中的旧 async 任务全部失效
+  leaveTeachingMode();
+  closeAllOverlays();
+
+  setBoardLayout(snap.width, snap.height);
+  recalcTileSizeOnly(snap.width, snap.height);
+
+  boardState = { grid: snap.grid, width: snap.width, height: snap.height };
+  moveCount = snap.moveCount || 0;
+  hintCount = snap.hintCount || 0;
+  undoStack = []; // 撤销栈不入档，恢复后从当前局面重新开始
+  resetCombo();
+  gameState = GAME_STATE.IDLE;
+
+  renderBoard(boardState, getBoardEl());
+  updateUI();
+}
+
+// 记录/更新最佳成绩（最短用时、最少步数、局数）
+function recordBest(elapsedSecs, moves) {
+  try {
+    const prev = JSON.parse(localStorage.getItem(BEST_KEY) || 'null') || {};
+    const best = {
+      bestTime: Math.min(prev.bestTime == null ? Infinity : prev.bestTime, elapsedSecs),
+      bestMoves: Math.min(prev.bestMoves == null ? Infinity : prev.bestMoves, moves),
+      games: (prev.games || 0) + 1,
+    };
+    localStorage.setItem(BEST_KEY, JSON.stringify(best));
+    return best;
+  } catch (e) {
+    return null;
+  }
 }
 
 // 撤销栈管理
@@ -890,12 +903,18 @@ function showVictory() {
   gameState = GAME_STATE.VICTORY;
   SoundController.playVictory();
   const elapsed = stopTimer();
+  const best = recordBest(elapsed, moveCount);
+  clearSave(); // 通关即清档
   const timeEl = document.getElementById('victory-time-display');
   if (timeEl) timeEl.textContent = `用时：${formatTime(elapsed)}`;
   const moveEl = document.getElementById('victory-move-display');
   if (moveEl) moveEl.textContent = `有效操作：${moveCount} 步`;
   const hintEl = document.getElementById('victory-hint-display');
   if (hintEl) hintEl.textContent = `使用提示：${hintCount} 次`;
+  const bestEl = document.getElementById('victory-best-display');
+  if (bestEl && best) {
+    bestEl.textContent = `最佳：${formatTime(best.bestTime)} · 最少 ${best.bestMoves} 步 · 第 ${best.games} 局`;
+  }
   const screen = document.getElementById('victory-screen');
   if (screen) screen.classList.remove('hidden');
 }
@@ -906,21 +925,29 @@ function hideVictoryScreen() {
 }
 
 // 死局提示
+// 临时提示的自动隐藏：句柄必须保存，否则重复触发会叠加定时器，
+// 后启动的 3s 定时器把先到的顶掉，提示提前消失。
+const _flashTimers = new Map();
+
+function flashElement(el, durationMs) {
+  if (!el) return;
+  const prev = _flashTimers.get(el);
+  if (prev) clearTimeout(prev);
+  el.classList.remove('hidden');
+  _flashTimers.set(el, setTimeout(() => {
+    el.classList.add('hidden');
+    _flashTimers.delete(el);
+  }, durationMs));
+}
+
+// 死局提示
 function showDeadlock() {
-  const msg = document.getElementById('deadlock-msg');
-  if (msg) {
-    msg.classList.remove('hidden');
-    setTimeout(() => msg.classList.add('hidden'), 3000);
-  }
+  flashElement(document.getElementById('deadlock-msg'), 3000);
 }
 
 // 重排提示
 function showReshuffle() {
-  const msg = document.getElementById('reshuffle-msg');
-  if (msg) {
-    msg.classList.remove('hidden');
-    setTimeout(() => msg.classList.add('hidden'), 3000);
-  }
+  flashElement(document.getElementById('reshuffle-msg'), 3000);
 }
 
 // 重排确认弹窗
@@ -943,24 +970,40 @@ function doReshuffle() {
   resetCombo();
   const newState = reshuffleRemainingTiles(boardState);
   boardState = newState;
-  window._gameState = boardState;
   renderBoard(boardState, getBoardEl());
   updateUI();
   SoundController.playReshuffle();
   showReshuffle();
+  persistSave();
+}
+
+// "继续上一局"弹窗（进入对局前弹出，此时计时器尚未启动）
+function showResumeConfirm(snap) {
+  const dialog = document.getElementById('resume-confirm');
+  if (!dialog) return false;
+  const desc = document.getElementById('resume-desc');
+  if (desc) {
+    let remaining = 0;
+    for (const row of snap.grid) for (const t of row) if (t) remaining++;
+    desc.textContent = `剩余 ${remaining} 张 · 已用 ${formatTime(snap.elapsed || 0)} · 步数 ${snap.moveCount || 0}`;
+  }
+  dialog.classList.remove('hidden');
+  return true;
+}
+
+function hideResumeConfirm() {
+  const dialog = document.getElementById('resume-confirm');
+  if (dialog) dialog.classList.add('hidden');
 }
 
 // 旋转屏幕提示（仅提示，不强制开新局）
 function showRotateHint() {
-  const el = document.getElementById('rotate-hint');
-  if (!el) return;
-  el.classList.remove('hidden');
-  setTimeout(() => el.classList.add('hidden'), 5000);
+  flashElement(document.getElementById('rotate-hint'), 5000);
 }
 
 export {
   gameState, boardState, moveCount, hintCount,
-  pauseTimer, resumeTimer,
+  getState, getPhase, isTeachingModeActive,
   initNewGame, startTeachingLevel, exitTeachingLevel,
   handleDragEnd, handleTileClick,
   handleHint, handleUndo, handleNewGame,
@@ -968,5 +1011,7 @@ export {
   refreshTeachingHighlights,
   pushUndo, updateUI, showVictory, hideVictoryScreen,
   showDeadlock, showReshuffle, showReshuffleConfirm,
-  syncPhase, getBoardEl, startTimer, stopTimer, resetTimer,
+  getBoardEl,
+  persistSave, clearSave, loadSaveSnapshot, restoreFromSnapshot,
+  showResumeConfirm, hideResumeConfirm,
 };

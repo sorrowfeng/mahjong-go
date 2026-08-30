@@ -59,6 +59,17 @@
   }
 }
 
+@keyframes tile-hint-arrow {
+  0%, 100% {
+    opacity: 0.55;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: var(--hint-arrow-nudge, translate(2px, 0));
+  }
+}
+
 @keyframes tile-teaching-target-pulse {
   0%, 100% {
     box-shadow:

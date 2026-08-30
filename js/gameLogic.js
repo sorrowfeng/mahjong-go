@@ -1,6 +1,6 @@
 import { setTiles } from './boardState.js';
 import { countRemainingTiles } from './boardState.js';
-import { findHint } from './hintSystem.js?v=20260607-10';
+import { findHint } from './hintSystem.js';
 import { TILE_TYPES } from './tileDefinitions.js';
 
 // gameLogic.js — 消除规则1/2统一实现 + 连锁消除
@@ -153,6 +153,17 @@ function checkVictory(state) {
 }
 
 /**
+ * 死局判定：既没有可直接点击消除的配对，也不存在任何能产生配对的移动。
+ *
+ * 注意两个条件缺一不可 —— 只看 findHint(state) === null 会漏判
+ * "整行填满、无法移动，但行内本身就有相邻同类牌"的情况，
+ * 那时玩家点一下就能消，游戏却会误报"无可消除步骤"。
+ */
+function isDeadlock(state) {
+  return !hasAnyPair(state) && findHint(state) === null;
+}
+
+/**
  * 拖动后专用的连锁消除：
  * 只消除"拖动前不存在"的配对，不碰用户尚未手动处理的存量配对。
  * 用 instanceId 而非坐标识别配对（坐标会因移动而改变）。
@@ -260,10 +271,10 @@ function reshuffleRemainingTiles(state) {
 
   for (let attempt = 0; attempt < 200; attempt++) {
     const newState = buildState(fisherYates(typeIds));
-    // 可解性检查：至少存在一个直接配对或可移动产生配对的步骤
-    if (hasAnyPair(newState) || findHint(newState) !== null) return newState;
+    // 可解性检查：重排后必须不是死局（有直接配对，或存在能产生配对的移动）
+    if (!isDeadlock(newState)) return newState;
   }
   return buildState(fisherYates(typeIds));
 }
 
-export { findAllPairs, hasAnyPair, eliminateTiles, resolveChainElimination, checkVictory, resolveNewPairChain, reshuffleRemainingTiles };
+export { scanLineForPairs, applyOneWave, findAllPairs, hasAnyPair, eliminateTiles, resolveChainElimination, checkVictory, isDeadlock, resolveNewPairChain, reshuffleRemainingTiles };

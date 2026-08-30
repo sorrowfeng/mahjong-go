@@ -22,9 +22,14 @@ function alignSnapTolerance(direction) {
 }
 
 /**
- * 选中连续牌组：
- * 从起始位置出发，沿指定方向收集与其连续相邻（无间隔）的所有牌。
+ * 选中整段连续牌组（双向）：
+ * 从起始位置出发，沿指定方向的"两侧"都收集，得到完整的一段。
  * 返回 [{row, col, tile}]，已按位置排序。
+ *
+ * ⚠️ 注意：这不是拖拽时的选组规则！
+ * 玩家拖拽时只会带动"拖动方向那一侧"的牌（见 collectDragGroup）。
+ * 本函数仅供工具性用途，**不要**用于提示或拖拽，否则给出的牌组
+ * 会与玩家实际能选中的不一致（历史上正是这个差异导致提示无法复现）。
  */
 function selectGroup(state, startRow, startCol, direction) {
   const group = [];
@@ -59,6 +64,64 @@ function selectGroup(state, startRow, startCol, direction) {
       const t = getTile(state, r, startCol);
       if (!t) break;
       group.push({ row: r, col: startCol, tile: t });
+    }
+  }
+
+  return group;
+}
+
+/**
+ * 拖拽选组（唯一真相来源）：
+ * 从按下点出发，只沿"拖动方向"那一侧收集连续相邻的牌。
+ *
+ * direction: DIR.HORIZONTAL | DIR.VERTICAL
+ * sign:      +1 = 向右/下拖，-1 = 向左/上拖
+ *
+ * hintSystem 与 dragController 必须共用本函数。
+ * 提示给出的 (起点, 方向, 位移) 必须恰好等于玩家从该起点朝该方向
+ * 拖拽时真实得到的牌组与位移，否则提示无法被玩家复现。
+ *
+ * 返回 [{row, col, tile}]，已按位置排序。
+ */
+function collectDragGroup(state, startRow, startCol, direction, sign) {
+  const group = [];
+  const startTile = getTile(state, startRow, startCol);
+  if (!startTile) return group;
+
+  group.push({ row: startRow, col: startCol, tile: startTile });
+
+  if (direction === DIR.HORIZONTAL) {
+    if (sign >= 0) {
+      // 向右拖：带动右侧相邻的牌
+      for (let c = startCol + 1; c < state.width; c++) {
+        const t = getTile(state, startRow, c);
+        if (!t) break;
+        group.push({ row: startRow, col: c, tile: t });
+      }
+    } else {
+      // 向左拖：带动左侧相邻的牌
+      for (let c = startCol - 1; c >= 0; c--) {
+        const t = getTile(state, startRow, c);
+        if (!t) break;
+        group.unshift({ row: startRow, col: c, tile: t });
+      }
+    }
+  } else {
+    // VERTICAL
+    if (sign >= 0) {
+      // 向下拖：带动下方相邻的牌
+      for (let r = startRow + 1; r < state.height; r++) {
+        const t = getTile(state, r, startCol);
+        if (!t) break;
+        group.push({ row: r, col: startCol, tile: t });
+      }
+    } else {
+      // 向上拖：带动上方相邻的牌
+      for (let r = startRow - 1; r >= 0; r--) {
+        const t = getTile(state, r, startCol);
+        if (!t) break;
+        group.unshift({ row: r, col: startCol, tile: t });
+      }
     }
   }
 
@@ -183,4 +246,4 @@ function clampDelta(delta, maxPositive, maxNegative) {
   return Math.max(-maxNegative, Math.min(maxPositive, delta)) || 0;
 }
 
-export { selectGroup, calcMaxSlide, applySlide, pixelsToCells, snapOffsetToGrid, clampDelta };
+export { selectGroup, collectDragGroup, calcMaxSlide, applySlide, pixelsToCells, snapOffsetToGrid, clampDelta };

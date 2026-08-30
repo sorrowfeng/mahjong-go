@@ -1,5 +1,5 @@
 import { ANIM, DIR, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
-import { getTileElement, commitGroupPosition, clearAllHints } from './renderer.js';
+import { getTileElement, removeTileElement, commitGroupPosition, clearAllHints } from './renderer.js';
 import { SoundController } from './soundController.js';
 
 // animationController.js — 动画序列（滑动/消除/提示）
@@ -265,8 +265,10 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
     }
 
     setTimeout(() => {
-      for (const el of elements) {
-        el.remove();
+      // 必须走 removeTileElement：直接 el.remove() 会绕过 _tileElementCache
+      // 的清理，留下已脱离 DOM 的僵尸条目阻止 GC，并拖慢后续 getTileElement。
+      for (const t of allTiles) {
+        removeTileElement(t.instanceId);
       }
       for (const line of lines) {
         line.remove();
@@ -301,12 +303,42 @@ async function runEliminationSequence(waves, onWaveComplete, combo = null) {
   }
 }
 
-// 提示动画：对牌组元素添加脉冲 class
-function animateHint(group) {
+const HINT_ARROW_CLASS = 'tile__hint-arrow';
+
+function hintArrowDirection(direction, delta) {
+  if (direction === DIR.HORIZONTAL) return delta > 0 ? 'right' : 'left';
+  return delta > 0 ? 'down' : 'up';
+}
+
+// 在"应该按住的那张牌"上画一个指向拖动方向的箭头。
+// 整段牌组会被一起拖动，但只有从正确的起点按下才能得到这个牌组，
+// 不标出来的话玩家按错牌就会得到完全不同（且无效）的结果。
+function markHintOrigin(origin, direction, delta) {
+  if (!origin || !origin.tile || !delta) return;
+  const el = getTileElement(origin.tile.instanceId);
+  if (!el) return;
+
+  el.classList.add('tile--hint-origin');
+  const old = el.querySelector(`:scope > .${HINT_ARROW_CLASS}`);
+  if (old) old.remove();
+
+  const arrow = document.createElement('div');
+  arrow.className = HINT_ARROW_CLASS;
+  arrow.dataset.dir = hintArrowDirection(direction, delta);
+  el.appendChild(arrow);
+}
+
+/**
+ * 提示动画：对牌组元素添加脉冲 class
+ * hint: 可选，{ start, direction, delta }（findHint 的返回值），
+ *       传入后会额外标记拖动起点与方向箭头。
+ */
+function animateHint(group, hint = null) {
   for (const g of group) {
     const el = getTileElement(g.tile.instanceId);
     if (el) el.classList.add('tile--hint');
   }
+  if (hint) markHintOrigin(hint.start, hint.direction, hint.delta);
 }
 
 // 清除提示动画

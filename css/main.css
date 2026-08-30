@@ -419,7 +419,8 @@ header h1::after {
 }
 
 #victory-screen,
-#reshuffle-confirm {
+#reshuffle-confirm,
+#resume-confirm {
   position: fixed;
   inset: 0;
   z-index: 2000;
@@ -432,7 +433,8 @@ header h1::after {
 }
 
 #victory-screen.hidden,
-#reshuffle-confirm.hidden {
+#reshuffle-confirm.hidden,
+#resume-confirm.hidden {
   display: none;
 }
 

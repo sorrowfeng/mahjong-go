@@ -1,8 +1,7 @@
 module.exports = {
-  testEnvironment: 'node',
-  setupFiles: ['./tests/setup.js'],
+  testEnvironment: 'jsdom',
+  setupFiles: ['./tests/dom-setup.js'],
   testMatch: ['**/tests/**/*.test.js'],
-  // V8 原生覆盖率引擎，可追踪通过 vm.runInContext 加载的代码（配合 filename 选项）
   coverageProvider: 'v8',
   collectCoverageFrom: [
     'js/tileDefinitions.js',
@@ -10,12 +9,25 @@ module.exports = {
     'js/gameLogic.js',
     'js/movementLogic.js',
     'js/hintSystem.js',
+    'js/gameController.js',
+    'js/renderer.js',
+    'js/animationController.js',
+    'js/timer.js',
+    'js/dragController.js',
+    // imagePreload 在 gameController 测试中被 mock（jsdom 不真正加载图片），
+    // 仅 20 行且逻辑 trivial，不纳入覆盖率统计
   ],
   coverageThreshold: {
     global: {
-      functions: 80,
-      lines: 80,
-      statements: 80,
+      functions: 40,
+      lines: 50,
+      statements: 50,
     },
+    // 5 个纯逻辑模块维持原有 80% 门槛（vm 注入 + ESM 双通道测试）
+    '**/js/gameLogic.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/hintSystem.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/movementLogic.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/boardState.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/tileDefinitions.js': { functions: 80, lines: 80, statements: 80 },
   },
 };
