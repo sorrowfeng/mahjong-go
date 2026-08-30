@@ -9,6 +9,7 @@ module.exports = {
     'js/gameLogic.js',
     'js/movementLogic.js',
     'js/hintSystem.js',
+    'js/pairDetection.js',
     'js/gameController.js',
     'js/renderer.js',
     'js/animationController.js',
@@ -37,6 +38,7 @@ module.exports = {
     // 纯逻辑模块维持 80% 门槛（vm 注入 + ESM 双通道测试）
     '**/js/gameLogic.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/hintSystem.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/pairDetection.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/movementLogic.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/boardState.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/tileDefinitions.js': { functions: 80, lines: 80, statements: 80 },

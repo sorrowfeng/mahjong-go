@@ -26,7 +26,7 @@
 **新增的可用性改进**（P0 修复的必要组成）：提示现在会用橙色描边 + 方向箭头标出
 "应该按住哪张牌、往哪个方向拖"，因为整段牌组里只有从正确起点按下才能得到该牌组。
 
-**仍未处理**（遗留）：`gameLogic ↔ hintSystem` 循环依赖（需把配对判定抽成叶子模块，牵扯面较大）；`share.js` 与 `gameController` 依赖浏览器 API 故覆盖率有限（jsdom 无 navigator.share/clipboard/canvas 2d，属预期）。牌面质感（CSS 3D 翻面 / SVG 重绘）作为可选的进一步视觉打磨项未实施。
+**已处理**（2026-08-30）：`gameLogic ↔ hintSystem` 循环依赖已修复 —— 把配对判定（`scanLineForPairs`/`findAllPairs`/`hasAnyPair`）抽成**零依赖叶子模块** `js/pairDetection.js`，`gameLogic` 与 `hintSystem` 均改为从它引用，`gameLogic` 再 re-export 以向后兼容；静态图检测确认全项目无循环依赖。`share.js` 与 `gameController` 依赖浏览器 API 故覆盖率有限（jsdom 无 navigator.share/clipboard/canvas 2d，属预期）。牌面质感（CSS 3D 翻面 / SVG 重绘）作为可选的进一步视觉打磨项未实施。
 第三、四、五节已于 2026-08-30 全部修复，详见各节状态标注。
 
 ---

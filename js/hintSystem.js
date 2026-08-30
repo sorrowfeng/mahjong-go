@@ -1,6 +1,6 @@
 import { DIR } from './constants.js';
 import { collectDragGroup, calcMaxSlide, applySlide } from './movementLogic.js';
-import { hasAnyPair } from './gameLogic.js';
+import { hasAnyPair } from './pairDetection.js';
 
 // hintSystem.js — 提示算法
 

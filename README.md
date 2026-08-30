@@ -173,7 +173,8 @@
 │   ├── constants.js            # 全局常量与视口自适应布局
 │   ├── tileDefinitions.js      # 牌型定义与洗牌
 │   ├── boardState.js           # 不可变棋盘数据结构
-│   ├── gameLogic.js            # 消除规则、连锁消除、重排
+│   ├── gameLogic.js            # 消除规则、连锁消除、重排（re-export pairDetection）
+│   ├── pairDetection.js        # 配对判定叶子模块（零依赖，消除循环依赖）
 │   ├── movementLogic.js        # 牌组选中与碰撞检测
 │   ├── hintSystem.js           # 提示算法（与拖拽共享同一选组实现）
 │   ├── renderer.js             # DOM 渲染（全量 + 增量 diff）
