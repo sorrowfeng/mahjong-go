@@ -2,7 +2,7 @@ import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
 import { showTutorial, hideTutorial } from './tutorial.js';
 import { initDragController } from './dragController.js';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights, getState, getPhase, isTeachingModeActive, loadSaveSnapshot, restoreFromSnapshot, showResumeConfirm, hideResumeConfirm, persistSave, useItem, getItems, getModeInfo, getMoveRemaining, cancelHammer, finishTimedOut, getLevelInfo } from './gameController.js';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights, getState, getPhase, isTeachingModeActive, loadSaveSnapshot, restoreFromSnapshot, showResumeConfirm, hideResumeConfirm, persistSave, useItem, getItems, getModeInfo, getScoreInfo, getMoveRemaining, cancelHammer, finishTimedOut, getLevelInfo } from './gameController.js';
 import { findHint } from './hintSystem.js';
 import { collectDragGroup } from './movementLogic.js';
 import { findAllPairs, hasAnyPair } from './pairDetection.js';
@@ -212,8 +212,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const info = buildShareInfo();
       const text = buildShareText(info);
       const res = await shareText(text);
-      if (res.method === 'clipboard') showToast('成绩已复制到剪贴板');
-      else if (res.method === 'unsupported') showToast('当前环境不支持分享');
+      if (res.method === 'clipboard') {
+        showToast('成绩已复制到剪贴板，可直接粘贴发送');
+      } else if (res.method === 'web-share') {
+        showToast('已调起系统分享');
+      } else if (res.method === 'aborted') {
+        showToast('已取消分享');
+      } else {
+        // 兜底：展示成绩内容供玩家手动复制
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            showToast('已复制到剪贴板');
+            return;
+          }
+        } catch (_) { /* ignore */ }
+        showToast('分享不可用，成绩未能复制');
+      }
     });
   }
   if (shareImgBtn) {
@@ -227,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
       info.score = match.length ? Number(match[0]) : (info.score || 0);
       info.stars = (starText.match(/★/g) || []).length;
       const canvas = drawScoreCard(info);
-      if (downloadCard(canvas)) showToast('成绩卡片已保存');
-      else showToast('保存失败');
+      if (downloadCard(canvas)) showToast('成绩卡片已保存为 PNG');
+      else showToast('保存失败，请长按成绩区域截图');
     });
   }
 
@@ -448,6 +463,10 @@ document.addEventListener('DOMContentLoaded', () => {
     handleTileClick,
     handleDragEnd,
     announce,
+    // 首次键盘操作时显示底部键盘提示条（默认隐藏，避免鼠标玩家看到多余 UI）
+    onFirstUse: () => {
+      if (kbHelp) kbHelp.classList.remove('hidden');
+    },
   });
 
   function syncKeyboardUI() {
@@ -456,7 +475,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const inGame = !!state && phase === 'IDLE' && !isTeachingModeActive();
     if (inGame) {
       kbController.enable();
-      if (kbHelp) kbHelp.classList.remove('hidden');
+      // 键盘提示条默认隐藏：仅当玩家首次按方向键/回车（onFirstUse）后才显示，
+      // 鼠标玩家全程看不到闪烁光标与提示条。
+      if (kbHelp) kbHelp.classList.add('hidden');
     } else {
       kbController.disable();
       if (kbHelp) kbHelp.classList.add('hidden');

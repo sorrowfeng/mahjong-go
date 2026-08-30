@@ -62,7 +62,7 @@ function makeEnvDirectPair() {
 }
 
 describe('createKeyboardController', () => {
-  test('enable 后光标出现在棋盘中部', () => {
+  test('enable 后光标默认隐藏，首次方向键才点亮', () => {
     const { state, els } = makeEnv();
     const calls = { click: [], drag: [] };
     const ctrl = createKeyboardController({
@@ -74,7 +74,10 @@ describe('createKeyboardController', () => {
     });
     ctrl.enable();
     expect(ctrl.isEnabled()).toBe(true);
-    // 光标 DOM 已挂载
+    // 默认隐藏：鼠标玩家看不到棋盘中央的闪烁框
+    expect(document.getElementById('kb-cursor')).toBeNull();
+    // 首次按下方向键 → 光标点亮
+    ctrl.handleKey({ key: 'ArrowRight', preventDefault: () => {} });
     expect(document.getElementById('kb-cursor')).not.toBeNull();
     ctrl.disable();
     expect(document.getElementById('kb-cursor')).toBeNull();

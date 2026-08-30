@@ -149,11 +149,12 @@ const ANIM = {
   // 时长为表现层参数（不在"主消除逻辑冻结"约束内）：缩短以改善"操作后
   // 等待感"，连锁时尤其明显（3 波从 ~1.4s 降到 ~1.0s）。可由设置面板的
   // "动画速度"档位整体缩放（0.5x/1x/2x）。
-  SLIDE_DURATION: 150,
-  ELIMINATE_DURATION: 280,
-  REVERT_DURATION: 170,
-  HINT_PULSE_DURATION: 600,
-  CHAIN_DELAY: 60,
+  // 手感优化：进一步收紧单次消除与回弹时长，让连续操作更"跟手"。
+  SLIDE_DURATION: 130,
+  ELIMINATE_DURATION: 230,
+  REVERT_DURATION: 150,
+  HINT_PULSE_DURATION: 560,
+  CHAIN_DELAY: 45,
 };
 
 // 动画速度档位（设置面板可选）
@@ -164,16 +165,17 @@ const ANIM_SPEED_PRESETS = Object.freeze([0.5, 1, 2]);
 // 因此这里改完即刻生效，无需重建任何模块。
 function setAnimSpeed(multiplier) {
   const m = ANIM_SPEED_PRESETS.includes(Number(multiplier)) ? Number(multiplier) : 1;
-  ANIM.SLIDE_DURATION = Math.round(150 / m);
-  ANIM.ELIMINATE_DURATION = Math.round(280 / m);
-  ANIM.REVERT_DURATION = Math.round(170 / m);
-  ANIM.HINT_PULSE_DURATION = Math.round(600 / m);
-  ANIM.CHAIN_DELAY = Math.round(60 / m);
+  ANIM.SLIDE_DURATION = Math.round(130 / m);
+  ANIM.ELIMINATE_DURATION = Math.round(230 / m);
+  ANIM.REVERT_DURATION = Math.round(150 / m);
+  ANIM.HINT_PULSE_DURATION = Math.round(560 / m);
+  ANIM.CHAIN_DELAY = Math.round(45 / m);
   return m;
 }
 
-// 拖拽阈值（像素）
-const DRAG_THRESHOLD = 10;
+// 拖拽阈值（像素）：略降以提升"轻拖即动"的跟手感，
+// 但仍高于手指轻微抖动，避免误触。8px ≈ 半格。
+const DRAG_THRESHOLD = 8;
 
 // 方向枚举
 const DIR = {

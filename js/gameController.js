@@ -145,6 +145,11 @@ let comboCount = 0;
 let lastComboAt = 0;
 let comboResetTimer = null;
 
+// 动画期间的"待执行点击"：玩家在消除动画尚未结束时点下的最后一击。
+// 动画结束后立即补执行，让连续点击消除"跟手"，不吞操作。
+// 只缓存最后一击（后按优先），避免动画结束后一次性回放过多历史点击。
+let pendingClick = null;
+
 // 供 dragController / main.js 依赖注入使用的只读访问器。
 // 取代原先的 window._gameState / _gamePhase / _isTeachingMode 全局通信。
 function getState() {
@@ -517,6 +522,7 @@ async function initNewGame(options = {}) {
   pairsThisGame = 0;
   maxComboThisGame = 0;
   resetCombo();
+  pendingClick = null; // 新一局清空待执行点击
 
   // 模式/计分/道具状态
   modeId = getMode(options.mode).id;
@@ -638,6 +644,7 @@ async function startTeachingLevel() {
   moveCount = 0;
   hintCount = 0;
   resetCombo();
+  pendingClick = null;
   resetTimer();
   gameState = GAME_STATE.ANIMATING;
 
@@ -666,6 +673,7 @@ async function handleDragEnd({ group, direction, delta }) {
   if (delta === 0) {
     const myGeneration = gameGeneration;
     clearHintAnimation(getBoardEl());
+    pendingClick = null; // 无效拖拽回弹，丢弃动画期间缓存的点击
     gameState = GAME_STATE.ANIMATING;
     SoundController.playInvalidMove();
     try {
@@ -699,6 +707,9 @@ async function handleDragEnd({ group, direction, delta }) {
       wavesToRun = [waveForSinglePair(proposedState, expectedPair)];
     }
   }
+
+  // 拖拽操作会覆盖动画期间缓存的待执行点击（拖拽优先级更高）
+  pendingClick = null;
 
   gameState = GAME_STATE.ANIMATING;
 
@@ -779,7 +790,12 @@ async function handleDragEnd({ group, direction, delta }) {
 
 // 处理点击消除（用户点击有配对的牌时调用）
 async function handleTileClick({ row, col }) {
-  if (gameState !== GAME_STATE.IDLE) return;
+  // 动画期间：缓存这一击，动画结束后立即补执行（"跟手"，不吞操作）。
+  // 只保留最后一击；若此前已有排队点击则被覆盖（后按优先）。
+  if (gameState !== GAME_STATE.IDLE) {
+    pendingClick = { row, col };
+    return;
+  }
 
   const myGeneration = gameGeneration;
 
@@ -842,6 +858,14 @@ async function handleTileClick({ row, col }) {
   } finally {
     if (gameGeneration === myGeneration) {
       gameState = GAME_STATE.IDLE;
+      // 动画期间若有新点击被缓存，先补执行它，避免先清 UI 造成闪烁。
+      // 补执行走的是"动画结束后的连续点击"，手感更跟手。
+      const pending = pendingClick;
+      pendingClick = null;
+      if (pending) {
+        handleTileClick(pending);
+        return;
+      }
       updateUI();
     }
   }
@@ -1219,6 +1243,7 @@ function restoreFromSnapshot(snap) {
   hintCount = snap.hintCount || 0;
   undoStack = []; // 撤销栈不入档，恢复后从当前局面重新开始
   resetCombo();
+  pendingClick = null; // 恢复局面后清空待执行点击
   gameState = GAME_STATE.IDLE;
 
   renderBoard(boardState, getBoardEl());

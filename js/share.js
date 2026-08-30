@@ -26,10 +26,15 @@ function _fmtClock(secs) {
   return h === '00' ? `${m}:${ss}` : `${h}:${m}:${ss}`;
 }
 
-// 分享文本：优先 Web Share，回退剪贴板。
+// 分享文本：优先系统分享（Web Share），回退剪贴板。
 // 返回 Promise<{ method: 'web-share'|'clipboard'|'unsupported' }>
 async function shareText(text) {
-  if (navigator.share && navigator.canShare) {
+  // 系统分享仅在有意义时使用：需 https/本地安全上下文，且用户手势调用。
+  // 桌面浏览器弹系统分享框可能让玩家困惑，这里限定移动端（触屏）才优先走 Web Share，
+  // 其余统一用剪贴板（反馈最明确、最可靠）。
+  const isTouch = typeof window !== 'undefined' &&
+    (navigator.maxTouchPoints > 0 || 'ontouchstart' in window);
+  if (isTouch && navigator.share && navigator.canShare) {
     try {
       await navigator.share({ text });
       return { method: 'web-share' };
@@ -42,7 +47,20 @@ async function shareText(text) {
     try {
       await navigator.clipboard.writeText(text);
       return { method: 'clipboard' };
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      // 剪贴板 API 在部分环境需用户授权；降级用 execCommand 兜底
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        if (ok) return { method: 'clipboard' };
+      } catch (_) { /* ignore */ }
+    }
   }
   return { method: 'unsupported' };
 }

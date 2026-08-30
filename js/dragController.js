@@ -45,13 +45,12 @@ function initDragController(boardEl, { getState, getPhase, onDragEnd, onTileClic
 
   function onPointerDown(e) {
     if (dragState) return;
-    // 动画期间不允许新拖拽
-    if (getPhase() !== GAME_STATE.IDLE) return;
     const tileInfo = getTileFromEvent(e);
     if (!tileInfo) return;
 
     e.preventDefault();
     const { x, y } = getEventCoords(e);
+    const phase = getPhase();
 
     dragState = {
       startX: x,
@@ -66,11 +65,16 @@ function initDragController(boardEl, { getState, getPhase, onDragEnd, onTileClic
       maxPxNegative: 0,
       currentOffset: 0,
       currentDelta: 0,
+      // 动画期间按下：不进入拖拽，但保留按下点，松手时作为"排队点击"转发
+      // 给 handleTileClick（其内部会缓存到动画结束后补执行，实现"跟手"）。
+      lockedOut: phase !== GAME_STATE.IDLE,
     };
   }
 
   function onPointerMove(e) {
     if (!dragState) return;
+    // 动画期间按下：不拖拽（棋盘不稳定），也不做选中，直接忽略移动
+    if (dragState.lockedOut) return;
     e.preventDefault();
 
     const { x, y } = getEventCoords(e);
@@ -135,10 +139,11 @@ function initDragController(boardEl, { getState, getPhase, onDragEnd, onTileClic
 
   function onPointerUp(e) {
     if (!dragState) return;
+    // 动画期间按下、未进入拖拽：转发为"排队点击"（handleTileClick 会缓存）
     if (!dragState.group || dragState.direction === DIR.NONE) {
       const { startRow, startCol } = dragState;
       dragState = null;
-      // 用户只点击未拖动：触发点击消除
+      // 用户只点击未拖动：触发点击消除（含动画期间的点按，用于排队）
       if (onTileClick) onTileClick({ row: startRow, col: startCol });
       return;
     }

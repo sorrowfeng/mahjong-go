@@ -114,7 +114,7 @@
 /* 连锁消除震动：与 pulse 动画互斥（animation 属性单值），
  * shake 放在 pulse 之后由 JS 单独触发，不叠加在同一帧。 */
 #board.board--shake {
-  animation: board-shake 230ms ease-out;
+  animation: board-shake 210ms ease-out;
 }
 
 .match-line {

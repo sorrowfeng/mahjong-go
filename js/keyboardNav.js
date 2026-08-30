@@ -138,21 +138,25 @@ const ARROW_KEY = {
  *
  * 返回控制器对象：{ enable(), disable(), setCursor(row,col), clear() }
  */
-function createKeyboardController(deps) {
-  const {
-    getState,
-    getPhase,
-    getTileElement,
-    handleTileClick,
-    handleDragEnd,
-    announce = () => {},
-  } = deps;
+  function createKeyboardController(deps) {
+    const {
+      getState,
+      getPhase,
+      getTileElement,
+      handleTileClick,
+      handleDragEnd,
+      announce = () => {},
+      onFirstUse = () => {},
+    } = deps;
 
   let enabled = false;
   let cursor = null;        // {row, col}
   let origin = null;        // 起点（选中后进入"拖拽方向"阶段）
   let pendingDir = null;    // {direction, sign} 预选的拖拽方向
   let originEl = null;      // 起点高亮元素
+  // 光标可见性：默认隐藏，首次按下方向键/回车时才显示。
+  // 鼠标玩家完全看不到闪烁的指示框；只有真正开始用键盘操作才出现。
+  let cursorVisible = false;
 
   function boardEl() {
     return document.getElementById('board');
@@ -188,7 +192,8 @@ function createKeyboardController(deps) {
 
   function renderCursor() {
     removeCursorEl();
-    if (!enabled || !cursor) return;
+    // 光标默认隐藏，只有玩家实际用键盘导航（方向键/回车）后才显示。
+    if (!enabled || !cursor || !cursorVisible) return;
     const state = getState();
     if (!state) return;
     const tile = state.grid[cursor.row]?.[cursor.col];
@@ -249,6 +254,20 @@ function createKeyboardController(deps) {
     await handleDragEnd(built);
   }
 
+  // 首次键盘操作时"点亮"光标：初始化到棋盘中央最近牌并显示。
+  // 之后方向键正常移动。重复调用无害（已可见则跳过）。
+  function revealCursorOnFirstUse() {
+    const state = getState();
+    if (!enabled || !state) return;
+    if (cursorVisible && cursor) return;
+    if (!cursor) {
+      cursor = nearestTile(state, Math.floor(state.height / 2), Math.floor(state.width / 2));
+    }
+    cursorVisible = true;
+    renderCursor();
+    onFirstUse();
+  }
+
   function handleKey(e) {
     if (!enabled) return;
     const state = getState();
@@ -261,6 +280,9 @@ function createKeyboardController(deps) {
     // 方向键：移动光标 或 预选拖拽方向
     if (ARROW_KEY[key]) {
       e.preventDefault();
+      // 首次按下方向键才点亮光标（鼠标玩家无感知）
+      revealCursorOnFirstUse();
+      if (!cursor) return;
       const { dr, dc } = ARROW_KEY[key];
 
       // 已选中起点：方向键进入拖拽方向预选（不立即执行）
@@ -288,6 +310,8 @@ function createKeyboardController(deps) {
     // Enter：选中起点 或 执行拖拽
     if (key === 'Enter' || key === ' ') {
       e.preventDefault();
+      // 首次回车也点亮光标，允许纯键盘用回车选择起点
+      revealCursorOnFirstUse();
       if (!cursor) return;
 
       if (origin && pendingDir) {
@@ -339,7 +363,7 @@ function createKeyboardController(deps) {
 
   // 供 gameController 在消除/重排/胜利后刷新光标（消除后格子可能空了）
   function refreshCursorAfterBoardChange() {
-    if (!enabled || !cursor) return;
+    if (!enabled || !cursor || !cursorVisible) return;
     const state = getState();
     if (!state) return;
     // 当前光标格若已被清空，跳到最近牌
@@ -353,22 +377,31 @@ function createKeyboardController(deps) {
 
   return {
     enable() {
+      // syncKeyboardUI 每 800ms 调用一次，必须幂等：
+      // 不能每次重置 cursorVisible，否则键盘玩家移动光标时会被周期性隐藏。
+      const wasEnabled = enabled;
       enabled = true;
       const state = getState();
       if (state && !cursor) {
         cursor = nearestTile(state, Math.floor(state.height / 2), Math.floor(state.width / 2));
       }
+      // 仅在"首次进入对局"或"从未点亮过"时保持隐藏；
+      // 已点亮（玩家正在用键盘）则保留可见状态。
+      if (!wasEnabled || !cursorVisible) {
+        cursorVisible = false;
+      }
       renderCursor();
     },
     disable() {
       enabled = false;
+      cursorVisible = false;
       clearOrigin();
       cursor = null;
       removeCursorEl();
     },
     setCursor(row, col) {
       cursor = { row, col };
-      renderCursor();
+      if (cursorVisible) renderCursor();
     },
     refresh: refreshCursorAfterBoardChange,
     isEnabled() {

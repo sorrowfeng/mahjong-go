@@ -103,7 +103,7 @@ test('只点击不拖动：触发 onTileClick', () => {
   expect(onDragEnd).not.toHaveBeenCalled();
 });
 
-test('phase 非 IDLE（动画中）：指针按下被忽略，mouseup 不触发任何回调', () => {
+test('phase 非 IDLE（动画中）：不进入拖拽，但点击会转发（供排队跟手）', () => {
   const boardEl = mountBoard();
   const onDragEnd = jest.fn();
   const onTileClick = jest.fn();
@@ -115,12 +115,35 @@ test('phase 非 IDLE（动画中）：指针按下被忽略，mouseup 不触发�
     onTileClick,
   });
 
+  // 动画期间按下后拖动：lockedOut 使拖拽被忽略，不触发 onDragEnd
   mouse('mousedown', 100, 100, boardEl.querySelector('[data-col="0"]'));
   mouse('mousemove', 130, 100);
   mouse('mouseup', 130, 100);
 
   expect(onDragEnd).not.toHaveBeenCalled();
-  expect(onTileClick).not.toHaveBeenCalled();
+  // 动画期间的点按被转发为排队点击（handleTileClick 会缓存到动画结束后执行）
+  expect(onTileClick).toHaveBeenCalledTimes(1);
+  expect(onTileClick).toHaveBeenCalledWith({ row: 0, col: 0 });
+});
+
+test('phase 非 IDLE（动画中）：纯点击同样转发为排队点击', () => {
+  const boardEl = mountBoard();
+  const onDragEnd = jest.fn();
+  const onTileClick = jest.fn();
+
+  initDragController(boardEl, {
+    getState: makeState,
+    getPhase: () => 'ANIMATING',
+    onDragEnd,
+    onTileClick,
+  });
+
+  mouse('mousedown', 100, 100, boardEl.querySelector('[data-col="1"]'));
+  mouse('mouseup', 100, 100);
+
+  expect(onDragEnd).not.toHaveBeenCalled();
+  expect(onTileClick).toHaveBeenCalledTimes(1);
+  expect(onTileClick).toHaveBeenCalledWith({ row: 0, col: 1 });
 });
 
 test('负方向拖动：只收集起点左侧的牌（单向）', () => {

@@ -80,6 +80,127 @@ const BgmController = (() => {
       ],
       bass: [N.C3, N.C3, N.G3, N.G3, N.A3, N.F3, N.G3, N.C3],
     },
+    // ── AI 新增：风格差异明显的曲目 ──────────────────────────────
+    {
+      name: 'Lotus Drift',      // 莲舟：G 大调，舒缓 sine 琶音，禅意
+      bpm: 70,
+      bars: 8,
+      melodyWave: 'sine',
+      melodyGain: 0.12,
+      melody: [
+        [N.G4, 1.5], [N.B4, 0.5], [N.D5, 2], [N.B4, 1], [N.A4, 1],
+        [N.G4, 1], [N.D5, 1.5], [N.E5, 0.5], [N.D5, 2], [N.B4, 1],
+        [N.A4, 1.5], [N.C5, 0.5], [N.B4, 2], [N.G4, 1], [N.A4, 1],
+        [N.D5, 1.5], [N.C5, 0.5], [N.B4, 2], [N.A4, 1], [N.G4, 1],
+        [N.E5, 2], [N.D5, 1], [N.B4, 1], [N.G4, 1], [N.A4, 1], [N.G4, 2],
+      ],
+      chords: [
+        [N.G3, N.B3, N.D4], [N.G3, N.B3, N.D4], [N.E3, N.G3, N.B3], [N.E3, N.G3, N.B3],
+        [N.C4, N.E4, N.G4], [N.C4, N.E4, N.G4], [N.D3, N.F3, N.A3], [N.G3, N.B3, N.D4],
+      ],
+      bass: [N.G3, N.G3, N.E3, N.E3, N.C3, N.C3, N.D3, N.G3],
+    },
+    {
+      name: 'Bamboo Breeze',    // 竹风：A 小调，温柔的忧郁叙事
+      bpm: 82,
+      bars: 8,
+      melodyWave: 'triangle',
+      melodyGain: 0.12,
+      melody: [
+        [N.A4, 1], [N.C5, 1], [N.B4, 1], [N.A4, 1], [N.G4, 2], [N.A4, 1],
+        [N.C5, 1], [N.D5, 1], [N.C5, 1], [N.A4, 2], [N.G4, 1],
+        [N.F4, 1], [N.A4, 1], [N.G4, 1], [N.F4, 1], [N.E4, 2], [N.G4, 1],
+        [N.A4, 1], [N.C5, 1], [N.D5, 1], [N.E5, 2], [N.D5, 1],
+        [N.C5, 1], [N.B4, 1], [N.A4, 1], [N.G4, 1], [N.A4, 2],
+      ],
+      chords: [
+        [N.A3, N.C4, N.E4], [N.A3, N.C4, N.E4], [N.F3, N.C4, N.F4], [N.G3, N.D4, N.G4],
+        [N.E3, N.G3, N.B3], [N.F3, N.A3, N.C4], [N.G3, N.B3, N.D4], [N.A3, N.C4, N.E4],
+      ],
+      bass: [N.A3, N.A3, N.F3, N.G3, N.E3, N.F3, N.G3, N.A3],
+    },
+    {
+      name: 'Golden Koi',       // 金鲤：D 大调，明快跳跃
+      bpm: 120,
+      bars: 8,
+      melodyWave: 'triangle',
+      melodyGain: 0.13,
+      melody: [
+        [N.D5, 0.5], [N.F5, 0.5], [N.A5, 1], [N.F5, 0.5], [N.D5, 0.5], [N.A5, 1], [N.G5, 1],
+        [N.F5, 0.5], [N.E5, 0.5], [N.D5, 1], [N.A4, 1], [N.D5, 2],
+        [N.A4, 0.5], [N.C5, 0.5], [N.E5, 1], [N.C5, 0.5], [N.A4, 0.5], [N.E5, 1], [N.D5, 1],
+        [N.C5, 0.5], [N.A4, 0.5], [N.B4, 1], [N.G4, 1], [N.A4, 2],
+        [N.D5, 0.5], [N.F5, 0.5], [N.A5, 1], [N.F5, 0.5], [N.D5, 0.5], [N.A5, 1], [N.G5, 1],
+        [N.F5, 0.5], [N.E5, 0.5], [N.D5, 1], [N.A4, 1], [N.D5, 2],
+      ],
+      chords: [
+        [N.D3, N.F3, N.A3], [N.D3, N.F3, N.A3], [N.G3, N.B3, N.D4], [N.G3, N.B3, N.D4],
+        [N.A3, N.C4, N.E4], [N.A3, N.C4, N.E4], [N.A3, N.C4, N.E4], [N.D3, N.F3, N.A3],
+      ],
+      bass: [N.D3, N.D3, N.G3, N.G3, N.A3, N.A3, N.A3, N.D3],
+    },
+    {
+      name: 'Tea House',        // 茶馆：C 大调五声音阶，慵懒午后
+      bpm: 66,
+      bars: 8,
+      melodyWave: 'sine',
+      melodyGain: 0.11,
+      melody: [
+        [N.C5, 1.5], [N.E5, 0.5], [N.G5, 2], [N.E5, 1], [N.D5, 1],
+        [N.C5, 2], [N.A4, 1], [N.G4, 2], [N.C5, 1],
+        [N.D5, 1.5], [N.E5, 0.5], [N.G5, 2], [N.E5, 1], [N.D5, 1],
+        [N.C5, 2], [N.G4, 1], [N.A4, 2], [N.G4, 1],
+        [N.A4, 1.5], [N.C5, 0.5], [N.D5, 2], [N.C5, 1], [N.A4, 1],
+        [N.G4, 2], [N.E4, 1], [N.G4, 2], [N.C5, 1],
+      ],
+      chords: [
+        [N.C4, N.E4, N.G4], [N.C4, N.E4, N.G4], [N.G3, N.D4, N.G4], [N.A3, N.C4, N.E4],
+        [N.F3, N.A3, N.C4], [N.C4, N.E4, N.G4], [N.G3, N.B3, N.D4], [N.C4, N.E4, N.G4],
+      ],
+      bass: [N.C3, N.C3, N.G3, N.A3, N.F3, N.C3, N.G3, N.C3],
+    },
+    {
+      name: 'Silk Road',        // 丝路：五声音阶，异域风情
+      bpm: 96,
+      bars: 8,
+      melodyWave: 'triangle',
+      melodyGain: 0.12,
+      melody: [
+        [N.D5, 0.75], [N.A4, 0.25], [N.C5, 0.75], [N.D5, 0.25], [N.E5, 2], [N.D5, 1],
+        [N.C5, 0.75], [N.A4, 0.25], [N.G4, 2], [N.A4, 1],
+        [N.C5, 0.75], [N.D5, 0.25], [N.E5, 1], [N.G5, 1], [N.A5, 2], [N.G5, 1],
+        [N.E5, 0.75], [N.D5, 0.25], [N.C5, 2], [N.A4, 1],
+        [N.D5, 0.75], [N.A4, 0.25], [N.C5, 0.75], [N.D5, 0.25], [N.E5, 2], [N.D5, 1],
+        [N.C5, 0.75], [N.A4, 0.25], [N.G4, 2], [N.A4, 1],
+        [N.C5, 0.5], [N.D5, 0.5], [N.E5, 1], [N.G5, 1], [N.A5, 1], [N.G5, 1], [N.E5, 2],
+      ],
+      chords: [
+        [N.D3, N.A3, N.D4], [N.D3, N.A3, N.D4], [N.G3, N.D4, N.G4], [N.G3, N.D4, N.G4],
+        [N.A3, N.E4, N.A4], [N.A3, N.E4, N.A4], [N.G3, N.D4, N.G4], [N.D3, N.A3, N.D4],
+      ],
+      bass: [N.D3, N.D3, N.G3, N.G3, N.A3, N.A3, N.G3, N.D3],
+    },
+    {
+      name: 'Lantern Night',    // 灯夜：F 大调，温暖圆舞曲三拍
+      bpm: 90,
+      bars: 8,
+      melodyWave: 'triangle',
+      melodyGain: 0.12,
+      melody: [
+        [N.F5, 1], [N.A5, 1], [N.C6, 2], [N.B5, 1], [N.A5, 1],
+        [N.G5, 1], [N.E5, 1], [N.G5, 2], [N.F5, 1], [N.D5, 1],
+        [N.F5, 1], [N.A5, 1], [N.C6, 2], [N.D6, 1], [N.C6, 1],
+        [N.B5, 1], [N.G5, 1], [N.A5, 2], [N.G5, 1], [N.F5, 1],
+        [N.E5, 1], [N.G5, 1], [N.C5, 2], [N.D5, 1], [N.E5, 1],
+        [N.F5, 1], [N.A5, 1], [N.C6, 2], [N.G5, 1], [N.A5, 1],
+        [N.G5, 1], [N.E5, 1], [N.F5, 3],
+      ],
+      chords: [
+        [N.F3, N.A3, N.C4], [N.F3, N.A3, N.C4], [N.G3, N.B3, N.D4], [N.C4, N.E4, N.G4],
+        [N.F3, N.A3, N.C4], [N.F3, N.A3, N.C4], [N.G3, N.B3, N.D4], [N.C4, N.E4, N.G4],
+      ],
+      bass: [N.F3, N.C3, N.G3, N.C4, N.F3, N.C3, N.G3, N.C4],
+    },
   ];
 
   function _getCtx() {
@@ -203,12 +324,21 @@ const BgmController = (() => {
       chord.forEach((freq, noteIndex) => {
         _pad(mg, freq * 2, barStart + 2 * beat + noteIndex * 0.012, 1.6 * beat, 0.018);
       });
+      // 琶音分解和弦层：每小节做根音→三音→五音→高八度根音的上行分解，
+      // 为舒缓/中速曲目增添流动感（低音量，不抢旋律）。快速曲目自动减淡。
+      const arpGain = Math.max(0.012, track.melodyGain * 0.18);
+      const arpFreqs = [chord[0], chord[1], chord[2], chord[0] * 2];
+      arpFreqs.forEach((freq, i) => {
+        _pluck(mg, freq, barStart + i * beat, Math.min(beat * 0.9, 0.5), arpGain, 'sine');
+      });
     });
 
     track.bass.forEach((freq, barIndex) => {
       const barStart = startTime + barIndex * 4 * beat;
+      // 低音：根音长音 + 第 3 拍五音点缀 + 第 4 拍快速回扣（律动感）
       _bass(mg, freq, barStart, beat * 1.7, 0.08);
-      _bass(mg, freq * 1.5, barStart + 2 * beat, beat * 1.2, 0.044);
+      _bass(mg, freq * 1.5, barStart + 2 * beat, beat * 1.0, 0.04);
+      _bass(mg, freq, barStart + 3 * beat, beat * 0.8, 0.034);
     });
 
     const nextStart = startTime + trackDuration;

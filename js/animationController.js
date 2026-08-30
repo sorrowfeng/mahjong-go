@@ -276,24 +276,32 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
     const ripples = drawComboRipples(boardEl, pairs, effectLevel);
     const badge = showWaveBadge(boardEl, pairs.length, waveIndex, combo, effectLevel);
 
-    const boardPulse = effectLevel >= 4
-      ? 'board--combo-high'
-      : effectLevel >= 2
-        ? 'board--combo'
-        : waveIndex > 0 ? 'board--chain' : 'board--match';
-    // pulseBoard 时长需与 CSS 动画时长匹配（见 board.css：--match 280 / --chain 340 / --combo 420 / --combo-high 540）
-    const boardPulseMs = effectLevel >= 4 ? 540
-      : effectLevel >= 2 ? 420
-      : waveIndex > 0 ? 340 : 280;
-    pulseBoard(boardEl, boardPulse, boardPulseMs + 30);
+    // 棋盘 pulse：仅在连锁（waveIndex>0）或连击（effectLevel>=2）时触发。
+    // 普通单次消除（effectLevel 1 + 第一波）不再让整个棋盘弹一下——
+    // 那样每次消除棋盘整体缩放抖动，干扰操作手感。单消的反馈集中在牌本身、
+    // 连线与粒子即可。
+    const isHighlight = waveIndex > 0 || effectLevel >= 2;
+    if (boardEl && isHighlight) {
+      const boardPulse = effectLevel >= 4
+        ? 'board--combo-high'
+        : effectLevel >= 2
+          ? 'board--combo'
+          : 'board--chain';
+      // pulseBoard 时长需与 CSS 动画时长匹配（见 board.css：--chain 340 / --combo 420 / --combo-high 540）
+      const boardPulseMs = effectLevel >= 4 ? 540
+        : effectLevel >= 2 ? 420
+        : 340;
+      pulseBoard(boardEl, boardPulse, boardPulseMs + 30);
+    }
 
     // 连锁/连击震动：高 combo 时给棋盘加轻微位移，增强"打击感"。
     // 纯 translate 可合成，0 软件光栅化；与 pulse 互斥，不复用同帧 animation。
     // 用 CSS 变量按连击等级控制震幅，避免 JS 逐帧改样式。
-    if (boardEl && effectLevel >= 3) {
-      const amp = effectLevel >= 5 ? 4 : effectLevel >= 4 ? 3 : 2;
+    // 门槛提到 effectLevel>=4，且幅度整体降低，避免低连击也晃棋盘影响手感。
+    if (boardEl && effectLevel >= 4) {
+      const amp = effectLevel >= 5 ? 3 : 2;
       boardEl.style.setProperty('--shake-amp', `${amp}px`);
-      pulseBoard(boardEl, 'board--shake', 230);
+      pulseBoard(boardEl, 'board--shake', 210);
     }
 
     for (const el of elements) {
