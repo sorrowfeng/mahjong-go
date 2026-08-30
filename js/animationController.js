@@ -1,6 +1,7 @@
 import { ANIM, DIR, TILE_WIDTH, TILE_HEIGHT, TILE_GAP } from './constants.js';
 import { getTileElement, removeTileElement, commitGroupPosition, clearAllHints } from './renderer.js';
 import { SoundController } from './soundController.js';
+import { burstAtElement } from './particles.js';
 
 // animationController.js — 动画序列（滑动/消除/提示）
 
@@ -262,6 +263,8 @@ function animateEliminate(pairs, waveIndex = 0, combo = null) {
       el.classList.add('tile--matched', 'tile--eliminating', `tile--combo-${effectLevel}`);
       el.style.setProperty('--combo-level', effectLevel);
       el.style.animationDuration = `${duration}ms`;
+      // Canvas 粒子迸发（独立叠加层；reduced-motion / 无 canvas 时内部自动 no-op）
+      burstAtElement(el, { count: 6 + effectLevel * 2, power: 0.6 + effectLevel * 0.12 });
     }
 
     setTimeout(() => {

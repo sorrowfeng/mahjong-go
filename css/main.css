@@ -11,6 +11,15 @@
   --ui-gold: #d2a33a;
   --ui-danger: #d4605d;
   --ui-shadow: 0 16px 42px rgba(27, 70, 53, 0.18);
+
+  /* 主题可覆盖变量（木韵默认） */
+  --theme-page-start: #e2eae5;
+  --theme-page-mid: #cfdcd5;
+  --theme-page-end: #b8cbc1;
+  --theme-overlay: rgba(20, 50, 39, 0.32);
+  --theme-toolbar: linear-gradient(180deg, rgba(238,245,241,0.9), rgba(215,227,220,0.78)), rgba(207, 222, 214, 0.7);
+  --theme-title: #1f7658;
+  --theme-header-line: rgba(47,157,114,0.7);
 }
 
 body {
@@ -33,7 +42,7 @@ body {
     radial-gradient(circle at 22% 18%, rgba(72, 139, 108, 0.14), transparent 30%),
     radial-gradient(circle at 80% 24%, rgba(82, 145, 140, 0.1), transparent 32%),
     radial-gradient(circle at 72% 86%, rgba(165, 139, 86, 0.08), transparent 30%),
-    linear-gradient(180deg, #e2eae5 0%, #cfdcd5 52%, #b8cbc1 100%);
+    linear-gradient(180deg, var(--theme-page-start) 0%, var(--theme-page-mid) 52%, var(--theme-page-end) 100%);
 }
 
 body::before,
@@ -76,7 +85,7 @@ header h1 {
   line-height: 1.1;
   font-weight: 850;
   letter-spacing: 0.05em;
-  color: #1f7658;
+  color: var(--theme-title);
   text-shadow: 0 1px 0 rgba(255,255,255,0.82);
 }
 
@@ -88,7 +97,7 @@ header h1::after {
   width: 76px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(47,157,114,0.7), transparent);
+  background: linear-gradient(90deg, transparent, var(--theme-header-line), transparent);
   transform: translateX(-50%);
 }
 
@@ -107,9 +116,7 @@ header h1::after {
   flex-shrink: 0;
   border: 1px solid rgba(80, 132, 105, 0.22);
   border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(238,245,241,0.9), rgba(215,227,220,0.78)),
-    rgba(207, 222, 214, 0.7);
+  background: var(--theme-toolbar);
   box-shadow: var(--ui-shadow);
   backdrop-filter: blur(14px);
 }
@@ -165,6 +172,8 @@ header h1::after {
 #btn-new::before { content: "+"; }
 #btn-rules::before { content: "i"; font-family: Georgia, serif; font-style: italic; }
 #btn-sound::before { content: "\266A"; }
+#btn-stats::before { content: "\2211"; font-weight: 900; }
+#btn-settings::before { content: "\2699"; font-size: 0.72rem; }
 
 .btn:hover {
   transform: translateY(-1px);
@@ -420,7 +429,9 @@ header h1::after {
 
 #victory-screen,
 #reshuffle-confirm,
-#resume-confirm {
+#resume-confirm,
+#stats-panel,
+#settings-panel {
   position: fixed;
   inset: 0;
   z-index: 2000;
@@ -428,13 +439,15 @@ header h1::after {
   align-items: center;
   justify-content: center;
   padding: 18px;
-  background: rgba(20, 50, 39, 0.32);
+  background: var(--theme-overlay);
   backdrop-filter: blur(14px);
 }
 
 #victory-screen.hidden,
 #reshuffle-confirm.hidden,
-#resume-confirm.hidden {
+#resume-confirm.hidden,
+#stats-panel.hidden,
+#settings-panel.hidden {
   display: none;
 }
 
@@ -661,3 +674,473 @@ header h1::after {
     font-size: 0.66rem;
   }
 }
+
+/* ===== 主题系统（数据主题切换） =====
+   主题由 js/themes.js 设置 <html data-theme>；木韵=默认（上面 :root），
+   暗夜/清新在此覆盖变量。CSS 变量驱动的区域即自动换肤。 */
+
+html[data-theme='dark'] {
+  --ui-ink: #dcebe2;
+  --ui-muted: #9db4a8;
+  --ui-panel: rgba(22, 34, 30, 0.82);
+  --ui-panel-strong: rgba(28, 42, 37, 0.94);
+  --ui-line: rgba(104, 176, 143, 0.28);
+  --ui-accent: #57c495;
+  --ui-accent-strong: #7fd4ad;
+  --ui-gold: #e2b95a;
+  --ui-danger: #e07a72;
+  --ui-shadow: 0 16px 42px rgba(0, 0, 0, 0.5);
+
+  --theme-page-start: #1c2622;
+  --theme-page-mid: #141c18;
+  --theme-page-end: #0d1310;
+  --theme-overlay: rgba(0, 0, 0, 0.55);
+  --theme-toolbar: linear-gradient(180deg, rgba(38,54,47,0.92), rgba(24,36,31,0.85)), rgba(22,34,30,0.85);
+  --theme-title: #7fd4ad;
+  --theme-header-line: rgba(87,196,149,0.75);
+
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] body::before {
+  background:
+    linear-gradient(rgba(120, 200, 165, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 200, 165, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.5;
+}
+
+html[data-theme='dark'] .btn--secondary {
+  color: #7fd4ad;
+  background: linear-gradient(180deg, #23352e, #1a2a23);
+  border-color: rgba(104, 176, 143, 0.24);
+}
+
+html[data-theme='dark'] .toolbar-stats .tile-counter,
+html[data-theme='dark'] .toolbar-stats .timer-display,
+html[data-theme='dark'] .toolbar-stats .stat-display {
+  background:
+    linear-gradient(180deg, rgba(40,58,50,0.86), rgba(28,44,38,0.72)),
+    rgba(26,40,34,0.7);
+}
+
+html[data-theme='fresh'] {
+  --theme-page-start: #eef6ef;
+  --theme-page-mid: #dff0e2;
+  --theme-page-end: #c9e6cf;
+  --theme-overlay: rgba(34, 84, 60, 0.32);
+  --theme-toolbar: linear-gradient(180deg, rgba(250,253,250,0.92), rgba(233,246,236,0.82)), rgba(224,242,228,0.72);
+  --theme-title: #2f9e6a;
+  --theme-header-line: rgba(60,188,124,0.7);
+}
+
+/* ===== 统计面板 ===== */
+.stats-box,
+.settings-box {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(248,251,249,0.97), rgba(236,244,239,0.94)),
+    #f6faf7;
+  border: 1px solid rgba(57, 139, 101, 0.2);
+  box-shadow: 0 22px 58px rgba(28, 74, 55, 0.24);
+}
+
+.stats-box {
+  padding: 26px 28px;
+}
+
+.panel-title {
+  margin: 0 0 16px;
+  color: var(--ui-accent-strong);
+  font-size: 1.3rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stats-grid__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid rgba(57, 139, 101, 0.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.4);
+}
+
+.stats-grid__label {
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.stats-grid__value {
+  color: var(--ui-accent-strong);
+  font-size: 1.1rem;
+  line-height: 1.2;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* ===== 设置面板 ===== */
+.settings-box {
+  padding: 24px 26px;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-row label {
+  color: var(--ui-ink);
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.setting-row select,
+.setting-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  max-width: 200px;
+}
+
+.setting-row select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid rgba(57, 139, 101, 0.24);
+  border-radius: 7px;
+  color: var(--ui-ink);
+  font-size: 0.88rem;
+  background: var(--ui-panel-strong);
+}
+
+.setting-row input[type='range'] {
+  accent-color: var(--ui-accent);
+  cursor: pointer;
+}
+
+.setting-row--toggle {
+  justify-content: space-between;
+}
+
+.setting-row--toggle input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ui-accent);
+  cursor: pointer;
+}
+
+/* ===== 色弱辅助（body.colorblind）：降饱和 + 强化文字 ===== */
+body.colorblind .tile img {
+  filter: saturate(0.55) contrast(1.08);
+}
+
+body.colorblind .tile__top,
+body.colorblind .tile__bottom {
+  font-weight: 900;
+}
+
+/* ===== 左手模式（body.left-handed）：横屏工具栏移到右侧，便于左手操作 ===== */
+body.left-handed .toolbar-stats {
+  order: 0;
+}
+
+/* 横屏侧边工具栏场景：左手模式把工具栏挪到右侧 */
+@media (max-height: 500px) and (orientation: landscape) {
+  body.left-handed {
+    flex-direction: row-reverse;
+  }
+
+  body.left-handed header {
+    display: none;
+  }
+
+  body.left-handed .toolbar {
+    align-self: center;
+  }
+}
+
+/* ===== P1 游戏性：模式选择 / 道具栏 / 计分 / 星级 / toast ===== */
+
+/* 道具栏 */
+.item-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.item-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+.item-btn__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+.item-btn__count {
+  min-width: 14px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--ui-accent-strong, #1d624c);
+}
+.item-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 模式选择面板 */
+#mode-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(20, 50, 39, 0.32);
+  backdrop-filter: blur(14px);
+}
+#mode-panel.hidden {
+  display: none;
+}
+.mode-box {
+  width: min(420px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+}
+.mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.mode-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+}
+.mode-item__name {
+  font-weight: 700;
+}
+.mode-item__desc {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+.mode-item__best {
+  font-size: 0.72rem;
+  color: var(--ui-gold, #d2a33a);
+  margin-top: 2px;
+}
+
+/* 工具栏得分 */
+.stat-display--score {
+  color: var(--ui-accent-strong, #1d624c);
+  font-weight: 600;
+}
+
+/* 胜利界面计分与星级 */
+.victory-subtitle {
+  opacity: 0.75;
+  font-size: 0.9rem;
+  margin: 2px 0 10px;
+}
+.victory-score {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ui-accent-strong, #1d624c);
+  margin: 4px 0 2px;
+}
+.victory-stars {
+  font-size: 1.9rem;
+  letter-spacing: 6px;
+  color: var(--ui-gold, #d2a33a);
+  margin: 2px 0 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* 通用 toast */
+#toast-msg {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 3000;
+  max-width: 80vw;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(20, 45, 35, 0.9);
+  color: #fff;
+  font-size: 0.86rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+#toast-msg.hidden {
+  display: none;
+}
+
+/* 竖屏工具栏适配 */
+@media (max-width: 720px) {
+  .item-bar {
+    margin-top: 4px;
+    justify-content: center;
+  }
+  .mode-item__desc,
+  .mode-item__best {
+    font-size: 0.72rem;
+  }
+}
+
+/* ===== P2 关卡面板 ===== */
+#level-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(20, 50, 39, 0.32);
+  backdrop-filter: blur(14px);
+}
+#level-panel.hidden {
+  display: none;
+}
+.level-box {
+  width: min(560px, 94vw);
+  max-height: 84vh;
+  overflow-y: auto;
+}
+.level-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.level-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  text-align: left;
+  min-height: 84px;
+}
+.level-item__no {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 0.7rem;
+  opacity: 0.45;
+  font-weight: 700;
+}
+.level-item__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.level-item__stars {
+  color: var(--ui-gold, #d2a33a);
+  letter-spacing: 2px;
+  font-size: 0.9rem;
+}
+.level-item__size {
+  font-size: 0.72rem;
+  opacity: 0.65;
+}
+.btn--locked {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.35);
+  cursor: not-allowed;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ===== P2 成就面板 ===== */
+#achievement-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(20, 50, 39, 0.32);
+  backdrop-filter: blur(14px);
+}
+#achievement-panel.hidden {
+  display: none;
+}
+.achievement-box {
+  width: min(520px, 94vw);
+  max-height: 84vh;
+  overflow-y: auto;
+}
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.achievement-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid rgba(57, 139, 101, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.4);
+}
+.achievement-grid__item--locked {
+  opacity: 0.45;
+}
+.achievement-grid__icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.achievement-grid__name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.achievement-grid__desc {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+/* ===== P2 分享按钮 ===== */
+.victory-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+

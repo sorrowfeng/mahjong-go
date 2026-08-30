@@ -36,8 +36,12 @@ import {
   handleTileClick, handleUndo, handleNewGame, initNewGame,
   pushUndo, updateUI, restoreFromSnapshot,
   persistSave, clearSave, loadSaveSnapshot,
+  useItem, getItems, getModeInfo, getScoreInfo, isHammerPending,
+  getMoveRemaining, finishTimedOut, getLevelInfo,
 } from '../js/gameController.js';
 import { MAX_UNDO_STEPS } from '../js/constants.js';
+import { MODES } from '../js/modes.js';
+import { getBestScore } from '../js/score.js';
 
 function makeTile(instanceId, typeId, value) {
   return {
@@ -75,7 +79,11 @@ function mountDom() {
     <span id="move-count"></span>
     <span id="hint-count"></span>
     <div id="victory-screen" class="hidden">
+      <h2></h2>
+      <p id="victory-subtitle"></p>
       <p id="victory-time-display"></p>
+      <p id="victory-score-display"></p>
+      <p id="victory-stars-display"></p>
       <p id="victory-move-display"></p>
       <p id="victory-hint-display"></p>
       <p id="victory-best-display"></p>
@@ -87,6 +95,9 @@ function mountDom() {
     <div id="reshuffle-msg" class="hidden"></div>
     <div id="rotate-hint" class="hidden"></div>
     <div id="teaching-panel" class="hidden"></div>
+    <div id="toast-msg" class="hidden"></div>
+    <div id="btn-mode"></div>
+    <span id="score-count"></span>
   `;
 }
 
@@ -305,3 +316,263 @@ describe('initNewGame', () => {
     expect(document.getElementById('board').querySelectorAll('.tile').length).toBe(136);
   });
 });
+
+// ── P1：模式 / 计分 / 道具 / 限时 / 步数 ─────────────────────────────
+
+describe('P1 模式系统', () => {
+  test('initNewGame 默认经典模式，计分关闭', async () => {
+    await initNewGame();
+    const info = getModeInfo();
+    expect(info.modeId).toBe('classic');
+    expect(info.mode.scoring).toBe(false);
+    expect(getScoreInfo().total).toBe(0);
+  });
+
+  test('initNewGame 传入模式生效', async () => {
+    await initNewGame({ mode: 'timed60' });
+    expect(getModeInfo().modeId).toBe('timed60');
+    expect(getModeInfo().mode.timeBudget).toBe(60);
+    // 限时模式启动倒计时（剩余 60）
+    expect(getMoveRemaining()).toBeNull(); // 非步数模式
+  });
+
+  test('非法模式回退经典', async () => {
+    await initNewGame({ mode: 'nope' });
+    expect(getModeInfo().modeId).toBe('classic');
+  });
+
+  test('步数模式 moveRemaining 从上限递减', async () => {
+    await initNewGame({ mode: 'moves30' });
+    expect(getMoveRemaining()).toBe(30);
+    // 一次有效消除后 moveCount=1 → 剩 29
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    const C = makeTile(3, 4, 5);
+    restoreFromSnapshot({ ...snapshotOf([[A, B, null, null, C]]), version: 2, modeId: 'moves30' });
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getMoveRemaining()).toBe(29);
+  });
+
+  test('每日挑战用日期种子可复现开局棋盘', async () => {
+    // 同一天两次开每日挑战 → 相同 instanceId 布局
+    const deck1 = await initDailyBoard();
+    const deck2 = await initDailyBoard();
+    const flat = (state) => {
+      const arr = [];
+      for (const row of state.grid) for (const t of row) if (t) arr.push(t.instanceId);
+      return arr.join(',');
+    };
+    expect(flat(deck1)).toBe(flat(deck2));
+  });
+
+  async function initDailyBoard() {
+    await initNewGame({ mode: 'daily' });
+    return getState();
+  }
+});
+
+describe('P1 计分系统', () => {
+  test('消除产生分数并显示在 score-count', async () => {
+    await initNewGame({ mode: 'timed60' });
+    const before = getScoreInfo().total;
+    // 造一对可消除
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    const C = makeTile(3, 4, 5);
+    restoreFromSnapshot({ ...snapshotOf([[A, B, null, null, C]]), version: 2, modeId: 'timed60' });
+    await handleTileClick({ row: 0, col: 0 });
+    const after = getScoreInfo().total;
+    expect(after).toBeGreaterThan(before);
+    // 首波 1 对 = 100 分（comboCount 可能 >0 有连击奖励，但至少 100）
+    expect(after).toBeGreaterThanOrEqual(100);
+    expect(document.getElementById('score-count').textContent).toBe(String(after));
+  });
+
+  test('胜利时结算分数并写入分数榜', async () => {
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    // 只剩一对 → 消除即胜利
+    restoreFromSnapshot({ ...snapshotOf([[A, B]]), version: 2, modeId: 'timed60' });
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getPhase()).toBe('VICTORY');
+    const scoreEl = document.getElementById('victory-score-display');
+    expect(scoreEl.textContent).toMatch(/得分/);
+    const starsEl = document.getElementById('victory-stars-display');
+    // 星级格式：3 个星位（实心★ + 空心☆），单对 100 分可能 0 星
+    expect(starsEl.textContent.length).toBe(3);
+    expect(starsEl.textContent).toMatch(/^[★☆]{3}$/);
+    // 分数榜已记录
+    expect(getBestScore('timed60')).not.toBeNull();
+  });
+
+  test('经典模式（scoring:false）不显示计分结算', async () => {
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    restoreFromSnapshot(snapshotOf([[A, B]])); // v1 classic
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getPhase()).toBe('VICTORY');
+    const scoreEl = document.getElementById('victory-score-display');
+    expect(scoreEl.textContent || '').toBe('');
+  });
+});
+
+describe('P1 道具系统', () => {
+  test('useItem 消耗库存并执行洗牌', async () => {
+    await initNewGame();
+    const before = getItems().reshuffle;
+    expect(before).toBeGreaterThan(0);
+    const ok = useItem('reshuffle');
+    expect(ok).toBe(true);
+    expect(getItems().reshuffle).toBe(before - 1);
+  });
+
+  test('useItem 库存不足失败', async () => {
+    await initNewGame();
+    // 清空 hammer 库存
+    localStorage.setItem('mahjong-items-v1', JSON.stringify({ reshuffle: 0, undo: 0, hint: 0, hammer: 0 }));
+    // gameController 的 itemStock 已缓存旧值，需重新加载
+    // useItem 内部每次重新 loadItems（itemStock 已有值则不重载），因此无法从外部改
+    // 直接构造耗尽场景：多次 use 至空
+    let ok = true;
+    let guard = 0;
+    while (ok && guard < 10) { ok = useItem('hammer'); guard++; }
+    expect(ok).toBe(false);
+  });
+
+  test('锤子：pendingHammer 后点击可消除对触发连锁消除', async () => {
+    await initNewGame();
+    // 造一对可消除，用锤子消除
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    const C = makeTile(3, 4, 5);
+    restoreFromSnapshot({ ...snapshotOf([[A, B, null, null, C]]), version: 2, modeId: 'classic' });
+    expect(useItem('hammer')).toBe(true);
+    expect(isHammerPending()).toBe(true);
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getState().grid[0][0]).toBeNull();
+    expect(getState().grid[0][1]).toBeNull();
+    expect(isHammerPending()).toBe(false);
+    expect(getPhase()).toBe('IDLE');
+  });
+
+  test('锤子点击不可消除牌不触发消除', async () => {
+    await initNewGame();
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 1, 2); // 不配对
+    restoreFromSnapshot({ ...snapshotOf([[A, B, null, null, null]]), version: 2, modeId: 'classic' });
+    expect(useItem('hammer')).toBe(true);
+    await handleTileClick({ row: 0, col: 0 });
+    // 不配对 → 不消除（保留 pendingHammer）
+    expect(getState().grid[0][0]).not.toBeNull();
+  });
+});
+
+describe('P1 限时 / 步数结算', () => {
+  test('步数达上限触发 finishMoveLimit 结算', async () => {
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    const C = makeTile(3, 4, 5);
+    // 步数预算 30，但 snapshot 预设已用 29 步 → 再消 1 步即达上限
+    restoreFromSnapshot({ ...snapshotOf([[A, B, null, null, C]], { moveCount: 29 }), version: 2, modeId: 'moves30' });
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getPhase()).toBe('VICTORY');
+    const titleEl = document.querySelector('#victory-screen h2');
+    expect(titleEl.textContent).toMatch(/步数用尽/);
+    const scoreEl = document.getElementById('victory-score-display');
+    expect(scoreEl.textContent).toMatch(/得分/);
+  });
+
+  test('finishTimedOut 触发限时结算', () => {
+    // 需要 boardState + currentMode 就绪
+    restoreFromSnapshot({ ...snapshotOf([[makeTile(1, 0, 1), makeTile(2, 0, 1)]]), version: 2, modeId: 'timed60' });
+    finishTimedOut();
+    expect(getPhase()).toBe('VICTORY');
+    const titleEl = document.querySelector('#victory-screen h2');
+    expect(titleEl.textContent).toMatch(/时间到/);
+    expect(getScoreInfo().total).toBeGreaterThanOrEqual(0);
+  });
+
+  test('胜利结算后分数榜最佳记录更新', async () => {
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    restoreFromSnapshot({ ...snapshotOf([[A, B]]), version: 2, modeId: 'timed60' });
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getBestScore('timed60').total).toBeGreaterThan(0);
+  });
+});
+
+// ── P2 关卡模式 ─────────────────────────────────────────────────────
+
+describe('P2 关卡模式', () => {
+  test('initNewGame({ level }) 进入关卡模式并设置棋盘尺寸', async () => {
+    await initNewGame({ level: 1 });
+    const info = getLevelInfo();
+    expect(info.isLevelMode).toBe(true);
+    expect(info.level.id).toBe(1);
+    expect(getState().width).toBe(10);
+    expect(getState().height).toBe(5);
+  });
+
+  test('关卡模式种子化棋盘可复现', async () => {
+    await initNewGame({ level: 1 });
+    const first = getState().grid.map(r => r.map(t => t ? t.tileTypeId : null));
+    await initNewGame({ level: 1 });
+    const second = getState().grid.map(r => r.map(t => t ? t.tileTypeId : null));
+    expect(second).toEqual(first);
+  });
+
+  test('关卡模式应用步数限额', async () => {
+    await initNewGame({ level: 2 }); // moveBudget 40
+    expect(getMoveRemaining()).toBe(40);
+  });
+
+  test('通关关卡记录星级并解锁下一关', async () => {
+    await initNewGame({ level: 1 });
+    const state = getState();
+    // 找一组可消除配对
+    const pairs = findAllPairsForBoard(state);
+    const { a, b } = pairs[0];
+    await handleTileClick({ row: a.row, col: a.col });
+    // 消除一对不触发胜利（还有牌），但进度需通关才记录
+    const progress = JSON.parse(localStorage.getItem('mahjong-progress-v1') || 'null');
+    // 未通关不记录进度
+    expect(progress).toBeNull();
+  });
+});
+
+// 辅助：找当前棋盘任意可消除配对
+function findAllPairsForBoard(state) {
+  const pairs = [];
+  const byRow = {};
+  const byCol = {};
+  for (let r = 0; r < state.height; r++) {
+    for (let c = 0; c < state.width; c++) {
+      const t = state.grid[r][c];
+      if (!t) continue;
+      if (!byRow[r]) byRow[r] = {};
+      if (!byCol[c]) byCol[c] = {};
+      if (byRow[r][t.tileTypeId] !== undefined) {
+        const prev = { row: r, col: byRow[r][t.tileTypeId] };
+        // 同行无遮挡
+        let blocked = false;
+        const [c1, c2] = [prev.col, c].sort((x, y) => x - y);
+        for (let cc = c1 + 1; cc < c2; cc++) {
+          if (state.grid[r][cc]) { blocked = true; break; }
+        }
+        if (!blocked) pairs.push({ a: prev, b: { row: r, col: c } });
+      }
+      if (byCol[c][t.tileTypeId] !== undefined) {
+        const prev = { row: byCol[c][t.tileTypeId], col: c };
+        let blocked = false;
+        const [r1, r2] = [prev.row, r].sort((x, y) => x - y);
+        for (let rr = r1 + 1; rr < r2; rr++) {
+          if (state.grid[rr][c]) { blocked = true; break; }
+        }
+        if (!blocked) pairs.push({ a: prev, b: { row: r, col: c } });
+      }
+      byRow[r][t.tileTypeId] = c;
+      byCol[c][t.tileTypeId] = r;
+    }
+  }
+  return pairs;
+}

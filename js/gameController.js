@@ -1,15 +1,22 @@
 import { GAME_STATE, MAX_UNDO_STEPS, MAX_SHUFFLE_RETRIES, recalcLayout, recalcTileSizeOnly, setBoardLayout, DIR } from './constants.js';
 import { createBoardFromDeck, cloneState, countRemainingTiles } from './boardState.js';
-import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, checkVictory, isDeadlock, reshuffleRemainingTiles } from './gameLogic.js';
+import { findAllPairs, hasAnyPair, eliminateTiles, resolveNewPairChain, resolveChainElimination, checkVictory, isDeadlock, reshuffleRemainingTiles } from './gameLogic.js';
 import { findHint } from './hintSystem.js';
 import { renderBoard, diffRenderBoard, resetGroupTransform, getTileElement } from './renderer.js';
 import { runDealAnimation, runEliminationSequence, animateSlide, animateRevert, animateHint, animateInvalidTile, clearHintAnimation } from './animationController.js';
 import { SoundController } from './soundController.js';
-import { formatTime, getElapsedSeconds, startTimer, startTimerFromElapsed, stopTimer, resetTimer, pauseTimer, resumeTimer } from './timer.js';
+import { formatTime, getElapsedSeconds, startTimer, startTimerFromElapsed, stopTimer, resetTimer, pauseTimer, resumeTimer, startCountdown, getRemainingSeconds, stopCountdown } from './timer.js';
 import { preloadTileImages } from './imagePreload.js';
 import { TILE_TYPES, generateDeck, shuffleDeck } from './tileDefinitions.js';
 import { applySlide } from './movementLogic.js';
 import { hideTutorial } from './tutorial.js';
+import { recordGameStart, recordGameResult } from './stats.js';
+import { burstAtElement, confetti } from './particles.js';
+import { MODES, getMode, hasTimeBudget, hasMoveBudget, resolveRng, mulberry32, hashSeed } from './modes.js';
+import { createScore, addWave, settleScore, defaultStarThresholds, recordScore } from './score.js';
+import { loadItems, saveItems, spendItem, getCount } from './items.js';
+import { getLevel, loadProgress, saveProgress, recordLevelResult, levelStarThresholds } from './levels.js';
+import { recordEvent } from './achievements.js';
 
 // gameController.js — 游戏状态机（主协调器）
 
@@ -21,6 +28,24 @@ let gameGeneration = 0; // 每次新游戏自增，使旧 async 任务失效
 // 统计数据
 let moveCount = 0;  // 有效操作步数（拖动产生消除 + 点击消除）
 let hintCount = 0;  // 使用提示次数
+
+// 本局累计（上报给 stats.js）
+let pairsThisGame = 0;    // 本局累计消除对数
+let maxComboThisGame = 0; // 本局最高连击
+
+// 当前模式与计分/道具状态（P1 游戏性）
+let currentMode = null;        // 当前模式对象（modes.js 里的定义）
+let modeId = 'classic';        // 当前模式 id
+let scoreAcc = null;           // 计分累计器（score.js createScore 产物）
+let chainIndex = 0;            // 当前连锁进行到的波数（同一次消除操作的连锁编号）
+let itemStock = null;          // 道具库存（items.js 加载）
+let pendingHammer = false;     // 锤子待消除态：下一次点击任一可消除对即触发
+let hammerPairCache = null;    // 锤子选中的待消除对（用于 UI 高亮，可选）
+let timedOut = false;          // 限时模式是否已超时结算
+let lastScoreGain = 0;         // 最近一次得分增量（供 UI 飘字/动画）
+let maxChainThisGame = 0;      // 本局最长连锁波数
+let undoUsedThisGame = 0;      // 本局已用撤销次数（模式 undoLimit 限制）
+let currentLevel = null;       // 当前关卡（关卡模式时非 null，levels.js 定义）
 
 const COMBO_WINDOW_MS = 10000;
 const TEACHING_LAYOUT = { width: 9, height: 5 };
@@ -135,6 +160,41 @@ function isTeachingModeActive() {
 
 function getBoardEl() {
   return document.getElementById('board');
+}
+
+// P1 只读访问器（供 main.js 渲染模式/计分/道具 UI）
+function getModeInfo() {
+  return { modeId, mode: currentMode || null };
+}
+
+function getScoreInfo() {
+  return {
+    total: scoreAcc ? scoreAcc.total : 0,
+    pairs: scoreAcc ? scoreAcc.pairs : 0,
+    maxCombo: maxComboThisGame,
+    maxChain: maxChainThisGame,
+    lastGain: lastScoreGain,
+  };
+}
+
+function getItems() {
+  return itemStock ? { ...itemStock } : {};
+}
+
+function isHammerPending() {
+  return pendingHammer;
+}
+
+function getMoveRemaining() {
+  if (!currentMode || !hasMoveBudget(currentMode)) return null;
+  return Math.max(0, currentMode.moveBudget - moveCount);
+}
+
+function getLevelInfo() {
+  return {
+    level: currentLevel,
+    isLevelMode: !!currentLevel,
+  };
 }
 
 function createTeachingTile(typeId, instanceOffset) {
@@ -423,7 +483,28 @@ function registerCombo(gain = 1) {
 }
 
 // 初始化新游戏
-async function initNewGame() {
+// options: { mode }  模式 id（缺省 = 经典）。向后兼容：无参数即经典模式。
+// 构建关卡棋盘（关卡模式专用）。
+// 设置固定布局 + 种子化洗牌（可复现），并保证开局有直接可消除配对。
+function _buildLevelState(level) {
+  const deck = generateDeck({ tileTypeIds: level.tileTypeIds, copies: level.copies });
+  const rng = mulberry32(hashSeed(level.seed));
+  let state = null;
+  for (let attempt = 0; attempt <= MAX_SHUFFLE_RETRIES; attempt++) {
+    const candidate = createBoardFromDeck(shuffleDeck(deck, rng), {
+      width: level.cols, height: level.rows,
+    });
+    if (hasAnyPair(candidate)) { state = candidate; break; }
+  }
+  if (!state) {
+    state = createBoardFromDeck(shuffleDeck(deck, rng), {
+      width: level.cols, height: level.rows,
+    });
+  }
+  return state;
+}
+
+async function initNewGame(options = {}) {
   gameGeneration++;
   const myGeneration = gameGeneration;
 
@@ -432,36 +513,81 @@ async function initNewGame() {
   undoStack = [];
   moveCount = 0;
   hintCount = 0;
+  pairsThisGame = 0;
+  maxComboThisGame = 0;
   resetCombo();
+
+  // 模式/计分/道具状态
+  modeId = getMode(options.mode).id;
+  currentMode = MODES[modeId];
+  // 关卡模式：加载关卡并覆盖限额
+  currentLevel = options.level ? getLevel(options.level) : null;
+  if (currentLevel) {
+    currentMode = {
+      ...currentMode,
+      moveBudget: currentLevel.moveBudget,
+      hintLimit: currentLevel.hintLimit,
+      undoLimit: currentLevel.undoLimit,
+      scoring: true,
+      isLevel: true,
+    };
+    modeId = 'level';
+  }
+  scoreAcc = createScore();
+  chainIndex = 0;
+  maxChainThisGame = 0;
+  lastScoreGain = 0;
+  pendingHammer = false;
+  hammerPairCache = null;
+  timedOut = false;
+  undoUsedThisGame = 0;
+  itemStock = loadItems();
+
   resetTimer();
+  recordGameStart(); // 跨局统计：正式局开局 +1（教学模式不走这里）
   // 隐藏旋转提示（如有）
   const rotateHint = document.getElementById('rotate-hint');
   if (rotateHint) rotateHint.classList.add('hidden');
   gameState = GAME_STATE.ANIMATING;
 
-  // 根据当前视口重算牌尺寸
-  recalcLayout();
+  if (currentLevel) {
+    // 关卡模式：固定布局 + 种子化棋盘（不走视口自适应 recalcLayout）
+    setBoardLayout(currentLevel.cols, currentLevel.rows);
+    recalcTileSizeOnly(currentLevel.cols, currentLevel.rows);
+  } else {
+    // 根据当前视口重算牌尺寸
+    recalcLayout();
+  }
 
   SoundController.playNewGame();
 
-  const deck = generateDeck();
   let state = null;
 
-  // 开局流程：洗牌 → 确保满棋盘有直接可消除配对（供用户手动操作）
-  for (let attempt = 0; attempt <= MAX_SHUFFLE_RETRIES; attempt++) {
-    const shuffled = shuffleDeck(deck);
-    const candidate = createBoardFromDeck(shuffled);
+  if (currentLevel) {
+    state = _buildLevelState(currentLevel);
+  } else {
+    const deck = generateDeck();
 
-    // 满棋盘无法滑动，只需确认有直接配对即可开始游戏
-    if (hasAnyPair(candidate)) {
-      state = candidate;
-      break;
+    // 解析模式随机源：经典/限时/步数用 Math.random，每日用日期种子（可复现）
+    const { rng, dailyDate } = resolveRng(currentMode);
+    currentMode.dailyDate = dailyDate; // 记录本局每日日期（用于展示/存档）
+
+    // 开局流程：洗牌 → 确保满棋盘有直接可消除配对（供用户手动操作）
+    for (let attempt = 0; attempt <= MAX_SHUFFLE_RETRIES; attempt++) {
+      const shuffled = shuffleDeck(deck, rng);
+      const candidate = createBoardFromDeck(shuffled);
+
+      // 满棋盘无法滑动，只需确认有直接配对即可开始游戏
+      if (hasAnyPair(candidate)) {
+        state = candidate;
+        break;
+      }
     }
-  }
 
-  // 极罕见：所有尝试均无直接配对，取最后一次洗牌结果
-  if (!state) {
-    state = createBoardFromDeck(shuffleDeck(deck));
+    // 极罕见：所有尝试均无直接配对，取最后一次洗牌结果
+    if (!state) {
+      state = createBoardFromDeck(shuffleDeck(deck, rng));
+    }
   }
 
   boardState = state;
@@ -477,7 +603,17 @@ async function initNewGame() {
 
   if (gameGeneration === myGeneration) {
     gameState = GAME_STATE.IDLE;
-    startTimer();
+    if (hasTimeBudget(currentMode)) {
+      // 限时模式：倒计时，归零时结束并结算
+      startCountdown(currentMode.timeBudget, () => {
+        if (gameGeneration === myGeneration) {
+          finishTimedOut();
+        }
+      });
+    } else {
+      startTimer();
+    }
+    updateUI();
     persistSave();
   }
 }
@@ -570,6 +706,26 @@ async function handleDragEnd({ group, direction, delta }) {
       pushUndo(boardState);
       moveCount++;
       const combo = registerCombo(countEliminatedPairs(wavesToRun));
+      pairsThisGame += countEliminatedPairs(wavesToRun);
+      maxComboThisGame = Math.max(maxComboThisGame, combo.count);
+      // 计分：逐波上报（连锁波数递增），并记录本局最长连锁
+      if (scoreAcc) {
+        let waveIdx = 1;
+        for (const wave of wavesToRun) {
+          const res = addWave(scoreAcc, {
+            pairs: wave.eliminated.length,
+            chainIndex: waveIdx,
+            comboCount: combo.count,
+          });
+          scoreAcc = res;
+          chainIndex = waveIdx;
+          waveIdx++;
+        }
+        maxChainThisGame = Math.max(maxChainThisGame, chainIndex);
+        if (chainIndex >= 5) {
+          _triggerAchievements({ event: 'chain', maxChain: chainIndex });
+        }
+      }
       SoundController.playSlideSuccess();
       await animateSlide(group, direction, delta);
 
@@ -607,6 +763,10 @@ async function handleDragEnd({ group, direction, delta }) {
       showVictory();
       return;
     }
+    if (hasMoveBudget(currentMode) && moveCount >= currentMode.moveBudget) {
+      finishMoveLimit();
+      return;
+    }
     if (refreshTeachingAfterFreeAction()) {
       return;
     }
@@ -636,6 +796,12 @@ async function handleTileClick({ row, col }) {
     return;
   }
 
+  // 锤子待选态：点击可消除对即触发锤子消除（复用连锁算子）
+  if (pendingHammer) {
+    await applyHammerElimination(pair);
+    return;
+  }
+
   const matchedTeachingClick = isTeachingMode && !teachingCompleted
     ? isExpectedTeachingClick(pair)
     : false;
@@ -653,6 +819,16 @@ async function handleTileClick({ row, col }) {
   // 点击只消除用户选中的那一对，不触发自动连锁（用户手动找下一对）
   const allWaves = [{ eliminated: [{ a, b }], stateAfter: stateAfterFirst }];
   const combo = registerCombo(countEliminatedPairs(allWaves));
+  // 计分：点击消除作为独立一波（chainIndex=1）
+  if (scoreAcc) {
+    scoreAcc = addWave(scoreAcc, {
+      pairs: 1,
+      chainIndex: 1,
+      comboCount: combo.count,
+    });
+    chainIndex = 1;
+    maxChainThisGame = Math.max(maxChainThisGame, 1);
+  }
 
   gameState = GAME_STATE.ANIMATING;
 
@@ -682,6 +858,11 @@ async function handleTileClick({ row, col }) {
     return;
   }
 
+  if (hasMoveBudget(currentMode) && moveCount >= currentMode.moveBudget) {
+    finishMoveLimit();
+    return;
+  }
+
   if (refreshTeachingAfterFreeAction()) {
     return;
   }
@@ -697,6 +878,14 @@ function handleHint() {
   if (!boardState) return;
 
   clearHintAnimation(getBoardEl());
+
+  // 模式提示限额（null/Infinity = 不限）
+  const hintLimit = currentMode && currentMode.hintLimit;
+  if (Number.isFinite(hintLimit) && hintCount >= hintLimit) {
+    showToast('提示次数已用完');
+    return;
+  }
+
   hintCount++;
 
   if (isTeachingMode && !teachingCompleted) {
@@ -734,6 +923,13 @@ function handleUndo() {
   if (isTeachingMode) return;
   if (undoStack.length === 0) return;
 
+  // 模式撤销限额（null/Infinity = 不限）
+  const undoLimit = currentMode && currentMode.undoLimit;
+  if (Number.isFinite(undoLimit) && undoUsedThisGame >= undoLimit) {
+    showToast('撤销次数已用完');
+    return;
+  }
+
   clearHintAnimation(getBoardEl());
   resetCombo();
 
@@ -742,10 +938,150 @@ function handleUndo() {
   boardState = prev.state;
   moveCount = prev.moveCount;
   hintCount = prev.hintCount;
+  undoUsedThisGame++;
 
   diffRenderBoard(prevState, boardState, getBoardEl());
   updateUI();
   persistSave();
+}
+
+// ── 道具系统 ──────────────────────────────────────────────────────────
+// showToast 通用提示（复用 flashElement 的定时隐藏逻辑）
+function showToast(msg) {
+  const el = document.getElementById('toast-msg');
+  if (!el) return;
+  el.textContent = msg;
+  flashElement(el, 2200);
+}
+
+// 用道具：成功返回 true，失败返回 false 并提示原因。
+// 洗牌/撤销/提示 复用现有能力；锤子进入"待选牌"状态。
+function useItem(itemId) {
+  if (gameState !== GAME_STATE.IDLE) return false;
+  if (!boardState) return false;
+  if (!itemStock) itemStock = loadItems();
+
+  // 库存校验
+  if (getCount(itemStock, itemId) <= 0) {
+    showToast('该道具已用完');
+    return false;
+  }
+
+  const spent = spendItem(itemStock, itemId);
+  if (!spent.ok) return false;
+  itemStock = spent.stock;
+  saveItems(itemStock);
+
+  switch (itemId) {
+    case 'reshuffle':
+      pushUndo(boardState);
+      resetCombo();
+      boardState = reshuffleRemainingTiles(boardState);
+      renderBoard(boardState, getBoardEl());
+      SoundController.playReshuffle();
+      showToast('已重新洗牌');
+      break;
+    case 'undo':
+      if (undoStack.length > 0) {
+        const prev = undoStack.pop();
+        boardState = prev.state;
+        moveCount = prev.moveCount;
+        hintCount = prev.hintCount;
+        undoUsedThisGame++;
+        diffRenderBoard(boardState, prev.state, getBoardEl());
+      } else {
+        // 撤销栈为空：退到开局（直接重开本局，消耗一个撤销道具）
+        showToast('无步骤可撤销，已重置本局');
+        initNewGame({ mode: modeId });
+      }
+      break;
+    case 'hint':
+      handleHint();
+      break;
+    case 'hammer':
+      pendingHammer = true;
+      hammerPairCache = null;
+      showToast('点击任意可消除的一对牌');
+      break;
+    default:
+      return false;
+  }
+  persistSave();
+  updateUI();
+  return true;
+}
+
+// 取消锤子待选态
+function cancelHammer() {
+  pendingHammer = false;
+  hammerPairCache = null;
+}
+
+// 触发锤子消除：传入用户点击选中的某一对，消除后自动连锁。
+// 返回新 state（经 runEliminationSequence 异步回调更新 boardState）。
+async function applyHammerElimination(pair) {
+  const myGeneration = gameGeneration;
+  pendingHammer = false;
+  hammerPairCache = null;
+
+  pushUndo(boardState);
+  moveCount++;
+
+  const { a, b } = pair;
+  const stateAfterFirst = eliminateTiles(boardState, [
+    { row: a.row, col: a.col },
+    { row: b.row, col: b.col },
+  ]);
+  // 锤子复用连锁算子：消除一对后自动跑剩余新配对连锁
+  const waves = resolveChainElimination(stateAfterFirst);
+  const allWaves = [{ eliminated: [{ a, b }], stateAfter: stateAfterFirst }, ...waves];
+
+  const totalPairs = allWaves.reduce((n, w) => n + w.eliminated.length, 0);
+  pairsThisGame += totalPairs;
+  const combo = registerCombo(totalPairs);
+  maxComboThisGame = Math.max(maxComboThisGame, combo.count);
+  // 计分：逐波上报
+  if (scoreAcc) {
+    let wi = 1;
+    for (const w of allWaves) {
+      scoreAcc = addWave(scoreAcc, {
+        pairs: w.eliminated.length, chainIndex: wi, comboCount: combo.count,
+      });
+      chainIndex = wi;
+      wi++;
+    }
+    maxChainThisGame = Math.max(maxChainThisGame, chainIndex);
+    if (chainIndex >= 5) {
+      _triggerAchievements({ event: 'chain', maxChain: chainIndex });
+    }
+  }
+
+  gameState = GAME_STATE.ANIMATING;
+  SoundController.playSlideSuccess();
+  try {
+    await runEliminationSequence(allWaves, (stateAfter) => {
+      if (gameGeneration === myGeneration) boardState = stateAfter;
+    }, combo);
+  } finally {
+    if (gameGeneration === myGeneration) {
+      gameState = GAME_STATE.IDLE;
+      updateUI();
+    }
+  }
+  if (gameGeneration !== myGeneration) return;
+
+  persistSave();
+  if (checkVictory(boardState)) {
+    showVictory();
+    return;
+  }
+  if (hasMoveBudget(currentMode) && moveCount >= currentMode.moveBudget) {
+    finishMoveLimit();
+    return;
+  }
+  if (isDeadlock(boardState)) {
+    showDeadlock();
+  }
 }
 
 // 关闭所有可能盖住棋盘的覆盖层。
@@ -756,6 +1092,7 @@ function closeAllOverlays() {
   hideTutorial();         // 内部会 resumeTimer
   hideVictoryScreen();
   hideResumeConfirm();
+  cancelHammer();
 }
 
 // 新游戏
@@ -778,18 +1115,27 @@ function exitTeachingLevel() {
 // 棋盘快照 + 步数 + 用时。刷新/关闭页面后可"继续上一局"。
 // 教学模式与胜利状态不存档。
 
-const SAVE_KEY = 'mahjong-save-v1';
+const SAVE_KEY = 'mahjong-save-v2';
 const BEST_KEY = 'mahjong-best-v1';
 
 function buildSnapshot() {
+  // 倒计时模式下 elapsed 用"已消耗秒"，正计时用 getElapsedSeconds
+  const elapsed = hasTimeBudget(currentMode)
+    ? Math.max(0, currentMode.timeBudget - getRemainingSeconds())
+    : getElapsedSeconds();
   return {
-    version: 1,
+    version: 2,
     width: boardState.width,
     height: boardState.height,
     grid: boardState.grid,
     moveCount,
     hintCount,
-    elapsed: getElapsedSeconds(),
+    elapsed,
+    modeId,
+    levelId: currentLevel ? currentLevel.id : null,
+    scoreAcc,
+    undoUsedThisGame,
+    maxChainThisGame,
     savedAt: Date.now(),
   };
 }
@@ -813,7 +1159,8 @@ function loadSaveSnapshot() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const snap = JSON.parse(raw);
-    if (!snap || snap.version !== 1) return null;
+    if (!snap) return null;
+    if (snap.version !== 2 && snap.version !== 1) return null;
     if (!Number.isInteger(snap.width) || !Number.isInteger(snap.height)) return null;
     if (!Array.isArray(snap.grid) || snap.grid.length !== snap.height) return null;
     return snap;
@@ -830,6 +1177,41 @@ function restoreFromSnapshot(snap) {
 
   setBoardLayout(snap.width, snap.height);
   recalcTileSizeOnly(snap.width, snap.height);
+
+  // 恢复模式与计分（v1 存档缺省 classic / 空计分）
+  const savedMode = getMode(snap.modeId);
+  modeId = savedMode.id;
+  currentMode = MODES[modeId];
+  // 关卡模式：恢复关卡并应用限额
+  currentLevel = snap.levelId ? getLevel(snap.levelId) : null;
+  if (currentLevel) {
+    currentMode = {
+      ...currentMode,
+      moveBudget: currentLevel.moveBudget,
+      hintLimit: currentLevel.hintLimit,
+      undoLimit: currentLevel.undoLimit,
+      scoring: true,
+      isLevel: true,
+    };
+    modeId = 'level';
+  }
+  scoreAcc = (snap.scoreAcc && typeof snap.scoreAcc === 'object')
+    ? {
+        total: snap.scoreAcc.total || 0,
+        pairs: snap.scoreAcc.pairs || 0,
+        maxChain: snap.scoreAcc.maxChain || 0,
+        maxCombo: snap.scoreAcc.maxCombo || 0,
+        waves: snap.scoreAcc.waves || 0,
+        comboBonus: snap.scoreAcc.comboBonus || 0,
+      }
+    : createScore();
+  chainIndex = 0;
+  maxChainThisGame = snap.maxChainThisGame || 0;
+  undoUsedThisGame = snap.undoUsedThisGame || 0;
+  pendingHammer = false;
+  hammerPairCache = null;
+  timedOut = false;
+  itemStock = loadItems();
 
   boardState = { grid: snap.grid, width: snap.width, height: snap.height };
   moveCount = snap.moveCount || 0;
@@ -881,8 +1263,34 @@ function updateUI() {
 
   const remaining = countRemainingTiles(boardState);
   setCounterText('tile-count', remaining);
-  setCounterText('move-count', moveCount);
+
+  // 步数：步数模式显示"剩余步数"，其余显示已用步数
+  const moveRemaining = getMoveRemaining();
+  const moveLabel = document.getElementById('move-count');
+  if (moveLabel) {
+    const text = moveRemaining != null ? `${moveRemaining}（剩）` : String(moveCount);
+    if (moveLabel.textContent !== text) {
+      moveLabel.textContent = text;
+      moveLabel.classList.remove('stat-pop');
+      void moveLabel.offsetWidth;
+      moveLabel.classList.add('stat-pop');
+    }
+  }
+
   setCounterText('hint-count', hintCount);
+
+  // 得分显示（计分模式）
+  const scoreEl = document.getElementById('score-count');
+  if (scoreEl) {
+    const total = scoreAcc ? scoreAcc.total : 0;
+    scoreEl.textContent = String(total);
+  }
+
+  // 模式按钮文案
+  const modeBtn = document.getElementById('btn-mode');
+  if (modeBtn && currentMode) {
+    modeBtn.textContent = currentMode.name;
+  }
 }
 
 function setCounterText(id, value) {
@@ -898,25 +1306,211 @@ function setCounterText(id, value) {
   el.classList.add('stat-pop');
 }
 
-// 胜利界面
-function showVictory() {
+// 统一停止本局计时：正计时返回已用秒，倒计时返回剩余秒（限时模式结算用）
+let _lastCountdownRemaining = 0; // 停止倒计时时缓存剩余秒（供结算读取）
+function stopGameTimer() {
+  if (hasTimeBudget(currentMode)) {
+    const remaining = stopCountdown();
+    _lastCountdownRemaining = remaining;
+    // 已用秒 = 总预算 - 剩余
+    return Math.max(0, currentMode.timeBudget - remaining);
+  }
+  return stopTimer();
+}
+
+// 计算本局计分结算（供胜利/超时/步数上限统一调用）
+function computeSettlement() {
+  if (!scoreAcc || !currentMode || !currentMode.scoring) {
+    return null;
+  }
+  // 关卡模式用关卡星级门槛；其余模式用默认比例门槛
+  const thresholds = currentLevel
+    ? levelStarThresholds(currentLevel, idealScoreForLevel())
+    : defaultStarThresholds();
+  const moveRemaining = hasMoveBudget(currentMode)
+    ? Math.max(0, currentMode.moveBudget - moveCount)
+    : null;
+  const secondRemaining = hasTimeBudget(currentMode)
+    ? Math.max(0, _lastCountdownRemaining)
+    : null;
+  return settleScore({
+    acc: scoreAcc,
+    moveRemaining,
+    secondRemaining,
+    starThresholds: thresholds,
+  });
+}
+
+// 关卡的"理想满分"估算：满盘每对 100 + 步数奖励近似
+function idealScoreForLevel() {
+  if (!currentLevel || !boardState) return 0;
+  const pairCount = (currentLevel.cols * currentLevel.rows) / 2;
+  return pairCount * 100 + (currentLevel.moveBudget != null ? currentLevel.moveBudget * 10 : 0);
+}
+
+// 结算展示辅助：填充胜利界面的分数与星级行
+function renderSettlementIntoVictory(settlement, mode) {
+  if (!settlement || !mode) return;
+  const scoreEl = document.getElementById('victory-score-display');
+  if (scoreEl) {
+    const bonus = settlement.breakdown.steps + settlement.breakdown.time;
+    const bonusText = bonus > 0 ? `（含奖励 +${bonus}）` : '';
+    scoreEl.textContent = `得分：${settlement.total}${bonusText}`;
+  }
+  const starsEl = document.getElementById('victory-stars-display');
+  if (starsEl) {
+    starsEl.textContent = '★'.repeat(settlement.stars) + '☆'.repeat(3 - settlement.stars);
+    starsEl.dataset.stars = String(settlement.stars);
+  }
+}
+
+// 限时模式超时结算（未通关，按当前得分结算并展示失败信息）
+function finishTimedOut() {
+  if (timedOut) return;
+  timedOut = true;
+  const elapsed = currentMode.timeBudget; // 已用完整个预算
+  const remaining = stopCountdown();
+  _lastCountdownRemaining = 0; // 超时剩余 0 秒（无时间奖励）
+  recordGameResult({
+    won: false, elapsed, moves: moveCount,
+    pairs: pairsThisGame, maxCombo: maxComboThisGame, hints: hintCount,
+  });
+  const settlement = computeSettlement();
+  if (settlement) {
+    recordScore({ mode: modeId, total: settlement.total, stars: settlement.stars, elapsed, moves: moveCount });
+  }
+  _triggerAchievements({ event: 'victory', won: false, mode: modeId, isLevel: !!currentLevel,
+    stars: 0, moves: moveCount, hints: hintCount, undoUsed: undoUsedThisGame,
+    isDaily: modeId === 'daily' });
   gameState = GAME_STATE.VICTORY;
   SoundController.playVictory();
-  const elapsed = stopTimer();
-  const best = recordBest(elapsed, moveCount);
-  clearSave(); // 通关即清档
+  clearSave();
+  showResultScreen({
+    title: '时间到',
+    subtitle: '未能在限时内清盘',
+    elapsed, remaining,
+    settlement, mode: currentMode,
+  });
+}
+
+// 步数模式达上限结算（未通关）
+function finishMoveLimit() {
+  const elapsed = stopGameTimer();
+  recordGameResult({
+    won: false, elapsed, moves: moveCount,
+    pairs: pairsThisGame, maxCombo: maxComboThisGame, hints: hintCount,
+  });
+  const settlement = computeSettlement();
+  if (settlement) {
+    recordScore({ mode: modeId, total: settlement.total, stars: settlement.stars, elapsed, moves: moveCount });
+  }
+  _triggerAchievements({ event: 'victory', won: false, mode: modeId, isLevel: !!currentLevel,
+    stars: 0, moves: moveCount, hints: hintCount, undoUsed: undoUsedThisGame,
+    isDaily: modeId === 'daily' });
+  gameState = GAME_STATE.VICTORY;
+  SoundController.playVictory();
+  clearSave();
+  showResultScreen({
+    title: '步数用尽',
+    subtitle: `已达 ${currentMode.moveBudget} 步上限`,
+    elapsed, remaining: null,
+    settlement, mode: currentMode,
+  });
+}
+
+// 通用结算界面（胜利/超时/步数上限共用）
+function showResultScreen({ title, subtitle, elapsed, remaining, settlement, mode }) {
+  const screen = document.getElementById('victory-screen');
+  if (!screen) return;
+  const titleEl = screen.querySelector('h2');
+  if (titleEl) titleEl.textContent = title;
+  const subEl = screen.querySelector('.victory-subtitle');
+  if (subEl) subEl.textContent = subtitle || '所有麻将已全部消除';
   const timeEl = document.getElementById('victory-time-display');
-  if (timeEl) timeEl.textContent = `用时：${formatTime(elapsed)}`;
+  if (timeEl) timeEl.textContent = remaining != null
+    ? `剩余：${formatTime(remaining)}`
+    : `用时：${formatTime(elapsed)}`;
   const moveEl = document.getElementById('victory-move-display');
   if (moveEl) moveEl.textContent = `有效操作：${moveCount} 步`;
   const hintEl = document.getElementById('victory-hint-display');
   if (hintEl) hintEl.textContent = `使用提示：${hintCount} 次`;
   const bestEl = document.getElementById('victory-best-display');
+  if (bestEl) bestEl.textContent = '';
+  renderSettlementIntoVictory(settlement, mode);
+  screen.classList.remove('hidden');
+}
+
+// 胜利界面
+function showVictory() {
+  gameState = GAME_STATE.VICTORY;
+  SoundController.playVictory();
+  const elapsed = stopGameTimer();
+  const best = recordBest(elapsed, moveCount);
+  clearSave(); // 通关即清档
+  // 跨局统计上报（胜利局，累计消除/连击/用时/步数）
+  recordGameResult({
+    won: true,
+    elapsed,
+    moves: moveCount,
+    pairs: pairsThisGame,
+    maxCombo: maxComboThisGame,
+    hints: hintCount,
+  });
+  // 计分结算（计分模式）
+  const settlement = computeSettlement();
+  if (settlement) {
+    recordScore({ mode: modeId, total: settlement.total, stars: settlement.stars, elapsed, moves: moveCount });
+  }
+  // 关卡：记录通关星级并解锁下一关
+  if (currentLevel && settlement) {
+    const prog = loadProgress();
+    saveProgress(recordLevelResult(prog, currentLevel.id, settlement.stars));
+  }
+  // 成就触发（胜利/连锁/累计消除）
+  _triggerAchievements({ event: 'victory', won: true, mode: modeId, isLevel: !!currentLevel,
+    stars: settlement ? settlement.stars : 0, moves: moveCount, hints: hintCount,
+    undoUsed: undoUsedThisGame, isDaily: modeId === 'daily' });
+  confetti(); // 通关彩带（Canvas 层，reduced-motion 自动禁用）
+  showResultScreen({
+    title: '恭喜通关！',
+    subtitle: '所有麻将已全部消除',
+    elapsed, remaining: null,
+    settlement, mode: currentMode,
+  });
+  const bestEl = document.getElementById('victory-best-display');
   if (bestEl && best) {
     bestEl.textContent = `最佳：${formatTime(best.bestTime)} · 最少 ${best.bestMoves} 步 · 第 ${best.games} 局`;
   }
-  const screen = document.getElementById('victory-screen');
-  if (screen) screen.classList.remove('hidden');
+}
+
+// 成就触发统一入口：合并跨局统计 + 本局快照，判定并 toast 通知
+function _triggerAchievements(ctx) {
+  const stats = { victories: 0, totalPairs: 0 };
+  try {
+    const raw = localStorage.getItem('mahjong-stats-v1');
+    if (raw) {
+      const p = JSON.parse(raw);
+      stats.victories = p.victories || 0;
+      stats.totalPairs = p.totalPairs || 0;
+    }
+  } catch (e) { /* ignore */ }
+  recordEvent(ctx, stats, (ach) => showToast(`🎉 成就达成：${ach.name}`));
+  // 关卡专属成就：任一 3 星 / 全部通关（需要 event:'level' 快照）
+  if (currentLevel && ctx.won) {
+    const prog = loadProgress();
+    const allDone = _allLevelsDone(prog);
+    recordEvent({ event: 'level', starsCount: ctx.stars || 0, levelId: currentLevel.id, allLevelsDone: allDone },
+      stats, (ach) => showToast(`🎉 成就达成：${ach.name}`));
+  }
+}
+
+// 是否已全部 12 关通关（每关都记录过星级）
+function _allLevelsDone(progress) {
+  if (!progress || !progress.stars) return false;
+  for (let i = 1; i <= 12; i++) {
+    if (!(progress.stars[i])) return false;
+  }
+  return true;
 }
 
 function hideVictoryScreen() {
@@ -1014,4 +1608,9 @@ export {
   getBoardEl,
   persistSave, clearSave, loadSaveSnapshot, restoreFromSnapshot,
   showResumeConfirm, hideResumeConfirm,
+  // P1 游戏性：模式/计分/道具
+  getModeInfo, getScoreInfo, getItems, isHammerPending, getMoveRemaining,
+  useItem, cancelHammer, finishTimedOut,
+  // P2 长线：关卡
+  getLevelInfo,
 };

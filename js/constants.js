@@ -153,6 +153,22 @@ const ANIM = {
   CHAIN_DELAY: 100,
 };
 
+// 动画速度档位（设置面板可选）
+const ANIM_SPEED_PRESETS = Object.freeze([0.5, 1, 2]);
+
+// 按倍率整体缩放动画时长（设置面板的"动画速度"）。
+// ANIM 的属性是可变的：animationController 每次动画都会实时读取，
+// 因此这里改完即刻生效，无需重建任何模块。
+function setAnimSpeed(multiplier) {
+  const m = ANIM_SPEED_PRESETS.includes(Number(multiplier)) ? Number(multiplier) : 1;
+  ANIM.SLIDE_DURATION = Math.round(180 / m);
+  ANIM.ELIMINATE_DURATION = Math.round(360 / m);
+  ANIM.REVERT_DURATION = Math.round(200 / m);
+  ANIM.HINT_PULSE_DURATION = Math.round(600 / m);
+  ANIM.CHAIN_DELAY = Math.round(100 / m);
+  return m;
+}
+
 // 拖拽阈值（像素）
 const DRAG_THRESHOLD = 10;
 
@@ -194,6 +210,8 @@ export {
   TILE_GAP,
   BOARD_PADDING,
   ANIM,
+  ANIM_SPEED_PRESETS,
+  setAnimSpeed,
   DRAG_THRESHOLD,
   DIR,
   GAME_STATE,

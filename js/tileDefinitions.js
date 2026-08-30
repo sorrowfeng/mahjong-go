@@ -49,12 +49,18 @@ const TILE_TYPES = [
 
 // 每种牌的副数：万/条/筒各4副，字牌各4副
 // 万子9×4=36, 条子9×4=36, 筒子9×4=36, 字牌7×4=28, 合计136
-function generateDeck() {
+// options: { tileTypeIds?: number[], copies?: number }
+//   tileTypeIds 缺省 = 全部 34 型；copies 缺省 = 4。
+//   关卡模式通过子集 + 自定义副数生成更小的棋盘。
+function generateDeck(options = {}) {
+  const { tileTypeIds = null, copies = 4 } = options;
+  const ids = tileTypeIds || TILE_TYPES.map(t => t.id);
   const deck = [];
   let instanceId = 0;
 
-  for (const tileDef of TILE_TYPES) {
-    const copies = 4;
+  for (const id of ids) {
+    const tileDef = TILE_TYPES.find(t => t.id === id);
+    if (!tileDef) continue;
     for (let c = 0; c < copies; c++) {
       deck.push({
         instanceId: instanceId++,
@@ -69,14 +75,15 @@ function generateDeck() {
     }
   }
 
-  return deck; // 136张
+  return deck;
 }
 
 // Fisher-Yates 洗牌
-function shuffleDeck(deck) {
+// rng 可选：函数返回 [0,1)，默认 Math.random。传入种子化 rng 时结果可复现。
+function shuffleDeck(deck, rng = Math.random) {
   const arr = deck.slice();
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;

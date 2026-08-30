@@ -14,6 +14,16 @@ module.exports = {
     'js/animationController.js',
     'js/timer.js',
     'js/dragController.js',
+    'js/settings.js',
+    'js/stats.js',
+    'js/themes.js',
+    'js/particles.js',
+    'js/modes.js',
+    'js/score.js',
+    'js/items.js',
+    'js/levels.js',
+    'js/achievements.js',
+    'js/share.js',
     // imagePreload 在 gameController 测试中被 mock（jsdom 不真正加载图片），
     // 仅 20 行且逻辑 trivial，不纳入覆盖率统计
   ],
@@ -23,11 +33,16 @@ module.exports = {
       lines: 50,
       statements: 50,
     },
-    // 5 个纯逻辑模块维持原有 80% 门槛（vm 注入 + ESM 双通道测试）
+    // 纯逻辑模块维持 80% 门槛（vm 注入 + ESM 双通道测试）
     '**/js/gameLogic.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/hintSystem.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/movementLogic.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/boardState.js': { functions: 80, lines: 80, statements: 80 },
     '**/js/tileDefinitions.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/modes.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/score.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/items.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/levels.js': { functions: 80, lines: 80, statements: 80 },
+    '**/js/achievements.js': { functions: 80, lines: 80, statements: 80 },
   },
 };

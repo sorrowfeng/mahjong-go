@@ -6,7 +6,7 @@
 > 保持冻结，所有升级叠加在表现层、规则层、元游戏层。
 >
 > **实施状态：** ✅ P0 快赢（统计/设置/动效/主题）已完成；✅ **P1 游戏性（计分/限时/步数/每日挑战/道具）已完成（2026-08-30）**；
-> ⏳ P2 长线（关卡/成就/PWA/分享）待实施。
+> ✅ **P2 长线（关卡/成就/PWA/分享）已完成（2026-08-30）**；⏳ P3 打磨待实施。
 
 ---
 
@@ -227,7 +227,22 @@ const MODES = {
 
 ---
 
-## P1 实施记录（2026-08-30）
+## P2 实施记录（2026-08-30）
+
+P2 长线阶段已全部落地，核心消除算子继续冻结：
+
+| 方案项 | 落地情况 |
+|--------|----------|
+| 1.2 关卡系统 | ✅ 新增 `js/levels.js`：`LEVELS` 数据表（12 关递进），`generateDeck` 支持 `{tileTypeIds,copies}` 子集、`createBoardFromDeck` 支持自定义宽高；`initNewGame({level})` 种子化发牌 + 关卡限额；进度/星级存档 `mahjong-progress-v1` |
+| 1.5 成就系统 | ✅ 新增 `js/achievements.js`：10 个成就定义数据化 + 纯逻辑判定 + toast 通知（`mahjong-achievements-v1`） |
+| 2.3 PWA | ✅ `manifest.webmanifest` + `sw.js` + `js/sw-register.js`；Pillow 生成 512/192/180 PNG 图标；预缓存应用外壳 + 牌图离线缓存 + 新版本提示 |
+| 2.4 分享 | ✅ 新增 `js/share.js`：成绩文本（Web Share 优先/剪贴板兜底）+ Canvas 成绩卡片 PNG |
+| UI | ✅ `index.html` 新增关卡面板/成就面板/分享按钮；`main.js` 渲染关卡网格（解锁态+星级）+成就网格+分享；`css/main.css` 追加 P2 样式 |
+| 测试 | ✅ 新增 levels/achievements/share 三套件 + tileDefinitions/boardState 子集参数测试 + gameController P2 关卡用例；**283/283 测试全绿（18 套件）**，全局覆盖率 78.19%，levels 100%、achievements 98% |
+
+**验证**：`npm test` 283 通过。建议浏览器实测：关卡选择与解锁、关卡种子化可复现、成就达成 toast、分享文本/卡片、PWA 安装与离线（需 HTTP 部署）。
+
+---
 
 P1 游戏性阶段已全部落地，核心消除算子保持冻结，仅扩展 `shuffleDeck` 增加可选 `rng` 参数（向后兼容）：
 

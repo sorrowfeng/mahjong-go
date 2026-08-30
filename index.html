@@ -8,6 +8,9 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
   <title>麻将消消乐</title>
   <link rel="icon" href="assets/icon.ico" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/board.css" />
@@ -25,14 +28,21 @@
     <button id="btn-hint" class="btn btn--secondary">提示</button>
     <button id="btn-undo" class="btn btn--secondary" disabled>撤销</button>
     <button id="btn-new" class="btn btn--danger">新游戏</button>
+    <button id="btn-mode" class="btn btn--secondary" title="选择模式">经典</button>
+    <button id="btn-level" class="btn btn--secondary" title="关卡挑战">关卡</button>
+    <button id="btn-achievement" class="btn btn--secondary" title="成就">成就</button>
     <button id="btn-rules" class="btn btn--secondary">规则</button>
+    <button id="btn-stats" class="btn btn--secondary" title="战绩统计">统计</button>
+    <button id="btn-settings" class="btn btn--secondary" title="设置">设置</button>
     <button id="btn-sound" class="btn btn--secondary btn--sound" title="音效开关">音效</button>
     <div class="toolbar-stats">
       <div class="tile-counter">剩余：<span id="tile-count">136</span> 张</div>
       <div class="timer-display">用时：<span id="game-timer">00:00:00</span></div>
       <div class="stat-display">步数：<span id="move-count">0</span></div>
       <div class="stat-display">提示：<span id="hint-count">0</span> 次</div>
+      <div class="stat-display stat-display--score">得分：<span id="score-count">0</span></div>
     </div>
+    <div id="item-bar" class="item-bar"></div>
   </div>
 
   <div class="game-area">
@@ -122,12 +132,106 @@
   <div id="victory-screen" class="hidden">
     <div class="victory-box">
       <h2>恭喜通关！</h2>
-      <p>所有麻将已全部消除</p>
+      <p id="victory-subtitle" class="victory-subtitle">所有麻将已全部消除</p>
       <p id="victory-time-display" class="victory-time"></p>
+      <p id="victory-score-display" class="victory-score"></p>
+      <p id="victory-stars-display" class="victory-stars"></p>
       <p id="victory-move-display" class="victory-stat"></p>
       <p id="victory-hint-display" class="victory-stat"></p>
       <p id="victory-best-display" class="victory-stat"></p>
-      <button id="btn-new-victory" class="btn btn--primary">再来一局</button>
+      <div class="victory-actions">
+        <button id="btn-new-victory" class="btn btn--primary">再来一局</button>
+        <button id="btn-share" class="btn btn--secondary" title="分享成绩">分享</button>
+        <button id="btn-share-img" class="btn btn--secondary" title="保存成绩卡片">存卡片</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡选择面板 -->
+  <div id="level-panel" class="hidden">
+    <div class="confirm-box level-box">
+      <p class="confirm-title">选择关卡</p>
+      <div id="level-list" class="level-list"></div>
+      <div class="confirm-actions">
+        <button id="btn-level-close" class="btn btn--secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成就面板 -->
+  <div id="achievement-panel" class="hidden">
+    <div class="stats-box achievement-box">
+      <h2 class="panel-title">成就</h2>
+      <div id="achievement-grid" class="achievement-grid"></div>
+      <div class="panel-actions">
+        <button id="btn-achievement-close" class="btn btn--primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模式选择面板 -->
+  <div id="mode-panel" class="hidden">
+    <div class="confirm-box mode-box">
+      <p class="confirm-title">选择游戏模式</p>
+      <div id="mode-list" class="mode-list"></div>
+      <div class="confirm-actions">
+        <button id="btn-mode-close" class="btn btn--secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用提示 -->
+  <div id="toast-msg" class="hidden"></div>
+
+  <!-- 统计面板 -->
+  <div id="stats-panel" class="hidden">
+    <div class="stats-box">
+      <h2 class="panel-title">战绩统计</h2>
+      <div id="stats-grid" class="stats-grid"></div>
+      <div class="panel-actions">
+        <button id="btn-stats-close" class="btn btn--primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div id="settings-panel" class="hidden">
+    <div class="settings-box">
+      <h2 class="panel-title">设置</h2>
+      <div class="settings-body">
+        <div class="setting-row">
+          <label for="set-theme">主题</label>
+          <select id="set-theme"></select>
+        </div>
+        <div class="setting-row">
+          <label for="set-sound-volume">音效音量</label>
+          <input id="set-sound-volume" type="range" min="0" max="100" step="1" />
+        </div>
+        <div class="setting-row">
+          <label for="set-bgm-volume">背景音乐</label>
+          <input id="set-bgm-volume" type="range" min="0" max="100" step="1" />
+        </div>
+        <div class="setting-row">
+          <label for="set-anim-speed">动画速度</label>
+          <select id="set-anim-speed">
+            <option value="0.5">慢</option>
+            <option value="1">正常</option>
+            <option value="2">快</option>
+          </select>
+        </div>
+        <div class="setting-row setting-row--toggle">
+          <label for="set-colorblind">色弱辅助</label>
+          <input id="set-colorblind" type="checkbox" />
+        </div>
+        <div class="setting-row setting-row--toggle">
+          <label for="set-left-handed">左手模式</label>
+          <input id="set-left-handed" type="checkbox" />
+        </div>
+      </div>
+      <div class="panel-actions">
+        <button id="btn-settings-reset" class="btn btn--secondary">恢复默认</button>
+        <button id="btn-settings-close" class="btn btn--primary">关闭</button>
+      </div>
     </div>
   </div>
 

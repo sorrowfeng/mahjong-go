@@ -1,0 +1,32 @@
+{
+  "name": "麻将消消乐",
+  "short_name": "麻将消消乐",
+  "description": "纯原生 JS 实现的网页麻将消消乐，支持点击消除、拖动消除、连锁消除与多种游戏模式。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#c8d8cf",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

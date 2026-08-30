@@ -97,6 +97,39 @@ describe('tileDefinitions', () => {
     });
   });
 
+  describe('generateDeck(options) 子集', () => {
+    test('tileTypeIds 子集生成对应牌数', () => {
+      const d = generateDeck({ tileTypeIds: [0, 1, 2] });
+      expect(d).toHaveLength(12); // 3 型 × 4 副
+      const types = new Set(d.map(t => t.tileTypeId));
+      expect(types).toEqual(new Set([0, 1, 2]));
+    });
+
+    test('自定义 copies', () => {
+      const d = generateDeck({ tileTypeIds: [0, 9], copies: 2 });
+      expect(d).toHaveLength(4);
+      const count = {};
+      for (const t of d) count[t.tileTypeId] = (count[t.tileTypeId] || 0) + 1;
+      expect(count[0]).toBe(2);
+      expect(count[9]).toBe(2);
+    });
+
+    test('instanceId 连续递增', () => {
+      const d = generateDeck({ tileTypeIds: [5, 6], copies: 3 });
+      expect(d.map(t => t.instanceId)).toEqual([0, 1, 2, 3, 4, 5]);
+    });
+
+    test('忽略非法 typeId', () => {
+      const d = generateDeck({ tileTypeIds: [0, 999, 1] });
+      expect(new Set(d.map(t => t.tileTypeId))).toEqual(new Set([0, 1]));
+    });
+
+    test('缺省参数保持 136 张行为', () => {
+      expect(generateDeck({})).toHaveLength(136);
+      expect(generateDeck()).toHaveLength(136);
+    });
+  });
+
   describe('shuffleDeck()', () => {
     let originalDeck;
 
@@ -152,6 +185,15 @@ describe('tileDefinitions', () => {
       for (const [, count] of Object.entries(countByTypeId)) {
         expect(count).toBe(4);
       }
+    });
+
+    test('accepts an injected rng (seedable for daily challenge)', () => {
+      // 固定序列 rng：返回 0.5 → j 恒为 floor(0.5*(i+1))，洗牌可复现
+      const fixedRng = () => 0.5;
+      const a = shuffleDeck(originalDeck, fixedRng);
+      const b = shuffleDeck(originalDeck, fixedRng);
+      expect(a.map(t => t.instanceId)).toEqual(b.map(t => t.instanceId));
+      expect(a).toHaveLength(originalDeck.length);
     });
   });
 });

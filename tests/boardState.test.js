@@ -56,6 +56,30 @@ describe('boardState', () => {
     });
   });
 
+  describe('createBoardFromDeck(deck, options) 自定义尺寸', () => {
+    test('关卡棋盘：自定义宽高 + 子集牌', () => {
+      const deck = generateDeck({ tileTypeIds: [0,1,2,3], copies: 2 }); // 8 张
+      const board = createBoardFromDeck(deck, { width: 4, height: 2 });
+      expect(board.width).toBe(4);
+      expect(board.height).toBe(2);
+      expect(countRemainingTiles(board)).toBe(8);
+    });
+
+    test('牌不足时格子为 null', () => {
+      const deck = generateDeck({ tileTypeIds: [0,1], copies: 2 }); // 4 张
+      const board = createBoardFromDeck(deck, { width: 5, height: 2 }); // 10 格
+      expect(countRemainingTiles(board)).toBe(4);
+      expect(board.grid[0][4]).toBeNull();
+      expect(board.grid[1][4]).toBeNull();
+    });
+
+    test('缺省 options 用全局尺寸', () => {
+      const board = createBoardFromDeck(generateDeck(), {});
+      expect(board.width).toBe(BOARD_COLS);
+      expect(board.height).toBe(BOARD_ROWS);
+    });
+  });
+
   // ─── getTile ─────────────────────────────────────────────────────────────────
   describe('getTile()', () => {
     let board;

@@ -20,15 +20,19 @@ function createEmptyBoard() {
   };
 }
 
-// 从136张牌数组创建已填满的棋盘（按行填入）
-function createBoardFromDeck(shuffledDeck) {
-  const grid = Array.from({ length: BOARD_ROWS }, (_, row) => {
-    return Array.from({ length: BOARD_COLS }, (_, col) => {
-      const idx = row * BOARD_COLS + col;
+// 从牌数组创建已填满的棋盘（按行填入）
+// options: { width?, height? } 缺省用全局 BOARD_COLS/BOARD_ROWS。
+// 关卡棋盘可用更小/非满的尺寸；牌不足时格子为 null。
+function createBoardFromDeck(shuffledDeck, options = {}) {
+  const width = options.width || BOARD_COLS;
+  const height = options.height || BOARD_ROWS;
+  const grid = Array.from({ length: height }, (_, row) => {
+    return Array.from({ length: width }, (_, col) => {
+      const idx = row * width + col;
       return shuffledDeck[idx] || null;
     });
   });
-  return { grid, width: BOARD_COLS, height: BOARD_ROWS };
+  return { grid, width, height };
 }
 
 // 获取指定位置的牌（越界返回 null）
