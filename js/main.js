@@ -2,7 +2,7 @@ import { SoundController } from './soundController.js';
 import { BgmController } from './bgmController.js';
 import { showTutorial, hideTutorial } from './tutorial.js';
 import { initDragController } from './dragController.js';
-import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights, getState, getPhase, isTeachingModeActive, loadSaveSnapshot, restoreFromSnapshot, showResumeConfirm, hideResumeConfirm, persistSave, useItem, getItems, getModeInfo, getScoreInfo, getMoveRemaining, cancelHammer, finishTimedOut, getLevelInfo } from './gameController.js';
+import { handleDragEnd, handleTileClick, handleHint, handleUndo, handleNewGame, doReshuffle, hideReshuffleConfirm, initNewGame, startTeachingLevel, exitTeachingLevel, showRotateHint, refreshTeachingHighlights, getState, getPhase, isTeachingModeActive, loadSaveSnapshot, restoreFromSnapshot, showResumeConfirm, hideResumeConfirm, persistSave, useItem, getItems, getModeInfo, getScoreInfo, getMoveRemaining, cancelHammer, finishTimedOut, getLevelInfo, getResultInfo } from './gameController.js';
 import { findHint } from './hintSystem.js';
 import { collectDragGroup } from './movementLogic.js';
 import { findAllPairs, hasAnyPair } from './pairDetection.js';
@@ -185,9 +185,24 @@ document.addEventListener('DOMContentLoaded', () => {
     el._toastTimer = setTimeout(() => el.classList.add('hidden'), 2200);
   }
   function buildShareInfo() {
+    const result = getResultInfo();
     const modeInfo = getModeInfo();
-    const scoreInfo = getScoreInfo();
     const levelInfo = getLevelInfo();
+    // 优先使用结算缓存（秒数、真实分数、星级、步数、提示数都可靠），
+    // 避免从 DOM 文本反解（顶栏计时器可能是剩余时间/文本格式，分数可能带"（含奖励）"后缀）。
+    if (result) {
+      return {
+        modeName: result.modeName || (modeInfo.mode ? modeInfo.mode.name : '经典模式'),
+        levelId: result.levelId != null ? result.levelId : (levelInfo.level ? levelInfo.level.id : null),
+        elapsed: result.elapsed,        // 秒数
+        moves: result.moves,
+        hints: result.hints,
+        score: result.score,
+        stars: result.stars,
+      };
+    }
+    // 兜底（尚未结算，理论上不会发生）：退回旧逻辑
+    const scoreInfo = getScoreInfo();
     return {
       modeName: modeInfo.mode ? modeInfo.mode.name : '经典模式',
       levelId: levelInfo.level ? levelInfo.level.id : null,
@@ -199,10 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
       score: scoreInfo.total > 0 ? scoreInfo.total : null,
       stars: 0,
     };
-  }
-  function formatElapsed() {
-    const t = document.getElementById('game-timer');
-    return t ? t.textContent : '00:00';
   }
 
   const shareBtn = document.getElementById('btn-share');
@@ -234,13 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shareImgBtn) {
     shareImgBtn.addEventListener('click', () => {
       const info = buildShareInfo();
-      const scoreEl = document.getElementById('victory-score-display');
-      // 从结算界面读取得分与星级
-      const match = scoreEl ? (scoreEl.textContent.match(/(\d+)/) || []) : [];
-      const starsEl = document.getElementById('victory-stars-display');
-      const starText = starsEl ? starsEl.textContent : '';
-      info.score = match.length ? Number(match[0]) : (info.score || 0);
-      info.stars = (starText.match(/★/g) || []).length;
+      // 直接使用结算缓存的秒数/分数/星级，不再解析 DOM 文本。
+      // drawScoreCard 内部用 _fmtClock(秒数) 渲染用时，正确显示。
       const canvas = drawScoreCard(info);
       if (downloadCard(canvas)) showToast('成绩卡片已保存为 PNG');
       else showToast('保存失败，请长按成绩区域截图');

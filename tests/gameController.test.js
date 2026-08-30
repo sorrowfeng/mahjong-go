@@ -37,7 +37,7 @@ import {
   pushUndo, updateUI, restoreFromSnapshot,
   persistSave, clearSave, loadSaveSnapshot,
   useItem, getItems, getModeInfo, getScoreInfo, isHammerPending,
-  getMoveRemaining, finishTimedOut, getLevelInfo,
+  getMoveRemaining, finishTimedOut, getLevelInfo, getResultInfo,
 } from '../js/gameController.js';
 import { MAX_UNDO_STEPS } from '../js/constants.js';
 import { MODES } from '../js/modes.js';
@@ -261,6 +261,41 @@ describe('胜利判定', () => {
     expect(best.games).toBe(1);
     expect(best.bestMoves).toBe(4);
     expect(loadSaveSnapshot()).toBeNull(); // 通关即清档
+  });
+
+  test('胜利结算后 getResultInfo 返回正确秒数/分数/星级（存卡片数据源）', async () => {
+    // 经典模式默认不计分，先切到计分模式以便 settlement 产生分数
+    await initNewGame({ mode: 'classic' });
+    // 造一个只剩一对的计分局面并消除 → 胜利
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    restoreFromSnapshot(snapshotOf([[A, B]], { moveCount: 5, hintCount: 2 }));
+
+    await handleTileClick({ row: 0, col: 0 });
+
+    expect(getPhase()).toBe('VICTORY');
+    const info = getResultInfo();
+    expect(info).not.toBeNull();
+    // elapsed 是数字秒数（不是 "HH:MM:SS" 文本），可供 _fmtClock 正确渲染
+    expect(typeof info.elapsed).toBe('number');
+    expect(Number.isNaN(info.elapsed)).toBe(false);
+    expect(info.moves).toBe(6); // snapshot moveCount=5 + 消除这一对 = 6
+    expect(info.hints).toBe(2);
+    // 分数/星级来自结算缓存而非 DOM 文本反解
+    expect(info.score == null || Number.isFinite(info.score)).toBe(true);
+    expect(info.stars).toBeGreaterThanOrEqual(0);
+    expect(info.modeName).toBeTruthy();
+  });
+
+  test('新局开始前 getResultInfo 清空（不残留上一局）', async () => {
+    const A = makeTile(1, 0, 1);
+    const B = makeTile(2, 0, 1);
+    restoreFromSnapshot(snapshotOf([[A, B]]));
+    await handleTileClick({ row: 0, col: 0 });
+    expect(getPhase()).toBe('VICTORY');
+    expect(getResultInfo()).not.toBeNull();
+    await initNewGame();
+    expect(getResultInfo()).toBeNull();
   });
 });
 

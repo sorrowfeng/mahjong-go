@@ -48,6 +48,28 @@ let maxChainThisGame = 0;      // 本局最长连锁波数
 let undoUsedThisGame = 0;      // 本局已用撤销次数（模式 undoLimit 限制）
 let currentLevel = null;       // 当前关卡（关卡模式时非 null，levels.js 定义）
 
+// 最近一次结算的结果缓存：供存卡片/分享读取，避免从 DOM 文本反解
+// （DOM 文本可能是剩余时间、含"（含奖励）"后缀等，解析不可靠）。
+// 结构：{ elapsed(秒), moves, hints, score, stars, modeName, levelId, won }
+let _lastResultInfo = null;
+// 记录一次结算结果（胜利/超时/步数上限统一入口）
+function _recordResultInfo({ elapsed, moves, hints, score, stars, won }) {
+  _lastResultInfo = {
+    elapsed: Math.max(0, Math.floor(elapsed || 0)),
+    moves: moves || 0,
+    hints: hints || 0,
+    score: Number.isFinite(score) && score > 0 ? score : null,
+    stars: stars || 0,
+    modeName: (currentMode && currentMode.name) || (modeId === 'classic' ? '经典模式' : modeId),
+    levelId: currentLevel ? currentLevel.id : null,
+    won: !!won,
+  };
+}
+// 供存卡片/分享读取本局结算结果（未结算或新局未结算返回 null）
+function getResultInfo() {
+  return _lastResultInfo;
+}
+
 const COMBO_WINDOW_MS = 10000;
 const TEACHING_LAYOUT = { width: 9, height: 5 };
 const TEACHING_STEPS = [
@@ -549,6 +571,7 @@ async function initNewGame(options = {}) {
   timedOut = false;
   undoUsedThisGame = 0;
   itemStock = loadItems();
+  _lastResultInfo = null; // 新局清空上一局结算结果（存卡片数据源）
 
   resetTimer();
   recordGameStart(); // 跨局统计：正式局开局 +1（教学模式不走这里）
@@ -1236,6 +1259,7 @@ function restoreFromSnapshot(snap) {
   pendingHammer = false;
   hammerPairCache = null;
   timedOut = false;
+  _lastResultInfo = null; // 恢复存档进入对局中，清空可能的结算残留
   itemStock = loadItems();
 
   boardState = { grid: snap.grid, width: snap.width, height: snap.height };
@@ -1417,6 +1441,12 @@ function finishTimedOut() {
     elapsed, remaining,
     settlement, mode: currentMode,
   });
+  _recordResultInfo({
+    elapsed, moves: moveCount, hints: hintCount,
+    score: settlement ? settlement.total : null,
+    stars: settlement ? settlement.stars : 0,
+    won: false,
+  });
   announce('时间到，未能在限时内清盘');
 }
 
@@ -1442,6 +1472,12 @@ function finishMoveLimit() {
     subtitle: `已达 ${currentMode.moveBudget} 步上限`,
     elapsed, remaining: null,
     settlement, mode: currentMode,
+  });
+  _recordResultInfo({
+    elapsed, moves: moveCount, hints: hintCount,
+    score: settlement ? settlement.total : null,
+    stars: settlement ? settlement.stars : 0,
+    won: false,
   });
   announce(`步数用尽，已达 ${currentMode.moveBudget} 步上限`);
 }
@@ -1505,6 +1541,12 @@ function showVictory() {
     subtitle: '所有麻将已全部消除',
     elapsed, remaining: null,
     settlement, mode: currentMode,
+  });
+  _recordResultInfo({
+    elapsed, moves: moveCount, hints: hintCount,
+    score: settlement ? settlement.total : null,
+    stars: settlement ? settlement.stars : 0,
+    won: true,
   });
   const bestEl = document.getElementById('victory-best-display');
   if (bestEl && best) {
@@ -1642,6 +1684,8 @@ export {
   // P1 游戏性：模式/计分/道具
   getModeInfo, getScoreInfo, getItems, isHammerPending, getMoveRemaining,
   useItem, cancelHammer, finishTimedOut,
+  // 结算结果（存卡片/分享用）
+  getResultInfo,
   // P2 长线：关卡
   getLevelInfo,
 };
