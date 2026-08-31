@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="纯 HTML/CSS/JavaScript 开发的网页麻将消消乐游戏，支持点击消除、拖动消除和连锁消除" />
+  <meta name="theme-color" content="#c8d8cf" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <title>麻将消消乐</title>
+  <link rel="icon" href="assets/icon.ico" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/board.css" />
+  <link rel="stylesheet" href="css/tile.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/tutorial.css" />
+</head>
+<body>
+
+  <header>
+    <h1>麻将消消乐</h1>
+    <a class="github-link" href="https://github.com/sorrowfeng/mahjong-go"
+       target="_blank" rel="noopener noreferrer"
+       aria-label="在 GitHub 上查看源码" title="查看源码">
+      <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true">
+        <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+    </a>
+  </header>
+
+  <div class="toolbar">
+    <button id="btn-hint" class="btn btn--secondary">提示</button>
+    <button id="btn-undo" class="btn btn--secondary" disabled>撤销</button>
+    <button id="btn-new" class="btn btn--danger">新游戏</button>
+    <button id="btn-mode" class="btn btn--secondary" title="选择模式">经典</button>
+    <button id="btn-level" class="btn btn--secondary" title="关卡挑战">关卡</button>
+    <button id="btn-achievement" class="btn btn--secondary" title="成就">成就</button>
+    <button id="btn-rules" class="btn btn--secondary">规则</button>
+    <button id="btn-stats" class="btn btn--secondary" title="战绩统计">统计</button>
+    <button id="btn-settings" class="btn btn--secondary" title="设置">设置</button>
+    <button id="btn-sound" class="btn btn--secondary btn--sound" title="音效开关">音效</button>
+    <div class="toolbar-stats">
+      <div class="tile-counter">剩余：<span id="tile-count">136</span> 张</div>
+      <div class="timer-display">用时：<span id="game-timer">00:00:00</span></div>
+      <div class="stat-display">步数：<span id="move-count">0</span></div>
+      <div class="stat-display">提示：<span id="hint-count">0</span> 次</div>
+      <div class="stat-display stat-display--score">得分：<span id="score-count">0</span></div>
+    </div>
+    <div id="item-bar" class="item-bar"></div>
+  </div>
+
+  <div class="game-area">
+    <div id="teaching-panel" class="teaching-panel hidden" aria-live="polite">
+      <div class="teaching-panel__copy">
+        <div id="teaching-step-label" class="teaching-panel__label">教学 1/5</div>
+        <div id="teaching-step-text" class="teaching-panel__text"></div>
+      </div>
+      <button id="btn-teaching-exit" class="teaching-panel__exit" type="button">退出</button>
+    </div>
+    <div id="board"></div>
+  </div>
+
+  <!-- 规则教学动画 -->
+  <div id="tutorial-overlay">
+    <div class="tutorial-box">
+      <h2 class="tutorial-title">游戏规则</h2>
+
+      <div class="tutorial-rules">
+
+        <!-- 规则1：直接消除 -->
+        <div class="tutorial-rule">
+          <div class="tutorial-rule__label">① 直接消除</div>
+          <div id="tutorial-stage-1" class="tutorial-rule__stage"></div>
+          <p class="tutorial-rule__desc">同行或同列中，两张<strong>相同的牌</strong>之间没有其他牌时，点击即可消除</p>
+        </div>
+
+        <hr class="tutorial-divider" />
+
+        <!-- 规则2：拖动消除 -->
+        <div class="tutorial-rule">
+          <div class="tutorial-rule__label">② 拖动消除</div>
+          <div id="tutorial-stage-2" class="tutorial-rule__stage"></div>
+          <p class="tutorial-rule__desc">拖动一张牌时，<strong>同方向相邻的牌会一起移动</strong>；移动后若与另一行/列的相同牌形成可消除关系，则触发消除，否则复原</p>
+        </div>
+
+        <hr class="tutorial-divider" />
+
+        <!-- 规则3：连锁文字说明 -->
+        <div class="tutorial-rule tutorial-rule--text">
+          <p class="tutorial-rule__desc">③ 拖动消除后若出现新的可消除对，会自动<strong>连锁消除</strong>；当无任何步骤可用时，点击<strong>提示</strong>按钮，确认后即可重新随机排列剩余牌</p>
+        </div>
+
+      </div>
+
+      <div class="tutorial-actions">
+        <button id="btn-tutorial-teaching" class="btn btn--secondary" type="button">教学关卡</button>
+        <button id="btn-tutorial-start" class="btn btn--primary" type="button">开始新游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 继续上局弹窗 -->
+  <div id="resume-confirm" class="hidden">
+    <div class="confirm-box">
+      <p class="confirm-title">发现上局进度</p>
+      <p id="resume-desc" class="confirm-desc"></p>
+      <div class="confirm-actions">
+        <button id="btn-resume-continue" class="btn btn--primary">继续上局</button>
+        <button id="btn-resume-new" class="btn btn--secondary">开新局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重排确认弹窗 -->
+  <div id="reshuffle-confirm" class="hidden">
+    <div class="confirm-box">
+      <p class="confirm-title">当前无可用步骤</p>
+      <p class="confirm-desc">是否重新随机排列剩余牌？</p>
+      <div class="confirm-actions">
+        <button id="btn-reshuffle-ok" class="btn btn--primary">确认重排</button>
+        <button id="btn-reshuffle-cancel" class="btn btn--secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 旋转屏幕提示 -->
+  <div id="rotate-hint" class="hidden">屏幕方向已改变，点击「新游戏」以最佳布局重新开局</div>
+
+  <!-- 死局提示 -->
+  <div id="deadlock-msg" class="hidden">无可消除步骤，请使用提示或撤销！</div>
+
+  <!-- 重排提示 -->
+  <div id="reshuffle-msg" class="hidden">无可用步骤，已重新随机排列剩余牌！</div>
+
+  <!-- 胜利界面 -->
+  <div id="victory-screen" class="hidden">
+    <div class="victory-box">
+      <h2>恭喜通关！</h2>
+      <p id="victory-subtitle" class="victory-subtitle">所有麻将已全部消除</p>
+      <p id="victory-time-display" class="victory-time"></p>
+      <p id="victory-score-display" class="victory-score"></p>
+      <p id="victory-stars-display" class="victory-stars"></p>
+      <p id="victory-move-display" class="victory-stat"></p>
+      <p id="victory-hint-display" class="victory-stat"></p>
+      <p id="victory-best-display" class="victory-stat"></p>
+      <div class="victory-actions">
+        <button id="btn-new-victory" class="btn btn--primary">再来一局</button>
+        <button id="btn-share" class="btn btn--secondary" title="分享成绩">分享</button>
+        <button id="btn-share-img" class="btn btn--secondary" title="保存成绩卡片">存卡片</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡选择面板 -->
+  <div id="level-panel" class="hidden">
+    <div class="confirm-box level-box">
+      <p class="confirm-title">选择关卡</p>
+      <div id="level-list" class="level-list"></div>
+      <div class="confirm-actions">
+        <button id="btn-level-close" class="btn btn--secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成就面板 -->
+  <div id="achievement-panel" class="hidden">
+    <div class="stats-box achievement-box">
+      <h2 class="panel-title">成就</h2>
+      <div id="achievement-grid" class="achievement-grid"></div>
+      <div class="panel-actions">
+        <button id="btn-achievement-close" class="btn btn--primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模式选择面板 -->
+  <div id="mode-panel" class="hidden">
+    <div class="confirm-box mode-box">
+      <p class="confirm-title">选择游戏模式</p>
+      <div id="mode-list" class="mode-list"></div>
+      <div class="confirm-actions">
+        <button id="btn-mode-close" class="btn btn--secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用提示 -->
+  <div id="toast-msg" class="hidden"></div>
+
+  <!-- 无障碍：读屏播报区（对可视用户不可见） -->
+  <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- 键盘操作帮助提示 -->
+  <div id="kb-help" class="kb-help hidden" aria-hidden="true">
+    <span class="kb-help__key">方向键</span> 移动
+    <span class="kb-help__key">回车</span> 选中/消除/拖拽
+    <span class="kb-help__key">Esc</span> 取消
+  </div>
+
+  <!-- 统计面板 -->
+  <div id="stats-panel" class="hidden">
+    <div class="stats-box">
+      <h2 class="panel-title">战绩统计</h2>
+      <div id="stats-grid" class="stats-grid"></div>
+      <div class="panel-actions">
+        <button id="btn-stats-close" class="btn btn--primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div id="settings-panel" class="hidden">
+    <div class="settings-box">
+      <h2 class="panel-title">设置</h2>
+      <div class="settings-body">
+        <div class="setting-row">
+          <label for="set-theme">主题</label>
+          <select id="set-theme"></select>
+        </div>
+        <div class="setting-row">
+          <label for="set-sound-volume">音效音量</label>
+          <input id="set-sound-volume" type="range" min="0" max="100" step="1" />
+        </div>
+        <div class="setting-row">
+          <label for="set-bgm-volume">背景音乐</label>
+          <input id="set-bgm-volume" type="range" min="0" max="100" step="1" />
+        </div>
+        <div class="setting-row">
+          <label for="set-anim-speed">动画速度</label>
+          <select id="set-anim-speed">
+            <option value="0.5">慢</option>
+            <option value="1">正常</option>
+            <option value="2">快</option>
+          </select>
+        </div>
+        <div class="setting-row setting-row--toggle">
+          <label for="set-colorblind">色弱辅助</label>
+          <input id="set-colorblind" type="checkbox" />
+        </div>
+        <div class="setting-row setting-row--toggle">
+          <label for="set-left-handed">左手模式</label>
+          <input id="set-left-handed" type="checkbox" />
+        </div>
+      </div>
+      <div class="panel-actions">
+        <button id="btn-settings-reset" class="btn btn--secondary">恢复默认</button>
+        <button id="btn-settings-close" class="btn btn--primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

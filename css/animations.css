@@ -1,0 +1,343 @@
+/* animations.css — 关键帧 */
+
+/* 性能说明：消除动画只使用可 GPU 合成的 transform/opacity。
+ * 原版包含 filter:brightness/saturate —— filter 无法合成，
+ * 每帧强制软件光栅化整张牌（含大图），是低端机卡顿的主因。
+ * 亮度增强感由 transform:scale 的"放大逼近"近似，肉眼几乎无差。
+ * --eliminate-lift 由 JS 按 combo 注入：牌消除时轻微上抛再缩小淡出，
+ * 比纯原地缩放更有"被移除"的质感。默认为 0，避免无动画时的位移。
+ */
+@keyframes tile-eliminate {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 0px))) scale(1.1);
+    opacity: 0.96;
+  }
+  100% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 0px) * 0.6)) scale(0.22) rotate(7deg);
+    opacity: 0;
+  }
+}
+
+@keyframes tile-eliminate-combo {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  28% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 6px))) scale(1.14);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(calc(-1 * var(--eliminate-lift, 6px) * 0.4)) scale(0.92) rotate(-4deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0) scale(0.12) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes tile-hint-pulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.035);
+  }
+}
+
+@keyframes tile-hint-arrow {
+  0%, 100% {
+    opacity: 0.55;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: var(--hint-arrow-nudge, translate(2px, 0));
+  }
+}
+
+@keyframes tile-teaching-target-pulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.04);
+  }
+}
+
+@keyframes tile-teaching-anchor-pulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.04);
+  }
+}
+
+@keyframes tile-invalid {
+  0%, 100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+    box-shadow:
+      0 1px 0 #b99d73,
+      0 0 0 3px rgba(255, 120, 110, 0.92),
+      0 0 22px rgba(255, 120, 110, 0.62),
+      0 8px 18px rgba(85, 42, 42, 0.22);
+  }
+}
+
+@keyframes match-line-flash {
+  0% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes match-badge-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.84);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 20px)) scale(0.98);
+  }
+}
+
+@keyframes match-badge-combo-pop {
+  0% {
+    opacity: 0;
+    filter: brightness(1.08) saturate(1.08);
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.62) rotate(-1deg);
+  }
+  16% {
+    opacity: 1;
+    filter: brightness(1.18) saturate(1.18);
+    transform: translate(-50%, -50%) scale(1.22) rotate(0deg);
+  }
+  34% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(1.06) saturate(1.08);
+    transform: translate(-50%, calc(-50% - 26px)) scale(1.04);
+  }
+}
+
+@keyframes match-badge-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+  24% {
+    opacity: 0.86;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(var(--badge-halo-scale, 1.22));
+  }
+}
+
+@keyframes match-badge-shine {
+  0%, 18% {
+    opacity: 0;
+    transform: translateX(-52%);
+  }
+  34% {
+    opacity: 0.7;
+  }
+  58% {
+    opacity: 0;
+    transform: translateX(56%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(56%);
+  }
+}
+
+@keyframes tile-spark-pop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.36);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(calc(var(--spark-x, 0px) * 0.18), calc(var(--spark-y, -18px) * 0.18)) scale(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--spark-x, 0px), var(--spark-y, -18px)) scale(0.18);
+  }
+}
+
+@keyframes combo-ripple-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  28% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--combo-scale, 1.8));
+  }
+}
+
+/* 棋盘脉冲：只使用可合成的 transform + opacity。
+ * 原版包含 filter:brightness/saturate + 大半径 box-shadow 逐帧动画，
+ * 作用在含 136 张牌的整个 #board 上，每帧强制整盘软件光栅化 —— 卡顿主因。
+ * 改为轻微缩放脉冲，视觉反馈保留，代价从"整盘重绘"降到"合成层变换"。
+ */
+@keyframes board-match-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.992);
+  }
+}
+
+@keyframes board-chain-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.99);
+  }
+}
+
+@keyframes board-combo-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(0.992);
+  }
+}
+
+@keyframes board-combo-high-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.99);
+  }
+  68% {
+    transform: scale(0.996);
+  }
+}
+
+@keyframes board-slide-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.994);
+  }
+}
+
+@keyframes board-invalid-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-1px);
+  }
+}
+
+/* 连锁/连击消除时的棋盘震动：只使用可合成的 translate，0 软件光栅化。
+ * 震幅由 JS 通过 --shake-amp 按连击等级注入（combo 越高震感越强），
+ * 用 var() 默认 0 保证无 animation 时不产生任何位移。 */
+@keyframes board-shake {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(calc(-1 * var(--shake-amp, 1px)), calc(var(--shake-amp, 1px) * 0.4));
+  }
+  40% {
+    transform: translate(calc(var(--shake-amp, 1px) * 0.8), calc(-1 * var(--shake-amp, 1px) * 0.6));
+  }
+  60% {
+    transform: translate(calc(-1 * var(--shake-amp, 1px) * 0.6), calc(var(--shake-amp, 1px) * 0.3));
+  }
+  80% {
+    transform: translate(calc(var(--shake-amp, 1px) * 0.5), calc(-1 * var(--shake-amp, 1px) * 0.25));
+  }
+}
+
+@keyframes stat-pop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-1px) scale(1.16);
+    text-shadow: 0 0 12px rgba(126,225,179,0.72);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes victory-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#victory-screen:not(.hidden) .victory-box,
+#reshuffle-confirm:not(.hidden) .confirm-box {
+  animation: victory-in 260ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

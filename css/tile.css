@@ -1,0 +1,427 @@
+/* tile.css — 牌的外观与状态
+ *
+ * 视觉原则：现代卡牌质感——大圆角 + 多层柔和阴影 + 顶部高光。
+ * 性能原则：动画只用 transform/opacity；filter 切换仅在静态状态间。
+ * 边框色系：象牙白底 + 暖灰描边 + 翡翠高光，凸显牌面内容。
+ */
+
+:root {
+  --tile-w: 60px;
+  --tile-h: 80px;
+  /* 牌面视觉令牌（被覆盖：暗夜主题在下方重写） */
+  --tile-radius: 10px;
+  --tile-border: 1px solid rgba(140, 116, 82, 0.42);
+  --tile-bg:
+    linear-gradient(168deg, rgba(255, 255, 252, 0.98) 0%, rgba(252, 248, 235, 0.96) 50%, rgba(238, 226, 198, 0.94) 100%),
+    repeating-linear-gradient(180deg, rgba(142, 112, 74, 0.018) 0 1px, transparent 1px 9px);
+  --tile-shadow:
+    /* 顶高光 */
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    /* 底内阴影（增强立体感） */
+    inset 0 -2px 0 rgba(110, 86, 50, 0.08),
+    inset 0 -8px 14px rgba(122, 92, 52, 0.06),
+    /* 外阴影：近 */
+    0 1px 0 rgba(160, 130, 90, 0.32),
+    0 2px 4px rgba(42, 88, 67, 0.12),
+    /* 外阴影：远（漂浮） */
+    0 8px 18px rgba(31, 64, 49, 0.18);
+  /* 选中状态叠加的金色高光 */
+  --tile-glow: 0 0 0 0 transparent;
+}
+
+.tile {
+  position: absolute;
+  z-index: 10;
+  width: var(--tile-w);
+  height: var(--tile-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  border: var(--tile-border);
+  border-radius: var(--tile-radius);
+  cursor: grab;
+  touch-action: none;
+  /* 常驻 will-change 会让 136 张牌全部提前提升为独立合成层，
+     低端设备上大量常驻层反而拖慢合成器 —— 改为拖拽/动画时动态添加。
+     静态牌的 transform/opacity 动画仍会被合成器按需提升。 */
+  backface-visibility: hidden;
+  transform-origin: center;
+  background: var(--tile-bg);
+  box-shadow: var(--tile-shadow), var(--tile-glow);
+  /* 移除 transition 中的 filter：filter 过渡每帧强制软件重绘整张牌（含大图），
+     不可合成。牌的状态切换（hover/selected）使用纯 opacity / transform / box-shadow
+     表达，已能覆盖视觉反馈。 */
+  transition: box-shadow 180ms cubic-bezier(0.22, 0.7, 0.2, 1),
+              border-color 180ms ease,
+              background-color 180ms ease;
+}
+
+/* 内层"象牙光晕"：增强卡牌感（叠加在背景之上）。
+ * 用径向高光模拟顶部光打在牌面上的反射，
+ * 比单层线性渐变更具立体感。
+ *
+ * 注意：::before 的 z-index 必须 < .tile__img（z-index:1），
+ * 否则图片牌的高光会覆盖图片内容。
+ * 但 .tile__top/.tile__bottom 是普通块元素无 z-index，
+ * 它们会被 ::before 覆盖 —— 文字牌需要更高的优先级。
+ * 解决：::before z-index 设为 0（仅在背景之上），
+ * 但 ::after（背面）用 z-index 3（在图片之后也可以接受，因为仅背面可见）。
+ *
+ * 注：翻牌前（rotateX -180）显示的是 ::after 翡翠背面，
+ * ::before 高光被背面挡住不可见 → 视觉一致。
+ * 翻牌后 ::after 转到背后，::before 顶高光显示 → 牌面更精致。 */
+.tile::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: 1;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 36%);
+  pointer-events: none;
+}
+
+/* 牌的"翻牌背面"：翡翠花纹 + 暗刻边框。
+ * 默认 rotateX(-180) 隐藏在背面下，
+ * 翻牌动画（rotateX 从 -180 → 0）过程中这张图朝外，
+ * 翻完后转到背后不再可见。
+ *
+ * 视觉升级：在原版基础上加深翡翠色、增加刻纹密度，
+ * 让翻牌过程视觉更有质感。 */
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: var(--tile-radius);
+  background:
+    /* 中央纹饰（菱形） */
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 18%, transparent 32%),
+    /* 边角暗纹 */
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.14) 0%, transparent 14%),
+    radial-gradient(circle at 50% 82%, rgba(255, 255, 255, 0.14) 0%, transparent 14%),
+    radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 14%),
+    radial-gradient(circle at 82% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 14%),
+    /* 主色：深翡翠渐变 */
+    linear-gradient(155deg, #6bb978 0%, #3d8c52 55%, #1f5a32 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.14),
+    inset 0 0 18px rgba(18, 56, 36, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(15, 45, 28, 0.32);
+  backface-visibility: hidden;
+  transform: rotateX(-180deg);
+}
+
+/* 牌正面态下，::after 隐藏（避免遮挡图片牌）—— 默认就是隐藏态，
+   仅在 .tile--deal-hidden（rotateX -180 整体）时翻出来显示。
+   这里不需要特殊规则：.tile 默认 transform 不是 -180，::after 的 rotateX(-180)
+   自然转到背后（Z 负向不可见）。 */
+
+/* 动态提升：拖拽中的牌 / 正在消除动画的牌才需要独立合成层。
+   由 JS 在 setGroupTransform / animateEliminate 时临时添加，结束后移除，
+   避免 136 张牌全部常驻 GPU 层（低端设备卡顿来源）。 */
+.tile--composited {
+  will-change: transform, opacity;
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+.tile__top,
+.tile__bottom,
+.tile__zi,
+.tile__blank,
+.tile__img {
+  backface-visibility: hidden;
+}
+
+.tile__top {
+  font-size: calc(var(--tile-w) * 0.32);
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.tile__bottom {
+  font-size: calc(var(--tile-w) * 0.22);
+  line-height: 1;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tile__zi {
+  font-size: calc(var(--tile-w) * 0.42);
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.tile__img {
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  display: block;
+  object-fit: fill;
+  border-radius: 5px;
+  pointer-events: none;
+  /* 用 box-shadow 替代 filter:drop-shadow —— drop-shadow 每帧重采样图片 alpha，
+     ×136 张牌是持续成本；box-shadow 不重采样，视觉接近且便宜得多。
+     多加 1px 内描边勾勒图片边界，让牌面与卡牌框分明。 */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 1px 1px rgba(0, 0, 0, 0.22);
+}
+
+.tile--deal-hidden {
+  transform: rotateX(-180deg);
+}
+
+.tile--deal-animating {
+  transition: transform 500ms cubic-bezier(0.22, 0.72, 0.18, 1);
+}
+
+.tile--bai {
+  border-width: 3px;
+  border-color: #b0a090;
+}
+
+.tile__blank {
+  display: block;
+  width: 60%;
+  height: 65%;
+  border: 2px solid #c8b99a;
+  border-radius: 4px;
+  background: #f0ece4;
+}
+
+/* 牌面色彩体系（万=红、条=绿、筒=蓝、字=紫）；
+ * 与图片牌本身的色系协调，移除单独 ::after 翡翠面以避免与图片视觉冲突。
+ * 仅对文字牌保留 ::after 翡翠装饰面（背景里那张旋转 -180 的翡翠面是给
+ * 翻牌动画使用的背面图案，对文字牌依然有意义，因为图片牌已经展示了正面）。 */
+.tile--wan .tile__top,
+.tile--wan .tile__bottom {
+  color: #c0392b;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(192, 57, 43, 0.18);
+}
+
+.tile--tiao .tile__top,
+.tile--tiao .tile__bottom {
+  color: #1a8a4c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(26, 138, 76, 0.18);
+}
+
+.tile--tong .tile__top,
+.tile--tong .tile__bottom {
+  color: #2472a8;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(36, 114, 168, 0.18);
+}
+
+.tile--zi .tile__zi {
+  color: #6c3483;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(108, 52, 131, 0.18);
+}
+
+.tile__zi--zhong {
+  color: #c0392b !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(192, 57, 43, 0.22) !important;
+}
+
+.tile__zi--fa {
+  color: #1a8a4c !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 2px rgba(26, 138, 76, 0.22) !important;
+}
+
+/* 选中/拖拽态：金色高光环 + 上浮 + 强化阴影 */
+.tile--selected,
+.tile--dragging {
+  z-index: 50;
+  border-color: #ffe88a;
+  box-shadow:
+    var(--tile-shadow),
+    /* 金色外光 */
+    0 0 0 2px rgba(255, 232, 138, 0.95),
+    0 0 22px rgba(255, 232, 138, 0.55),
+    0 0 38px rgba(255, 200, 90, 0.32);
+  transform: translateY(-2px);
+}
+
+.tile--dragging {
+  z-index: 100;
+  cursor: grabbing;
+}
+
+/* 提示态：金橙色光晕 + 呼吸光效（静态 box-shadow + transform 关键帧，
+   可合成；无 filter 无 box-shadow 关键帧，逐帧成本低） */
+.tile--hint {
+  z-index: 80;
+  border-color: #f4c84f;
+  outline: 3px solid rgba(255, 220, 104, 0.88);
+  outline-offset: 3px;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(244, 200, 79, 0.7),
+    0 0 22px rgba(255, 220, 104, 0.55),
+    0 0 38px rgba(255, 180, 60, 0.28);
+  animation: tile-hint-pulse 1080ms ease-in-out infinite;
+}
+
+/* 提示的拖动起点：玩家必须按住这张牌朝箭头方向拖 */
+.tile--hint-origin {
+  z-index: 82;
+  outline-style: solid;
+  outline-width: 4px;
+  outline-color: #ff9f1c;
+  outline-offset: 4px;
+  animation: tile-hint-origin-pulse 1080ms ease-in-out infinite;
+}
+
+@keyframes tile-hint-origin-pulse {
+  0%, 100% {
+    box-shadow:
+      var(--tile-shadow),
+      0 0 0 2px rgba(244, 200, 79, 0.7),
+      0 0 22px rgba(255, 220, 104, 0.55),
+      0 0 38px rgba(255, 180, 60, 0.28);
+  }
+  50% {
+    box-shadow:
+      var(--tile-shadow),
+      0 0 0 3px rgba(255, 159, 28, 0.95),
+      0 0 30px rgba(255, 159, 28, 0.72),
+      0 0 54px rgba(255, 159, 28, 0.4);
+  }
+}
+
+.tile__hint-arrow {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(31, 83, 54, 0.45));
+  animation: tile-hint-arrow 1080ms ease-in-out infinite;
+}
+
+.tile__hint-arrow[data-dir="right"] {
+  left: 100%;
+  top: 50%;
+  margin: -9px 0 0 5px;
+  border-left-color: #ffb020;
+  --hint-arrow-nudge: translate(5px, 0);
+}
+
+.tile__hint-arrow[data-dir="left"] {
+  right: 100%;
+  top: 50%;
+  margin: -9px 5px 0 0;
+  border-right-color: #ffb020;
+  --hint-arrow-nudge: translate(-5px, 0);
+}
+
+.tile__hint-arrow[data-dir="down"] {
+  top: 100%;
+  left: 50%;
+  margin: 5px 0 0 -9px;
+  border-top-color: #ffb020;
+  --hint-arrow-nudge: translate(0, 5px);
+}
+
+.tile__hint-arrow[data-dir="up"] {
+  bottom: 100%;
+  left: 50%;
+  margin: 0 0 5px -9px;
+  border-bottom-color: #ffb020;
+  --hint-arrow-nudge: translate(0, -5px);
+}
+
+/* 教学标记：目标牌金色光晕、锚点牌绿色光晕。
+ * 与 hint 类似但用 transform 关键帧而非 filter —— 整盘多张教学牌时可合成。 */
+.tile--teaching-target,
+.tile--teaching-anchor {
+  z-index: 70;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(255, 232, 138, 0.6),
+    0 0 22px rgba(255, 200, 90, 0.4);
+}
+
+.tile--teaching-target {
+  border-color: #ffd76d;
+  animation: tile-teaching-target-pulse 1180ms ease-in-out infinite;
+}
+
+.tile--teaching-anchor {
+  border-color: #86e2bb;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(134, 226, 187, 0.6),
+    0 0 22px rgba(134, 226, 187, 0.4);
+  animation: tile-teaching-anchor-pulse 1180ms ease-in-out infinite;
+}
+
+.tile--matched {
+  z-index: 85;
+  border-color: #ffffff;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 26px rgba(126, 225, 179, 0.85),
+    0 0 48px rgba(126, 225, 179, 0.45);
+}
+
+.tile--eliminating {
+  animation: tile-eliminate 340ms ease-out forwards;
+}
+
+.tile--combo-2.tile--eliminating,
+.tile--combo-3.tile--eliminating,
+.tile--combo-4.tile--eliminating,
+.tile--combo-5.tile--eliminating {
+  animation-name: tile-eliminate-combo;
+}
+
+.tile--combo-2.tile--matched,
+.tile--combo-3.tile--matched {
+  border-color: #fff2a8;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 22px rgba(126, 225, 179, 0.85),
+    0 0 38px rgba(238, 207, 120, 0.42);
+}
+
+.tile--combo-4.tile--matched,
+.tile--combo-5.tile--matched {
+  border-color: #fff2a8;
+  box-shadow:
+    var(--tile-shadow),
+    0 0 0 2px rgba(255, 255, 255, 0.98),
+    0 0 28px rgba(126, 225, 179, 0.92),
+    0 0 48px rgba(238, 207, 120, 0.55),
+    0 12px 28px rgba(42, 88, 67, 0.22);
+}
+
+.tile--invalid {
+  animation: tile-invalid 260ms ease-out;
+}
+
+@media (hover: hover) {
+  .tile:hover {
+    /* hover 时牌面上浮 + 强化阴影 —— 用 transform 而非 filter，
+       整盘 136 张牌时可保持合成性能 */
+    transform: translateY(-1px);
+    box-shadow:
+      var(--tile-shadow),
+      0 0 0 1px rgba(255, 232, 138, 0.4),
+      0 12px 24px rgba(31, 64, 49, 0.22);
+  }
+}
