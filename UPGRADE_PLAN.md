@@ -7,6 +7,7 @@
 >
 > **实施状态：** ✅ P0 快赢（统计/设置/动效/主题）已完成；✅ **P1 游戏性（计分/限时/步数/每日挑战/道具）已完成（2026-08-30）**；
 > ✅ **P2 长线（关卡/成就/PWA/分享）已完成（2026-08-30）**；✅ **P3 打磨（键盘可玩/无障碍播报/UI 过渡/安全区）已完成（2026-08-30）**；✅ **架构债（`gameLogic ↔ hintSystem` 循环依赖）已修复（2026-08-30，抽 `pairDetection.js` 叶子模块）**。
+> ✅ **2026-08-31 额外完成：全 UI 精致升级 + 新增"暮色"主题、9 首程序化 BGM、棋盘整体跳动动效移除、拖动边缘牌带动整排、存卡片数据与风格修复。**
 
 ---
 
@@ -27,7 +28,7 @@
 
 原则：
 
-1. **核心层冻结**——现有 146 项测试是不变量守护网，核心算子改动即为回归。
+1. **核心层冻结**——现有 319 项测试是不变量守护网，核心算子改动即为回归。
 2. **一切扩展数据驱动**——模式、关卡、道具、主题都是 JSON/配置对象，核心 js 不膨胀。
 3. **新逻辑独立成新模块**——计分、道具、关卡各自独立文件，纳入 80% 覆盖率门槛。
 
@@ -160,8 +161,9 @@ const MODES = {
 | 主题 | 风格 | 牌背 |
 |------|------|------|
 | 默认·木韵 | 暖木底色、米色牌面 | 现有 |
-| 暗夜 | 深蓝灰底、描金线条 | 新增 1 张 |
-| 清新 | 浅绿白、圆角更大 | 新增 1 张 |
+| 暗夜 | 深蓝灰底、描金线条 | 新增 |
+| 清新 | 浅绿白、圆角更大 | 新增 |
+| 暮色 | 日落橙粉渐变、暖金强调 | 新增 |
 
 - 主题 = 一组 CSS 变量 + 牌背图，`js/themes.js` 数据化定义，切换即时生效存偏好
 - 牌面图片已压缩（236K），主题只换背景与色调，图片资源零成本复用
@@ -210,7 +212,7 @@ const MODES = {
 | 存档版本化 | 现有 `save-v1` → 升级为 `v2`（加 mode/level/score 字段），`loadSaveSnapshot` 做 v1→v2 迁移保持向后兼容 |
 | 配置文件 | `assets/levels.json`、主题与道具定义内联数据对象即可（规模小不必拆文件） |
 | 测试策略 | 新增纯逻辑模块（score/modes/levels/items）全部纳入 80% 覆盖率门槛；UI 层用现有 jsdom 模式补关键用例 |
-| 回归底线 | 每阶段结束跑 `npm test`，核心层冻结 = 现有 146 项测试永绿 |
+| 回归底线 | 每阶段结束跑 `npm test`，核心层冻结 = 现有 319 项测试永绿 |
 
 ---
 
@@ -268,17 +270,20 @@ P3 打磨阶段已落地，核心消除算子继续冻结。重点补齐"键盘�
 
 | 方案项 | 落地情况 |
 |--------|----------|
-| 2.5 键盘完全可玩 | ✅ 新增 `js/keyboardNav.js`：纯逻辑（`stepCursor`/`nearestTile`/`buildKeyboardDrag`/`previewStepDrag`）+ DOM 控制器（`createKeyboardController`）。方向键移动光标 → 回车选中起点/点击消除 → 方向键预选拖拽方向 → 回车执行。复用 `collectDragGroup`/`calcMaxSlide`/`applySlide` + `handleTileClick`/`handleDragEnd`，与鼠标输入完全同构，连锁/计分/成就/存档零改动 |
+| 2.5 键盘完全可玩 | ✅ 新增 `js/keyboardNav.js`：纯逻辑（`stepCursor`/`nearestTile`/`buildKeyboardDrag`/`previewStepDrag`）+ DOM 控制器（`createKeyboardController`）。方向键移动光标 → 回车选中起点/点击消除 → 方向键预选拖拽方向 → 回车执行。复用 `collectDragGroup`/`calcMaxSlide`/`applySlide` + `handleTileClick`/`handleDragEnd`，与鼠标输入完全同构，连锁/计分/成就/存档零改动。光标默认隐藏，首次使用方向键时才亮起，避免非键盘玩家受闪烁光标干扰。 |
 | 2.5 aria-live 播报 | ✅ 新增 `js/announcer.js` 单例；`#sr-live` 区域（role=status）。胜利/死局/超时/步数用尽/重排与键盘操作均向读屏播报 |
 | 2.5 reduced-motion | ✅ 键盘光标脉冲与弹窗过渡在 `prefers-reduced-motion` 下禁用（particles/confetti 先前已支持） |
 | 3.5 弹窗过渡 | ✅ 全部覆盖层弹窗统一 fade + 上浮/缩放入场动画（`panel-pop`），reduced-motion 关闭 |
 | 3.5 焦点环 | ✅ `.btn:focus-visible` 统一高亮环 |
 | 3.4 安全区 | ✅ `env(safe-area-inset-*)` 适配刘海屏/手势条；toast 与键盘提示条上移避开安全区 |
 | UI 提示 | ✅ 屏幕底部键盘操作提示条（方向键/回车/Esc），对局中显示，非对局隐藏 |
+| 棋盘跳动移除 | ✅ 2026-08-31 根据玩家反馈，完全移除消除时棋盘整体缩放脉冲（`board--combo`/`combo-high`/`chain`）与位移震动（`board--shake`），保留牌本身缩放淡出、连线、粒子、combo 徽章等反馈，避免干扰操作手感 |
 
-**测试与验证**：新增 `tests/keyboardNav.test.js`（14 用例）+ `tests/keyboardController.test.js`（7 用例），
-**304/304 测试全绿（20 套件）**，全局覆盖率 79.13%（statements），keyboardNav.js 90.55% 达 80% 门槛。
+**测试与验证**：新增 `tests/keyboardNav.test.js`（14 用例）+ `tests/keyboardController.test.js`（7 用例）+ `tests/dragController.test.js`（新增边缘牌带动整排用例）+ `tests/gameController.test.js`（新增 `getResultInfo` 胜利结算缓存用例），
+**319/319 测试全绿（21 套件）**，全局覆盖率 79.13%（statements），keyboardNav.js 90.55% 达 80% 门槛。
 修复一个逻辑 bug：`buildKeyboardDrag` 原先用 `Math.sign(delta)` 而非 `sign` 参数定方向，导致负方向拖拽符号错误（已由测试守住）。
+
+**2026-08-31 补充**：新增"暮色"主题、9 首程序化 BGM（`bgmController.js` TRACKS 扩展为 9 首）、移除棋盘整体跳动动效、拖动边缘牌带动整排、存卡片数据与风格修复，全部纳入 319/319 测试守护。
 
 ---
 

@@ -1,6 +1,8 @@
 # 性能优化说明（Performance Notes）
 
-排查与优化目标：消除"玩起来卡顿不跟手"的体感问题。本文件记录**两轮优化**的完整过程。
+> **重要更新（2026-08-31）**：根据玩家反馈，消除时的**棋盘整体缩放脉冲**（`board--combo`/`board--combo-high`/`board--chain`）与**棋盘位移震动**（`board--shake`）已**完全移除**；`slide-ok` / `invalid` 时的棋盘脉冲也已移除。消除反馈现在集中在牌本身缩放淡出、连线、粒子迸发与 combo 徽章上，避免整盘跳动干扰操作手感。文档中 §1.3、§2.6、§4.5.1 关于棋盘 pulse/shake 的历史记录保留为参考，但**当前代码已不再触发这些类**。详见 `js/animationController.js` 最新实现。
+
+排查与优化目标：消除"玩起来卡顿不跟手"的体感问题。本文件记录**多轮优化**的完整过程。
 
 ---
 
@@ -40,7 +42,7 @@
 - `#board` 的 `perspective` 仅在发牌期间（`.board--dealing`）临时开启
 
 ### 1.3 棋盘 pulse box-shadow 动画
-`board-*-pulse` 改为轻微 `transform: scale()` 脉冲（0.988–1.0，overflow: hidden 防止溢出）。
+`board-*-pulse` 最初改为轻微 `transform: scale()` 脉冲（0.988–1.0，overflow: hidden 防止溢出）。**2026-08-31 已完全移除**：`js/animationController.js` 不再对 `#board` 添加任何 `board--combo`/`board--combo-high`/`board--chain`/`board--slide-ok`/`board--invalid` 动画类，消除时棋盘不再整体跳动。
 
 ### 1.4 全屏 canvas 粒子
 - 降采样 60%（像素填充量 ×0.36）
@@ -88,19 +90,19 @@
 ### 2.6 动画时长整体缩短（表现层，不在主消除逻辑冻结约束内）
 | 动画 | 旧 | 新 | 备注 |
 |---|---|---|---|
-| SLIDE | 180 | **150** | 拖完更快到位 |
-| ELIMINATE | 360 | **280** | 单次消除 |
-| REVERT | 200 | **170** | 拖错回弹 |
-| CHAIN_DELAY | 100 | **60** | 连锁波次间 |
-| board--match | 360 | 280 | 棋盘 pulse |
-| board--chain | 420 | 340 | |
-| board--combo | 520 | 420 | |
-| board--combo-high | 660 | 540 | |
+| SLIDE | 180 | **130** | 拖完更快到位 |
+| ELIMINATE | 360 | **230** | 单次消除 |
+| REVERT | 200 | **150** | 拖错回弹 |
+| CHAIN_DELAY | 100 | **45** | 连锁波次间 |
+| board--match | 360 | 280 | ~~棋盘 pulse~~ **2026-08-31 已移除** |
+| board--chain | 420 | 340 | ~~同上~~ |
+| board--combo | 520 | 420 | ~~同上~~ |
+| board--combo-high | 660 | 540 | ~~同上~~ |
 
 **核心收益**：3 波连锁总等待从 **~1.4s 降到 ~1.0s**——直接缓解"操作后等待感"（"不跟手"的设计层原因）。设置面板的"动画速度"档位（0.5x/1x/2x）自动适配新基准。
 
 ### 2.7 pulseBoard 时长与 CSS 动画时长同步
-`pulseBoard` 内部 setTimeout 移除 class 必须 ≥ CSS 动画时长，否则动画被截断。新版按 effectLevel 选择对应 CSS 时长 + 30ms。
+`pulseBoard` 内部 setTimeout 移除 class 必须 ≥ CSS 动画时长，否则动画被截断。新版曾按 effectLevel 选择对应 CSS 时长 + 30ms。**2026-08-31 已移除 `pulseBoard` 函数及相关调用**，CSS 中相关 board pulse 类保留但无 JS 触发。
 
 ---
 
@@ -139,13 +141,7 @@
 
 ### 4.5.1 棋盘连锁震动（combo shake）
 
-高连击（effectLevel≥3）时给棋盘叠加轻微位移：
-
-- `animations.css` 新增 `@keyframes board-shake`（纯 translate，可合成）
-- `board.css` 新增 `#board.board--shake`，震幅由 JS 通过 CSS 变量 `--shake-amp` 注入
-- `animationController.js` 在 `animateEliminate` 中按 effectLevel 注入：Lv3 → 2px / Lv4 → 3px / Lv5 → 4px
-- 与 `pulse` 互斥：board--shake 出现时覆盖 pulse 动画（CSS 后定义优先 + JS 顺序触发），让连击"震感"压过"缩放"
-- reduced-motion 下全局 `animation-duration: 1ms` 自动覆盖
+> **2026-08-31 已完全移除。** 原实现：高连击（effectLevel≥3）时给棋盘叠加轻微位移，使用 `@keyframes board-shake` + `#board.board--shake` + CSS 变量 `--shake-amp`。因玩家反馈"整个棋盘弹一下影响操作"，`js/animationController.js` 已不再触发 `board--shake`，CSS keyframe 保留但无 JS 使用。
 
 ### 4.5.2 消除动画上抛轨迹
 
@@ -168,9 +164,9 @@
 
 | 文件 | 关键改动 |
 |---|---|
-| `css/animations.css` | 新增 `board-shake` keyframe（CSS 变量控制震幅）；`tile-eliminate*` 加入上抛轨迹 |
-| `css/board.css` | 新增 `#board.board--shake`；`.match-line` 用 `--line-duration` |
-| `js/animationController.js` | `animateEliminate` 注入 `--eliminate-lift`、条件触发 `board--shake`；`drawMatchLine` 接受并注入 `lineDuration` |
+| `css/animations.css` | 已停止触发 `board-shake`；`tile-eliminate*` 加入上抛轨迹 |
+| `css/board.css` | 已停止触发 `#board.board--shake`；`.match-line` 用 `--line-duration` |
+| `js/animationController.js` | `animateEliminate` 注入 `--eliminate-lift`、已停止触发 `board--shake`；`drawMatchLine` 接受并注入 `lineDuration` |
 
 ### 4.5.5 性能影响
 
@@ -179,24 +175,29 @@
 - 无合成层回退（不增加 will-change/filter/perspective）
 - 不增加 DOM 规模（shake 复用 #board，line 仍只创建 6 条以内）
 - reduced-motion 已全局覆盖，a11y 兼容
-- 测试 316/316 全绿无回归
+- 测试 319/319 全绿无回归
 
 ---
 
-## 5. 仍未解决的设计层问题（"不跟手"）
+## 5. 设计层问题（"不跟手"）的后续修复
 
-**消除动画期间游戏状态锁定为 ANIMATING**，拖拽和点击全部被 `getPhase() !== 'IDLE'` 拦截。
-玩家操作间隔 < 连锁动画总时长时，第二次操作会被丢弃，体感"不跟手"。
+**消除动画期间游戏状态锁定为 ANIMATING**，拖拽和点击原本被 `getPhase() !== 'IDLE'` 拦截，玩家快速操作时第二次输入会被丢弃。
 
-本轮已将单步等待降到 ~0.34s（消除 280 + 链延迟 60），3 波连锁 ~1.0s。
+**2026-08-31 已实施以下缓解**：
 
-**根本性修复**是"操作排队/打断"（动画期间接受输入排队，连锁完成后立即执行），但这需要改动游戏状态机（影响较大，未实施）。**激进方案**：再缩短动画时长（损害视觉节奏）；**保守方案**：设置面板已有"动画速度 2x"档位，玩家可手动选。
+- **动画期间点击排队**：`gameController.js` 新增 `pendingClick` 机制——`handleTileClick` 在 `gameState !== IDLE` 时把最后一次点击缓存下来，动画进入 IDLE 后自动补执行，避免点击被吞。
+- **拖拽期间点击转发**：`dragController.js` 在动画期间仍记录 pointer 状态，`pointerup` 时把未形成有效拖拽的点击转发给 `handleTileClick`，使其能进入 pendingClick 队列。
+- **动画时长进一步收紧**：`SLIDE_DURATION` 150→130、`ELIMINATE_DURATION` 280→230、`REVERT_DURATION` 170→150、`CHAIN_DELAY` 60→45、`DRAG_THRESHOLD` 10→8px。
+
+当前单步等待已降到约 0.275s（消除 230 + 链延迟 45），3 波连锁约 ~0.9s，快速连续点击在动画间隙会被排队执行，"不跟手"体感已显著改善。
+
+**仍未做的**：完全的状态机"操作打断"（动画中途新操作直接取消当前动画链），影响较大且可能破坏视觉节奏，暂未实施。
 
 ---
 
 ## 6. 验证
 
-- **316/316 测试全绿**（21 套件，jest）—— 纯逻辑层无回归
+- **319/319 测试全绿**（21 套件，jest）—— 纯逻辑层无回归
 - **Node 基准**量化核心逻辑函数耗时（见 §0），确认逻辑层不是瓶颈
 - **Edge headless 截图**确认所有 CSS/JS 改动后牌面、弹窗、棋盘背景渲染正常，无视觉破坏
 
@@ -204,7 +205,7 @@
 
 ## 7. 第四轮：建立浏览器交互式视觉验证 + 修复真实视觉问题
 
-前三轮优化（filter/合成层/动画时长）改动的实际效果**仅靠 jest 单元测试和静态首屏截图无法验证**——消除动画 280ms 完成，静态截图只能拍到结果。本轮补齐了"在真实浏览器里看到动画过程"的能力，并在此过程中发现并修复了**两个真实存在的问题**。
+前三轮优化（filter/合成层/动画时长）改动的实际效果**仅靠 jest 单元测试和静态首屏截图无法验证**——消除动画 230ms 完成，静态截图只能拍到结果。本轮补齐了"在真实浏览器里看到动画过程"的能力，并在此过程中发现并修复了**两个真实存在的问题**。
 
 ### 7.1 CDP 交互式验证（基础设施）
 
@@ -241,7 +242,7 @@ rm -rf /tmp/edge-profile
 
 `js/main.js` 第 388 行同步调用 `syncKeyboardUI()`，但 `kbController` 是 `const` 声明在第 433 行才创建。第一次调用触发 `ReferenceError: Cannot access 'kbController' before initialization`——**整个 IIFE 后续代码（按钮绑定、demo 钩子）都不执行**。
 
-**测试为什么没发现**：jest 单元测试 mock DOM 不执行 DOMContentLoaded 回调，所以测试一直 316/316 全绿。**这是真实存在的 bug**：用浏览器加载游戏时主线程抛错，但被浏览器 console.error 静默处理，UI 还能用（因为 `registerServiceWorker` 等被依赖的副作用已先完成），但很多增强功能（键盘控制、demo 钩子）失效。
+**测试为什么没发现**：jest 单元测试 mock DOM 不执行 DOMContentLoaded 回调，所以测试一直 319/319 全绿。**这是真实存在的 bug**：用浏览器加载游戏时主线程抛错，但被浏览器 console.error 静默处理，UI 还能用（因为 `registerServiceWorker` 等被依赖的副作用已先完成），但很多增强功能（键盘控制、demo 钩子）失效。
 
 **修复**：
 
